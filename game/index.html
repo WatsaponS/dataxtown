@@ -18,10 +18,11 @@
     <div id="online-badge">👥 1</div>
     <div id="online-list"></div>
     <div id="chat-log"></div>
+    <button id="history-btn" type="button" title="ประวัติแชตทั้งหมด (H)">📜</button>
     <div id="chat-bar" class="hidden">
       <input id="chat-input" type="text" maxlength="120" placeholder="พิมพ์ข้อความ… (Esc ยกเลิก)">
     </div>
-    <div id="controls-hint">WASD/ลูกศร เดิน · Shift วิ่ง · Enter แชต · +/- ซูม · M มินิแมป · B เพลง</div>
+    <div id="controls-hint">WASD/ลูกศร เดิน · Shift วิ่ง · Enter แชต · +/- ซูม · M มินิแมป · B เพลง · H ประวัติแชต</div>
     <div id="touch-ui">
       <div id="joystick"><div id="stick"></div></div>
       <button id="chat-btn" type="button">💬</button>
@@ -44,6 +45,14 @@
       <h2>🏆 Leaderboard</h2>
       <div id="board-list"></div>
       <button id="board-close" type="button">ปิด</button>
+    </div>
+  </div>
+
+  <div id="history-overlay" class="hidden">
+    <div id="history-card">
+      <h2>📜 ประวัติแชต</h2>
+      <div id="history-list"></div>
+      <button id="history-close" type="button">ปิด</button>
     </div>
   </div>
 

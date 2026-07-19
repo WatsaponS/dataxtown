@@ -9,6 +9,7 @@ import { connectFirebase } from "./net_firebase.js";
 import { FIREBASE_CONFIG } from "./firebase-config.js";
 import { createMusic } from "./audio.js";
 import { initQuests, updateQuests, tryStartQuiz, isQuizOpen, toggleBoard } from "./quests.js";
+import { initHistory, toggleHistory } from "./history.js";
 import { makeCamera, updateCamera, draw } from "./render.js";
 import {
   setupUI, isChatOpen, toggleChat, submitChat,
@@ -176,7 +177,10 @@ function startGame() {
   const netReady = FIREBASE_CONFIG
     ? connectFirebase(world, ui)
     : Promise.resolve(connectNet(world, ui));
-  netReady.then(() => initQuests(world, ui)); // quest ต้องรอ net เพื่อผูก leaderboard
+  netReady.then(() => {
+    initQuests(world, ui); // quest ต้องรอ net เพื่อผูก leaderboard
+    initHistory(world, ui);
+  });
   requestAnimationFrame(loop);
 }
 
@@ -195,7 +199,8 @@ window.addEventListener("keydown", e => {
   if (e.code === "KeyB") { music.toggle(); updateMusicBtn(); }
   if (e.code === "KeyE" && !isQuizOpen(world)) tryStartQuiz(world, ui);
   if (e.code === "KeyL") toggleBoard(world, document.getElementById("board-overlay").classList.contains("hidden"));
-  if (e.key === "Escape") toggleBoard(world, false);
+  if (e.code === "KeyH") toggleHistory(world, document.getElementById("history-overlay").classList.contains("hidden"));
+  if (e.key === "Escape") { toggleBoard(world, false); toggleHistory(world, false); }
   input.add(e.code);
 });
 window.addEventListener("keyup", e => input.delete(e.code));

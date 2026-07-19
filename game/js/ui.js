@@ -33,6 +33,7 @@ export function isChatOpen(ui) { return ui.chatOpen; }
 export function toggleChat(ui, world, open) {
   ui.chatOpen = open;
   ui.chatBar.classList.toggle("hidden", !open);
+  document.body.classList.toggle("chatting", open); // ซ่อนปุ่ม 📜 ไม่ให้ทับช่องพิมพ์
   if (open) ui.chatInput.focus();
   else { ui.chatInput.value = ""; ui.chatInput.blur(); }
 }

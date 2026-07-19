@@ -18,13 +18,14 @@ export async function connectFirebase(world, ui) {
   try {
     const { initializeApp } = await import(`${SDK}/firebase-app.js`);
     const {
-      getDatabase, ref, set, update, onValue, onChildAdded, onChildChanged, onChildRemoved,
-      onDisconnect, push, query, orderByChild, startAt, serverTimestamp,
+      getDatabase, ref, get, set, update, onValue, onChildAdded, onChildChanged, onChildRemoved,
+      onDisconnect, push, query, orderByChild, startAt, limitToLast, serverTimestamp,
     } = await import(`${SDK}/firebase-database.js`);
 
     const app = initializeApp(FIREBASE_CONFIG);
     const db = getDatabase(app);
-    net.fb = { db, ref, set, update, onValue, push }; // ให้โมดูลอื่น (เช่น quests) ใช้ต่อ
+    // ให้โมดูลอื่นใช้ต่อ (quests = leaderboard, history = ประวัติแชต)
+    net.fb = { db, ref, get, set, update, onValue, push, query, orderByChild, limitToLast };
 
     // ไอดีประจำเครื่อง (ไม่ใช้ระบบ auth — เกมภายในบริษัท)
     let uid = localStorage.getItem("dataxtown.uid");
