@@ -1,0 +1,215 @@
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+html, body {
+  width: 100%; height: 100%; overflow: hidden;
+  background: #171b2c;
+  font-family: "Segoe UI", "Leelawadee UI", Tahoma, sans-serif;
+  color: #fff6dc;
+  overscroll-behavior: none;
+}
+
+#game {
+  display: block; width: 100vw; height: 100vh; height: 100dvh;
+  image-rendering: pixelated; touch-action: none;
+}
+
+#hud > * { position: fixed; z-index: 10; }
+
+#brand {
+  top: 14px; left: 16px;
+  font-weight: 700; font-size: 18px; letter-spacing: .5px;
+  text-shadow: 0 2px 4px rgba(0,0,0,.6);
+}
+#brand span { font-weight: 400; font-size: 12px; opacity: .75; margin-left: 8px; }
+
+#zone-banner {
+  top: 18px; left: 50%; transform: translateX(-50%);
+  background: rgba(23,27,44,.88); border: 1px solid #e7b94f;
+  padding: 8px 22px; border-radius: 20px;
+  font-size: 15px; font-weight: 600;
+  transition: opacity .4s; pointer-events: none;
+}
+#zone-banner.hidden { opacity: 0; }
+
+#minimap {
+  top: 14px; right: 16px;
+  border: 2px solid #26324a; border-radius: 6px;
+  background: #171b2c; image-rendering: pixelated;
+}
+#minimap.hidden { display: none; }
+
+#online-list {
+  top: 186px; right: 16px; width: 160px;
+  background: rgba(23,27,44,.8); border-radius: 6px;
+  padding: 8px 10px; font-size: 12px; line-height: 1.7;
+}
+#online-list .dot {
+  display: inline-block; width: 8px; height: 8px;
+  border-radius: 50%; margin-right: 6px;
+}
+#online-list .head { font-weight: 700; opacity: .8; margin-bottom: 2px; }
+
+#chat-log {
+  bottom: 64px; left: 16px; width: 320px; max-height: 220px;
+  overflow-y: auto; font-size: 13px; line-height: 1.5;
+  display: flex; flex-direction: column; justify-content: flex-end;
+  pointer-events: none;
+}
+#chat-log .msg {
+  background: rgba(23,27,44,.75); border-radius: 6px;
+  padding: 3px 8px; margin-top: 3px; max-width: 100%;
+  text-shadow: 0 1px 2px rgba(0,0,0,.5);
+}
+#chat-log .msg b { color: #e7b94f; }
+#chat-log .msg.sys { color: #77b9b4; font-style: italic; }
+
+#chat-bar { bottom: 20px; left: 16px; width: 320px; }
+#chat-bar.hidden { display: none; }
+#chat-input {
+  width: 100%; padding: 9px 12px; font-size: 14px;
+  background: rgba(23,27,44,.95); color: #fff6dc;
+  border: 1px solid #e7b94f; border-radius: 8px; outline: none;
+}
+
+#controls-hint {
+  bottom: 14px; right: 16px; font-size: 11px; opacity: .55;
+}
+
+#music-btn {
+  top: 14px; right: 192px;
+  width: 36px; height: 36px; border-radius: 50%;
+  font-size: 17px; cursor: pointer;
+  background: rgba(23,27,44,.8); border: 1px solid #394158;
+}
+#music-btn:hover { border-color: #e7b94f; }
+
+/* ---------- Touch / Mobile ---------- */
+
+#online-badge {
+  display: none; top: 116px; right: 10px;
+  align-items: center; justify-content: center; gap: 4px;
+  background: rgba(23,27,44,.85); border: 1px solid #394158;
+  border-radius: 16px; padding: 5px 12px; font-size: 13px;
+  cursor: pointer; user-select: none;
+}
+
+#touch-ui { display: none; }
+body.touch #touch-ui { display: block; }
+body.touch #controls-hint { display: none; }
+
+#joystick {
+  position: fixed; left: 18px; bottom: 22px; z-index: 20;
+  width: 116px; height: 116px; border-radius: 50%;
+  background: rgba(23,27,44,.45); border: 2px solid rgba(231,185,79,.4);
+  touch-action: none;
+}
+#stick {
+  position: absolute; left: 50%; top: 50%;
+  width: 50px; height: 50px; border-radius: 50%;
+  background: rgba(231,185,79,.85);
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+}
+#chat-btn {
+  position: fixed; right: 18px; bottom: 30px; z-index: 20;
+  width: 56px; height: 56px; border-radius: 50%;
+  font-size: 24px; border: 2px solid rgba(231,185,79,.5);
+  background: rgba(23,27,44,.65); cursor: pointer;
+  touch-action: manipulation;
+}
+
+/* จอเล็ก: มือถือแนวตั้ง (แคบ) หรือแนวนอน (เตี้ย) — ย่อ HUD ไม่ให้บังเกม */
+@media (max-width: 700px), (max-height: 520px) {
+  #brand { font-size: 14px; top: 10px; left: 12px; }
+  #brand span { display: none; }
+  #minimap { width: 96px; height: 96px; top: 10px; right: 10px; }
+  #music-btn { top: 10px; right: 114px; width: 32px; height: 32px; font-size: 15px; }
+  #online-badge { display: flex; }
+  #online-list { display: none; top: 152px; right: 10px; width: 150px; font-size: 11px; }
+  #online-list.open { display: block; }
+  #zone-banner { font-size: 12px; padding: 6px 14px; top: 12px; max-width: 60vw; text-align: center; }
+  #chat-log { left: 12px; bottom: 158px; width: 58vw; max-width: 250px; max-height: 130px; font-size: 12px; }
+  body.touch #chat-bar { left: 12px; right: 86px; width: auto; bottom: 16px; z-index: 30; }
+  #start-card { width: 92vw; max-width: 380px; padding: 20px 22px; max-height: 92dvh; overflow-y: auto; }
+  #start-card h1 { font-size: 22px; }
+  #avatar-picker canvas { width: 40px; height: 60px; }
+  #avatar-preview { width: 48px; height: 72px; }
+}
+
+/* มือถือแนวนอน (จอเตี้ย) — ลดความสูงของ log/list เพิ่มเติม */
+@media (max-height: 520px) {
+  #chat-log { max-height: 84px; bottom: 150px; }
+  #online-list { top: 118px; }
+  #online-list.open { max-height: 46vh; overflow-y: auto; }
+  #online-badge { top: 116px; }
+  #start-card { max-height: 88dvh; }
+}
+
+#start-overlay {
+  position: fixed; inset: 0; z-index: 100;
+  background: rgba(23,27,44,.92);
+  display: flex; align-items: center; justify-content: center;
+}
+#start-overlay.hidden { display: none; }
+#start-card {
+  background: #212842; border: 1px solid #394158;
+  border-radius: 14px; padding: 32px 36px; width: 360px;
+  box-shadow: 0 12px 40px rgba(0,0,0,.5);
+}
+#start-card h1 { font-size: 28px; color: #e7b94f; }
+#start-card p { font-size: 13px; opacity: .75; margin: 4px 0 20px; }
+#start-card label { display: block; font-size: 12px; opacity: .8; margin: 14px 0 6px; }
+#name-input {
+  width: 100%; padding: 10px 12px; font-size: 15px;
+  background: #171b2c; color: #fff6dc;
+  border: 1px solid #394158; border-radius: 8px; outline: none;
+}
+#name-input:focus { border-color: #e7b94f; }
+#gender-picker { display: flex; gap: 8px; }
+#gender-picker button {
+  flex: 1; padding: 8px 0; font-size: 14px; cursor: pointer;
+  background: #171b2c; color: #fff6dc;
+  border: 2px solid #394158; border-radius: 8px;
+}
+#gender-picker button.selected { border-color: #e7b94f; background: #26324a; }
+#avatar-picker { display: flex; gap: 8px; flex-wrap: wrap; }
+#avatar-picker canvas {
+  width: 48px; height: 72px; image-rendering: pixelated;
+  border: 2px solid #394158; border-radius: 8px; cursor: pointer;
+  background: #171b2c;
+}
+#avatar-picker canvas.selected { border-color: #e7b94f; background: #26324a; }
+#custom-row { display: flex; gap: 16px; align-items: flex-start; }
+#custom-cols { flex: 1; }
+.swatches { display: flex; gap: 6px; flex-wrap: wrap; }
+.swatches .sw {
+  width: 22px; height: 22px; border-radius: 6px; cursor: pointer;
+  border: 2px solid #394158;
+}
+.swatches .sw.selected { border-color: #e7b94f; box-shadow: 0 0 0 2px rgba(231,185,79,.35); }
+.swatches .sw.auto {
+  background: repeating-linear-gradient(45deg, #26324a 0 5px, #394158 5px 10px);
+  position: relative;
+}
+.swatches .sw.auto::after {
+  content: "✕"; position: absolute; inset: 0;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 11px; color: #fff6dc; opacity: .8;
+}
+#preview-wrap {
+  display: flex; flex-direction: column; align-items: center; gap: 4px;
+  margin-top: 22px;
+}
+#preview-wrap span { font-size: 11px; opacity: .6; }
+#avatar-preview {
+  width: 64px; height: 96px; image-rendering: pixelated;
+  background: #171b2c; border: 2px solid #394158; border-radius: 10px;
+}
+
+#start-btn {
+  margin-top: 22px; width: 100%; padding: 12px;
+  font-size: 16px; font-weight: 700; cursor: pointer;
+  background: #e7b94f; color: #171b2c;
+  border: none; border-radius: 8px;
+}
+#start-btn:hover { background: #fff0cf; }

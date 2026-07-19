@@ -1,0 +1,120 @@
+// กล้อง + เรนเดอร์ทุกอย่างลง canvas หลัก
+
+import { canHear, spriteFrame } from "./entities.js";
+
+export function makeCamera(config) {
+  return { x: 0, y: 0, zoom: config.defaultZoom };
+}
+
+export function updateCamera(cam, world, canvas) {
+  const vw = canvas.width / cam.zoom, vh = canvas.height / cam.zoom;
+  cam.x = world.player.x - vw / 2;
+  cam.y = world.player.y - vh / 2 - 8;
+  cam.x = Math.max(0, Math.min(cam.x, world.pxW - vw));
+  cam.y = Math.max(0, Math.min(cam.y, world.pxH - vh));
+  if (world.pxW < vw) cam.x = (world.pxW - vw) / 2;
+  if (world.pxH < vh) cam.y = (world.pxH - vh) / 2;
+}
+
+export function draw(ctx, world, cam) {
+  const { config } = world;
+  const canvas = ctx.canvas;
+  ctx.imageSmoothingEnabled = false;
+  ctx.fillStyle = "#171b2c";
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+  ctx.save();
+  ctx.scale(cam.zoom, cam.zoom);
+  ctx.translate(-Math.round(cam.x), -Math.round(cam.y));
+
+  ctx.drawImage(world.mapImg, 0, 0);
+
+  // วงรัศมีสนทนารอบผู้เล่น
+  const p = world.player;
+  ctx.beginPath();
+  ctx.arc(p.x, p.y - 8, config.proximityRadius, 0, Math.PI * 2);
+  ctx.fillStyle = "rgba(231,185,79,0.07)";
+  ctx.fill();
+  ctx.strokeStyle = "rgba(231,185,79,0.25)";
+  ctx.lineWidth = 1;
+  ctx.stroke();
+
+  // วาดตัวละครเรียงตาม y (คนอยู่ล่างบังคนอยู่บน)
+  const sorted = [...world.entities].sort((a, b) => a.y - b.y);
+  for (const ent of sorted) {
+    const col = spriteFrame(ent);
+    // ent.sheet = spritesheet เฉพาะตัว (custom สี, 1 แถว) — ไม่มีก็ใช้ sheet รวมตาม variant
+    const img = ent.sheet || world.sheetImg;
+    const sx = col * config.frameW, sy = ent.sheet ? 0 : ent.variant * config.frameH;
+    const dx = Math.round(ent.x - config.frameW / 2), dy = Math.round(ent.y - config.frameH + 1);
+    // เงาใต้เท้า
+    ctx.fillStyle = "rgba(0,0,0,0.25)";
+    ctx.fillRect(dx + 3, Math.round(ent.y) - 2, 10, 3);
+    ctx.drawImage(img, sx, sy, config.frameW, config.frameH, dx, dy, config.frameW, config.frameH);
+  }
+  ctx.restore();
+
+  // ป้ายชื่อ + bubble วาดใน screen space (คมชัดทุกระดับซูม)
+  for (const ent of sorted) {
+    const sxp = (ent.x - cam.x) * cam.zoom, syp = (ent.y - cam.y) * cam.zoom;
+    drawNameTag(ctx, ent, sxp, syp - (config.frameH + 3) * cam.zoom, ent === p);
+    if (ent.bubble && world.time < ent.bubble.until && canHear(world, p, ent)) {
+      drawBubble(ctx, ent.bubble.text, sxp, syp - (config.frameH + 12) * cam.zoom);
+    }
+  }
+}
+
+function drawNameTag(ctx, ent, x, y, isPlayer) {
+  ctx.font = "600 11px 'Segoe UI', 'Leelawadee UI', sans-serif";
+  const w = ctx.measureText(ent.name).width + 10;
+  ctx.fillStyle = "rgba(23,27,44,0.7)";
+  roundRect(ctx, x - w / 2, y - 14, w, 14, 4);
+  ctx.fill();
+  ctx.fillStyle = isPlayer ? "#e7b94f" : "#fff6dc";
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  ctx.fillText(ent.name, x, y - 7);
+}
+
+function drawBubble(ctx, text, x, y) {
+  ctx.font = "13px 'Segoe UI', 'Leelawadee UI', sans-serif";
+  const maxW = 200;
+  const lines = wrapText(ctx, text, maxW);
+  const w = Math.min(maxW, Math.max(...lines.map(l => ctx.measureText(l).width))) + 16;
+  const h = lines.length * 17 + 10;
+  const bx = x - w / 2, by = y - h - 8;
+  ctx.fillStyle = "rgba(255,246,220,0.95)";
+  roundRect(ctx, bx, by, w, h, 7);
+  ctx.fill();
+  // หางลูกโป่ง
+  ctx.beginPath();
+  ctx.moveTo(x - 5, by + h); ctx.lineTo(x + 5, by + h); ctx.lineTo(x, by + h + 6);
+  ctx.closePath(); ctx.fill();
+  ctx.fillStyle = "#171b2c";
+  ctx.textAlign = "center";
+  ctx.textBaseline = "top";
+  lines.forEach((l, i) => ctx.fillText(l, x, by + 6 + i * 17));
+}
+
+function wrapText(ctx, text, maxW) {
+  const words = text.split(" ");
+  const lines = [];
+  let cur = "";
+  for (const wd of words) {
+    const test = cur ? cur + " " + wd : wd;
+    if (ctx.measureText(test).width > maxW && cur) { lines.push(cur); cur = wd; }
+    else cur = test;
+  }
+  if (cur) lines.push(cur);
+  return lines.slice(0, 4);
+}
+
+function roundRect(ctx, x, y, w, h, r) {
+  ctx.beginPath();
+  ctx.moveTo(x + r, y);
+  ctx.arcTo(x + w, y, x + w, y + h, r);
+  ctx.arcTo(x + w, y + h, x, y + h, r);
+  ctx.arcTo(x, y + h, x, y, r);
+  ctx.arcTo(x, y, x + w, y, r);
+  ctx.closePath();
+}

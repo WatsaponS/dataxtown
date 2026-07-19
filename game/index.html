@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>DataX Town — SCB Park West B, 7F</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <canvas id="game"></canvas>
+
+  <div id="hud">
+    <div id="brand">DataX Town <span>SCB Park West B · 7F</span></div>
+    <div id="zone-banner" class="hidden"></div>
+    <canvas id="minimap" width="160" height="160"></canvas>
+    <button id="music-btn" type="button" title="เปิด/ปิดเพลง (B)">🎵</button>
+    <div id="online-badge">👥 1</div>
+    <div id="online-list"></div>
+    <div id="chat-log"></div>
+    <div id="chat-bar" class="hidden">
+      <input id="chat-input" type="text" maxlength="120" placeholder="พิมพ์ข้อความ… (Esc ยกเลิก)">
+    </div>
+    <div id="controls-hint">WASD/ลูกศร เดิน · Shift วิ่ง · Enter แชต · +/- ซูม · M มินิแมป · B เพลง</div>
+    <div id="touch-ui">
+      <div id="joystick"><div id="stick"></div></div>
+      <button id="chat-btn" type="button">💬</button>
+    </div>
+  </div>
+
+  <div id="start-overlay">
+    <div id="start-card">
+      <h1>DataX Town</h1>
+      <p>ออฟฟิศเสมือน DataX · SCB Park West B ชั้น 7</p>
+      <label for="name-input">ชื่อของคุณ</label>
+      <input id="name-input" type="text" maxlength="16" placeholder="เช่น Nok" autocomplete="off">
+      <label>เพศตัวละคร</label>
+      <div id="gender-picker">
+        <button type="button" data-gender="0">👨 ชาย</button>
+        <button type="button" data-gender="1">👩 หญิง</button>
+      </div>
+      <label>เลือกตัวละคร</label>
+      <div id="avatar-picker"></div>
+      <div id="custom-row">
+        <div id="custom-cols">
+          <label>สีผม</label>
+          <div id="hair-picker" class="swatches"></div>
+          <label>สีเสื้อ</label>
+          <div id="shirt-picker" class="swatches"></div>
+        </div>
+        <div id="preview-wrap">
+          <canvas id="avatar-preview" width="16" height="24"></canvas>
+          <span>ตัวอย่าง</span>
+        </div>
+      </div>
+      <button id="start-btn">เข้าออฟฟิศ →</button>
+    </div>
+  </div>
+
+  <script type="module" src="js/main.js"></script>
+</body>
+</html>

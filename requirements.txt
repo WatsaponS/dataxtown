@@ -1,0 +1,1 @@
+# DataX Town ใช้ Python stdlib ล้วน — ไฟล์นี้มีไว้ให้ cloud host (Render) รู้ว่าเป็นโปรเจกต์ Python

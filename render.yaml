@@ -1,0 +1,9 @@
+# Render.com Blueprint — deploy DataX Town ทั้งเกม+multiplayer ในบริการเดียว (แผนฟรี)
+# ใช้: push repo ขึ้น GitHub -> render.com -> New + Blueprint -> เลือก repo นี้
+services:
+  - type: web
+    name: dataxtown
+    runtime: python
+    plan: free
+    buildCommand: "echo no build needed"
+    startCommand: python game/server.py --no-browser

@@ -1,0 +1,126 @@
+{
+  "frameW": 16,
+  "frameH": 24,
+  "dirs": [
+    "down",
+    "left",
+    "right",
+    "up"
+  ],
+  "frames": 3,
+  "colorsPerGender": 8,
+  "variants": [
+    {
+      "shirt": "#4f8fdd",
+      "shirtShadow": "#33639f",
+      "hair": "#2b2233",
+      "skin": "#f2c79b",
+      "gender": "m"
+    },
+    {
+      "shirt": "#e2698a",
+      "shirtShadow": "#a8455f",
+      "hair": "#5a3825",
+      "skin": "#e8b48a",
+      "gender": "m"
+    },
+    {
+      "shirt": "#57b06b",
+      "shirtShadow": "#3a7d4a",
+      "hair": "#1f1a16",
+      "skin": "#c98d63",
+      "gender": "m"
+    },
+    {
+      "shirt": "#e7b94f",
+      "shirtShadow": "#b08631",
+      "hair": "#703c22",
+      "skin": "#f2c79b",
+      "gender": "m"
+    },
+    {
+      "shirt": "#9867a8",
+      "shirtShadow": "#6d4579",
+      "hair": "#e5d9c0",
+      "skin": "#e8b48a",
+      "gender": "m"
+    },
+    {
+      "shirt": "#65a9c2",
+      "shirtShadow": "#42768c",
+      "hair": "#8a2f2f",
+      "skin": "#f5d4ae",
+      "gender": "m"
+    },
+    {
+      "shirt": "#d97e3f",
+      "shirtShadow": "#9c5527",
+      "hair": "#3a3f6b",
+      "skin": "#c98d63",
+      "gender": "m"
+    },
+    {
+      "shirt": "#7f8c9f",
+      "shirtShadow": "#565f6f",
+      "hair": "#243b2a",
+      "skin": "#f2c79b",
+      "gender": "m"
+    },
+    {
+      "shirt": "#4f8fdd",
+      "shirtShadow": "#33639f",
+      "hair": "#2b2233",
+      "skin": "#f2c79b",
+      "gender": "f"
+    },
+    {
+      "shirt": "#e2698a",
+      "shirtShadow": "#a8455f",
+      "hair": "#5a3825",
+      "skin": "#e8b48a",
+      "gender": "f"
+    },
+    {
+      "shirt": "#57b06b",
+      "shirtShadow": "#3a7d4a",
+      "hair": "#1f1a16",
+      "skin": "#c98d63",
+      "gender": "f"
+    },
+    {
+      "shirt": "#e7b94f",
+      "shirtShadow": "#b08631",
+      "hair": "#703c22",
+      "skin": "#f2c79b",
+      "gender": "f"
+    },
+    {
+      "shirt": "#9867a8",
+      "shirtShadow": "#6d4579",
+      "hair": "#e5d9c0",
+      "skin": "#e8b48a",
+      "gender": "f"
+    },
+    {
+      "shirt": "#65a9c2",
+      "shirtShadow": "#42768c",
+      "hair": "#8a2f2f",
+      "skin": "#f5d4ae",
+      "gender": "f"
+    },
+    {
+      "shirt": "#d97e3f",
+      "shirtShadow": "#9c5527",
+      "hair": "#3a3f6b",
+      "skin": "#c98d63",
+      "gender": "f"
+    },
+    {
+      "shirt": "#7f8c9f",
+      "shirtShadow": "#565f6f",
+      "hair": "#243b2a",
+      "skin": "#f2c79b",
+      "gender": "f"
+    }
+  ]
+}

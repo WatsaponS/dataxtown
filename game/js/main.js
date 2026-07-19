@@ -1,0 +1,257 @@
+// Bootstrap + game loop ของ DataX Town
+
+import { CONFIG, NPCS, HAIR_COLORS, SHIRT_COLORS } from "./data.js";
+import { loadWorld, spawnPoint } from "./world.js";
+import { makeEntity, updatePlayer, updateNPC } from "./entities.js";
+import { makeCustomSheet } from "./avatar.js";
+import { connectNet, updateRemotes } from "./net.js";
+import { connectFirebase } from "./net_firebase.js";
+import { FIREBASE_CONFIG } from "./firebase-config.js";
+import { createMusic } from "./audio.js";
+import { makeCamera, updateCamera, draw } from "./render.js";
+import {
+  setupUI, isChatOpen, toggleChat, submitChat,
+  updateZoneBanner, drawMinimap, refreshOnlineList, addSystemLine,
+} from "./ui.js";
+
+const canvas = document.getElementById("game");
+const ctx = canvas.getContext("2d");
+const input = new Set();
+const joy = { x: 0, y: 0, active: false };
+const controls = { keys: input, joy };
+
+function fitCanvas() {
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+}
+window.addEventListener("resize", fitCanvas);
+fitCanvas();
+
+const world = await loadWorld(CONFIG);
+const cam = makeCamera(CONFIG);
+let ui = null;
+
+// ---------- เพลงประกอบ ----------
+const music = createMusic();
+const musicBtn = document.getElementById("music-btn");
+const updateMusicBtn = () => { musicBtn.textContent = music.isMuted() ? "🔇" : "🎵"; };
+musicBtn.addEventListener("click", () => { music.toggle(); updateMusicBtn(); });
+updateMusicBtn();
+// autoplay ต้องรอ gesture แรก (คลิก/แตะ/กดคีย์) — เรียกซ้ำได้ ไม่มีผลข้างเคียง
+window.addEventListener("pointerdown", () => music.start(), { once: true });
+window.addEventListener("keydown", () => music.start(), { once: true });
+window.__music = music; // hook สำหรับ automated test ผ่าน cdp_shot --eval
+
+// ---------- หน้าจอเริ่มเกม: ชื่อ + เพศ + เลือกตัวละคร + สีผม/สีเสื้อ ----------
+const saved = JSON.parse(localStorage.getItem("dataxtown.avatar") || "null") || {};
+const CPG = CONFIG.colorsPerGender;
+const savedVariant = saved.variant ?? Math.floor(Math.random() * CONFIG.avatarVariants);
+let chosenGender = Math.floor(savedVariant / CPG); // 0 ชาย, 1 หญิง
+let chosenColor = savedVariant % CPG;
+let chosenHair = saved.hair ?? null;    // null = สีเดิมของ variant
+let chosenShirt = saved.shirt ?? null;
+if (saved.name) document.getElementById("name-input").value = saved.name;
+
+const variantIndex = () => chosenGender * CPG + chosenColor;
+const picker = document.getElementById("avatar-picker");
+const genderPicker = document.getElementById("gender-picker");
+
+function rebuildPicker() {
+  picker.textContent = "";
+  for (let v = 0; v < CPG; v++) {
+    const row = chosenGender * CPG + v;
+    const c = document.createElement("canvas");
+    c.width = CONFIG.frameW; c.height = CONFIG.frameH;
+    const cc = c.getContext("2d");
+    cc.imageSmoothingEnabled = false;
+    cc.drawImage(world.sheetImg, 0, row * CONFIG.frameH, CONFIG.frameW, CONFIG.frameH, 0, 0, CONFIG.frameW, CONFIG.frameH);
+    if (v === chosenColor) c.classList.add("selected");
+    c.addEventListener("click", () => {
+      picker.querySelectorAll("canvas").forEach(el => el.classList.remove("selected"));
+      c.classList.add("selected");
+      chosenColor = v;
+      updatePreview();
+    });
+    picker.appendChild(c);
+  }
+}
+
+function refreshGenderButtons() {
+  genderPicker.querySelectorAll("button").forEach(b =>
+    b.classList.toggle("selected", Number(b.dataset.gender) === chosenGender));
+}
+genderPicker.querySelectorAll("button").forEach(b => b.addEventListener("click", () => {
+  chosenGender = Number(b.dataset.gender);
+  refreshGenderButtons();
+  rebuildPicker();
+  updatePreview();
+}));
+refreshGenderButtons();
+rebuildPicker();
+
+// แถบสี: ช่องแรก (✕) = กลับไปใช้สีเดิมของตัวละคร
+function buildSwatchRow(elId, colors, getValue, setValue) {
+  const row = document.getElementById(elId);
+  const options = [null, ...colors];
+  for (const color of options) {
+    const sw = document.createElement("div");
+    sw.className = "sw" + (color === null ? " auto" : "");
+    if (color) sw.style.background = color;
+    if (color === getValue()) sw.classList.add("selected");
+    sw.addEventListener("click", () => {
+      row.querySelectorAll(".sw").forEach(el => el.classList.remove("selected"));
+      sw.classList.add("selected");
+      setValue(color);
+      updatePreview();
+    });
+    row.appendChild(sw);
+  }
+  if (!row.querySelector(".selected")) row.firstChild.classList.add("selected");
+}
+buildSwatchRow("hair-picker", HAIR_COLORS, () => chosenHair, c => { chosenHair = c; });
+buildSwatchRow("shirt-picker", SHIRT_COLORS, () => chosenShirt, c => { chosenShirt = c; });
+
+function updatePreview() {
+  const sheet = makeCustomSheet(world, variantIndex(), { hair: chosenHair, shirt: chosenShirt });
+  const pc = document.getElementById("avatar-preview").getContext("2d");
+  pc.imageSmoothingEnabled = false;
+  pc.clearRect(0, 0, CONFIG.frameW, CONFIG.frameH);
+  pc.drawImage(sheet, 0, 0, CONFIG.frameW, CONFIG.frameH, 0, 0, CONFIG.frameW, CONFIG.frameH);
+}
+updatePreview();
+
+document.getElementById("start-btn").addEventListener("click", startGame);
+document.getElementById("name-input").addEventListener("keydown", e => {
+  if (e.key === "Enter") startGame();
+});
+
+// เปิดเกมข้าม overlay: index.html?autostart=1&name=Test&hair=c94f4f&shirt=2e6b4f (hex ไม่ต้องใส่ #)
+const params = new URLSearchParams(location.search);
+if (params.get("hair")) chosenHair = "#" + params.get("hair").replace("#", "");
+if (params.get("shirt")) chosenShirt = "#" + params.get("shirt").replace("#", "");
+if (params.get("autostart")) {
+  document.getElementById("name-input").value = params.get("name") || "Tester";
+  startGame();
+}
+
+// &settle=6000 หน่วง load event ด้วยเวลาจริง — ใช้คู่กับ headless screenshot
+// เพื่อให้ WebSocket/realtime มีเวลาทำงานก่อนภาพถูกถ่าย (อย่าใช้กับ --virtual-time-budget)
+const settleMs = parseInt(params.get("settle") || "0", 10);
+if (settleMs > 0) await new Promise(r => setTimeout(r, settleMs));
+
+function startGame() {
+  const name = document.getElementById("name-input").value.trim() || "Guest";
+  document.getElementById("start-overlay").classList.add("hidden");
+
+  const sp = spawnPoint(world, new URLSearchParams(location.search).get("spawn") || "main_entrance");
+  world.player = makeEntity({ id: "player", name, variant: variantIndex(), x: sp.x, y: sp.y, kind: "player" });
+  world.player.hair = chosenHair;
+  world.player.shirt = chosenShirt;
+  if (chosenHair || chosenShirt) {
+    world.player.sheet = makeCustomSheet(world, variantIndex(), { hair: chosenHair, shirt: chosenShirt });
+  }
+  world.entities.push(world.player);
+  localStorage.setItem("dataxtown.avatar", JSON.stringify({
+    name, variant: variantIndex(), hair: chosenHair, shirt: chosenShirt,
+  }));
+
+  for (const n of NPCS) {
+    const ent = makeEntity({
+      id: "npc_" + n.name, name: n.name, role: n.role, variant: n.variant,
+      x: (n.home[0] + 0.5) * world.tile, y: (n.home[1] + 0.5) * world.tile,
+    });
+    ent.home = [ent.x, ent.y];
+    ent.roam = n.roam;
+    ent.lines = n.lines;
+    world.entities.push(ent);
+  }
+
+  ui = setupUI(world);
+  refreshOnlineList(ui, world);
+  addSystemLine(ui, `ยินดีต้อนรับสู่ DataX ชั้น 7 คุณ ${name} 👋 เดินเข้าใกล้เพื่อนร่วมงานเพื่อคุยกัน`);
+  // มี Firebase config = multiplayer ผ่าน cloud (URL ถาวร, ไม่ต้องมีเซิร์ฟเวอร์เอง)
+  // ไม่มี = ใช้ WebSocket server ในเครื่อง (server.py) แบบเดิม
+  if (FIREBASE_CONFIG) connectFirebase(world, ui);
+  else connectNet(world, ui);
+  requestAnimationFrame(loop);
+}
+
+// ---------- คีย์บอร์ด ----------
+window.addEventListener("keydown", e => {
+  if (!world.player) return;
+  if (ui && isChatOpen(ui)) {
+    if (e.key === "Enter") submitChat(ui, world);
+    if (e.key === "Escape") toggleChat(ui, world, false);
+    return;
+  }
+  if (e.key === "Enter") { toggleChat(ui, world, true); e.preventDefault(); return; }
+  if (e.code === "Equal" || e.key === "+") cam.zoom = Math.min(4, cam.zoom + 1);
+  if (e.code === "Minus" || e.key === "-") cam.zoom = Math.max(1, cam.zoom - 1);
+  if (e.code === "KeyM") document.getElementById("minimap").classList.toggle("hidden");
+  if (e.code === "KeyB") { music.toggle(); updateMusicBtn(); }
+  input.add(e.code);
+});
+window.addEventListener("keyup", e => input.delete(e.code));
+window.addEventListener("blur", () => input.clear());
+
+// ---------- จอสัมผัส: virtual joystick + ปุ่มแชต ----------
+const isTouch = new URLSearchParams(location.search).get("touch") === "1"
+  || matchMedia("(pointer: coarse)").matches;
+if (isTouch) {
+  document.body.classList.add("touch");
+  const joyEl = document.getElementById("joystick");
+  const stickEl = document.getElementById("stick");
+  let joyPointer = null;
+
+  const updateStick = e => {
+    const rect = joyEl.getBoundingClientRect();
+    const r = rect.width / 2;
+    let jx = (e.clientX - (rect.left + r)) / r;
+    let jy = (e.clientY - (rect.top + r)) / r;
+    const mag = Math.hypot(jx, jy);
+    if (mag > 1) { jx /= mag; jy /= mag; }
+    joy.x = jx; joy.y = jy; joy.active = true;
+    stickEl.style.transform = `translate(calc(-50% + ${jx * r * 0.55}px), calc(-50% + ${jy * r * 0.55}px))`;
+  };
+  const resetStick = () => {
+    joyPointer = null;
+    joy.x = 0; joy.y = 0; joy.active = false;
+    stickEl.style.transform = "translate(-50%, -50%)";
+  };
+  joyEl.addEventListener("pointerdown", e => {
+    joyPointer = e.pointerId;
+    joyEl.setPointerCapture(e.pointerId);
+    updateStick(e);
+    e.preventDefault();
+  });
+  joyEl.addEventListener("pointermove", e => {
+    if (e.pointerId === joyPointer) updateStick(e);
+  });
+  joyEl.addEventListener("pointerup", resetStick);
+  joyEl.addEventListener("pointercancel", resetStick);
+
+  document.getElementById("chat-btn").addEventListener("click", () => {
+    if (!ui) return;
+    if (isChatOpen(ui)) submitChat(ui, world);
+    else toggleChat(ui, world, true);
+  });
+}
+
+// ---------- Game loop ----------
+let last = performance.now();
+function loop(now) {
+  const dt = Math.min((now - last) / 1000, 0.1);
+  last = now;
+  world.time += dt;
+
+  if (!isChatOpen(ui)) updatePlayer(world, controls, dt);
+  for (const ent of world.entities) if (ent.kind === "npc") updateNPC(world, ent, dt);
+  updateRemotes(world, dt);
+
+  updateCamera(cam, world, canvas);
+  draw(ctx, world, cam);
+  updateZoneBanner(ui, world);
+  drawMinimap(ui, world);
+
+  requestAnimationFrame(loop);
+}
