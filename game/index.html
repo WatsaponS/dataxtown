@@ -14,6 +14,7 @@
     <div id="zone-banner" class="hidden"></div>
     <canvas id="minimap" width="160" height="160"></canvas>
     <button id="music-btn" type="button" title="เปิด/ปิดเพลง (B)">🎵</button>
+    <div id="score-badge" title="เปิด leaderboard (L)">🏆 0</div>
     <div id="online-badge">👥 1</div>
     <div id="online-list"></div>
     <div id="chat-log"></div>
@@ -24,6 +25,25 @@
     <div id="touch-ui">
       <div id="joystick"><div id="stick"></div></div>
       <button id="chat-btn" type="button">💬</button>
+    </div>
+    <div id="quest-hint" class="hidden">❓ กดที่นี่หรือกด E เพื่อเริ่ม Quiz Databricks</div>
+  </div>
+
+  <div id="quiz-overlay" class="hidden">
+    <div id="quiz-card">
+      <div id="quiz-progress"></div>
+      <div id="quiz-question"></div>
+      <div id="quiz-choices"></div>
+      <div id="quiz-feedback"></div>
+      <button id="quiz-next" class="hidden" type="button">ข้อต่อไป →</button>
+    </div>
+  </div>
+
+  <div id="board-overlay" class="hidden">
+    <div id="board-card">
+      <h2>🏆 Leaderboard</h2>
+      <div id="board-list"></div>
+      <button id="board-close" type="button">ปิด</button>
     </div>
   </div>
 

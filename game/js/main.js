@@ -8,6 +8,7 @@ import { connectNet, updateRemotes } from "./net.js";
 import { connectFirebase } from "./net_firebase.js";
 import { FIREBASE_CONFIG } from "./firebase-config.js";
 import { createMusic } from "./audio.js";
+import { initQuests, updateQuests, tryStartQuiz, isQuizOpen, toggleBoard } from "./quests.js";
 import { makeCamera, updateCamera, draw } from "./render.js";
 import {
   setupUI, isChatOpen, toggleChat, submitChat,
@@ -40,7 +41,8 @@ updateMusicBtn();
 // autoplay ต้องรอ gesture แรก (คลิก/แตะ/กดคีย์) — เรียกซ้ำได้ ไม่มีผลข้างเคียง
 window.addEventListener("pointerdown", () => music.start(), { once: true });
 window.addEventListener("keydown", () => music.start(), { once: true });
-window.__music = music; // hook สำหรับ automated test ผ่าน cdp_shot --eval
+window.__music = music; // hooks สำหรับ automated test ผ่าน cdp_shot --eval
+window.__world = world;
 
 // ---------- หน้าจอเริ่มเกม: ชื่อ + เพศ + เลือกตัวละคร + สีผม/สีเสื้อ ----------
 const saved = JSON.parse(localStorage.getItem("dataxtown.avatar") || "null") || {};
@@ -171,8 +173,10 @@ function startGame() {
   addSystemLine(ui, `ยินดีต้อนรับสู่ DataX ชั้น 7 คุณ ${name} 👋 เดินเข้าใกล้เพื่อนร่วมงานเพื่อคุยกัน`);
   // มี Firebase config = multiplayer ผ่าน cloud (URL ถาวร, ไม่ต้องมีเซิร์ฟเวอร์เอง)
   // ไม่มี = ใช้ WebSocket server ในเครื่อง (server.py) แบบเดิม
-  if (FIREBASE_CONFIG) connectFirebase(world, ui);
-  else connectNet(world, ui);
+  const netReady = FIREBASE_CONFIG
+    ? connectFirebase(world, ui)
+    : Promise.resolve(connectNet(world, ui));
+  netReady.then(() => initQuests(world, ui)); // quest ต้องรอ net เพื่อผูก leaderboard
   requestAnimationFrame(loop);
 }
 
@@ -189,6 +193,9 @@ window.addEventListener("keydown", e => {
   if (e.code === "Minus" || e.key === "-") cam.zoom = Math.max(1, cam.zoom - 1);
   if (e.code === "KeyM") document.getElementById("minimap").classList.toggle("hidden");
   if (e.code === "KeyB") { music.toggle(); updateMusicBtn(); }
+  if (e.code === "KeyE" && !isQuizOpen(world)) tryStartQuiz(world, ui);
+  if (e.code === "KeyL") toggleBoard(world, document.getElementById("board-overlay").classList.contains("hidden"));
+  if (e.key === "Escape") toggleBoard(world, false);
   input.add(e.code);
 });
 window.addEventListener("keyup", e => input.delete(e.code));
@@ -244,9 +251,10 @@ function loop(now) {
   last = now;
   world.time += dt;
 
-  if (!isChatOpen(ui)) updatePlayer(world, controls, dt);
+  if (!isChatOpen(ui) && !isQuizOpen(world)) updatePlayer(world, controls, dt);
   for (const ent of world.entities) if (ent.kind === "npc") updateNPC(world, ent, dt);
   updateRemotes(world, dt);
+  updateQuests(world);
 
   updateCamera(cam, world, canvas);
   draw(ctx, world, cam);

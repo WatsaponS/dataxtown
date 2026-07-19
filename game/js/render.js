@@ -1,6 +1,7 @@
 // กล้อง + เรนเดอร์ทุกอย่างลง canvas หลัก
 
 import { canHear, spriteFrame } from "./entities.js";
+import { drawQuestMarkers } from "./quests.js";
 
 export function makeCamera(config) {
   return { x: 0, y: 0, zoom: config.defaultZoom };
@@ -53,6 +54,8 @@ export function draw(ctx, world, cam) {
     ctx.drawImage(img, sx, sy, config.frameW, config.frameH, dx, dy, config.frameW, config.frameH);
   }
   ctx.restore();
+
+  drawQuestMarkers(ctx, world, cam);
 
   // ป้ายชื่อ + bubble วาดใน screen space (คมชัดทุกระดับซูม)
   for (const ent of sorted) {

@@ -105,6 +105,13 @@ export function drawMinimap(ui, world) {
     const x = (ent.x / world.tile) * s, y = (ent.y / world.tile) * s;
     c.fillRect(x - 1.5, y - 1.5, 3, 3);
   }
+  if (world.quests) {
+    c.fillStyle = "#fff0cf";
+    for (const spot of world.quests.spots) {
+      const x = (spot.x / world.tile) * s, y = (spot.y / world.tile) * s;
+      c.fillRect(x - 2, y - 2, 4, 4);
+    }
+  }
 }
 
 export function refreshOnlineList(ui, world) {

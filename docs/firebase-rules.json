@@ -20,15 +20,12 @@
         }
       }
     },
-    "players": {
-      ".read": true,
-      "$uid": {
-        "points": { ".write": false }
-      }
-    },
     "leaderboard": {
       ".read": true,
-      ".write": false
+      "$uid": {
+        ".write": true,
+        ".validate": "newData.child('name').isString() && newData.child('name').val().length <= 24 && newData.child('points').isNumber() && newData.child('points').val() >= 0 && newData.child('points').val() <= 1000000"
+      }
     }
   }
 }

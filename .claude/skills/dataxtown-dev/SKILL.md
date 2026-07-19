@@ -36,8 +36,11 @@ URL params สำหรับทดสอบ: `autostart=1` ข้าม overlay
 ทดสอบจอมือถือ: `cdp_shot.py --width 390 --height 844` (แนวตั้ง) / `--width 844 --height 390` (แนวนอน)
 ร่วมกับ `touch=1` — เช็คว่า joystick+ปุ่มแชตโผล่, minimap ย่อ, online list เป็น badge 👥
 
-รัน JS ในหน้าเกมได้ด้วย `cdp_shot.py --eval "<expr>"` (มี user gesture + await promise ให้ —
-ใช้ทดสอบของที่ต้องการ gesture เช่นเพลง: `__music` ถูก expose ไว้บน window แล้ว
+รัน JS ในหน้าเกมได้ด้วย `cdp_shot.py --eval "<expr>"` (มี user gesture + await promise ให้)
+— ⚠️ PowerShell 5.1 ต้องเรียกแบบ `python --% cdp_shot.py ...` (stop-parsing) ไม่งั้น quote พัง
+และห้ามต่อคำสั่งอื่นหลัง `;` ในบรรทัดเดียวกับ `--%`
+hooks บน window: `__music` (เพลง), `__world` (world ทั้งก้อน — ใช้ teleport/เช็ค quests/points ได้
+เช่น `__world.player.x = __world.quests.spots[0].x` แล้วคลิก #quest-hint เพื่อทำ quiz อัตโนมัติ
 ตัวอย่าง: `--eval "(async()=>{window.__err=null;addEventListener('error',e=>__err=e.message);__music.start();await new Promise(r=>setTimeout(r,2500));return 'err='+__err;})()"`)
 
 ### วิธี verify (ไม่มี JS test runner — ตรวจด้วย screenshot)
@@ -76,6 +79,8 @@ python game/tools/cdp_shot.py --url "http://localhost:8700/index.html?autostart=
 | bootstrap, game loop, คีย์บอร์ด, URL params | `game/js/main.js` |
 | multiplayer client (remote entity, interpolation, sync) | `game/js/net.js` |
 | เพลงประกอบ (Web Audio sequencer — BPM, progression, เมโลดี้, mix) | `game/js/audio.js` |
+| ระบบ quest ❓ + quiz modal + leaderboard | `game/js/quests.js` |
+| คลังข้อสอบ Databricks 100 ข้อ (เพิ่ม/แก้โจทย์ที่นี่) | `game/js/quiz_data.js` |
 | multiplayer server + protocol (JSON: join/move/chat) | `game/server.py` |
 | **ผังชั้น 7** (ห้อง, โต๊ะ, collision, spawn, โซน) | `pixel-art/scb-park-west-b-floor7/build.py` |
 | หน้าตา avatar | `game/assets/build_avatars.py` |
