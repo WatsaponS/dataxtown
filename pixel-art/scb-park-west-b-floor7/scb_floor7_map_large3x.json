@@ -1144,8 +1144,8 @@
       ]
     },
     {
-      "id": "north_meeting_room",
-      "type": "meeting",
+      "id": "cro_office",
+      "type": "risk_executive",
       "rect": [
         13,
         2,

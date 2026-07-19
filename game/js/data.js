@@ -29,7 +29,7 @@ export const SHIRT_COLORS = [
 export const ZONE_INFO = {
   playback:             { name: "🎤 Play Back Stage", note: "โซนกิจกรรมรวม — ทุกคนบนเวทีได้ยินกันหมด" },
   cco_office:           { name: "🤝 ห้องพี่หว่า (CCO)", note: "ปรึกษาเรื่องลูกค้า/ดีลได้ที่นี่" },
-  north_meeting_room:   { name: "🧑‍💼 ห้องประชุมเหนือ", note: "เสียงไม่รั่วออกนอกห้อง" },
+  cro_office:           { name: "🛡️ ห้องคุณ Manis (CRO)", note: "ปรึกษาความเสี่ยงและ compliance" },
   cdo_office:           { name: "📊 ห้องพี่แตน (CDO)", note: "คุยเรื่องข้อมูลและ insight" },
   cfo_finance:          { name: "💰 ห้องคุณ TT (CFO)", note: "เรื่องงบและการเงิน เชิญทางนี้" },
   cto_technology:       { name: "💻 ห้องพี่อ้อ (CTO)", note: "คุยเทคนิค/architecture ได้เต็มที่" },
@@ -47,7 +47,7 @@ export const ZONE_INFO = {
 // ประเภทโซนที่ "เสียงไม่รั่ว" — ต้องอยู่โซน id เดียวกันถึงได้ยินกัน (ใช้ใน canHear)
 export const PRIVATE_ZONE_TYPES = new Set([
   "private_audio", "presentation", "meeting",
-  "executive_consultation", "data_executive", "executive_finance", "technology",
+  "executive_consultation", "data_executive", "executive_finance", "technology", "risk_executive",
 ]);
 
 // ทีมผู้บริหาร DataX (NPC) — home คือ tile ประจำ (grid 32, tile 48px) แต่ละคนประจำห้อง/โซนของตัวเอง
@@ -75,6 +75,14 @@ export const NPCS = [
       "ฟังเสียงลูกค้าเยอะ ๆ นะครับ insight ดี ๆ อยู่ตรงนั้นแหละ",
       "ดีลไหนติดขัด มาปรึกษาพี่หว่าได้เสมอครับ",
       "เป้า Q นี้ไม่ไกลเกินเอื้อม ช่วยกันอีกนิดครับทุกคน 🔥",
+    ] },
+  { name: "คุณ Manis", role: "CRO", variant: 5, home: [15, 3], roam: 1,
+    lines: [
+      "ความเสี่ยงไม่ใช่สิ่งที่ต้องกลัว แต่ต้องรู้จักมันให้ดีพอครับ",
+      "ก่อน launch อะไรใหม่ แวะมาคุยเรื่อง risk กับคุณ Manis ได้เสมอครับ",
+      "Data governance ที่ดี = ความเสี่ยงที่ต่ำ ขอบคุณที่ช่วยกันดูแลนะครับ",
+      "เจออะไรผิดปกติ รีบแจ้งทันที อย่าเก็บไว้คนเดียวนะครับ 🛡️",
+      "กล้าเสี่ยงอย่างมีข้อมูล คือวิธีที่ DataX เติบโตอย่างปลอดภัยครับ",
     ] },
   { name: "พี่แตน", role: "CDO", variant: 11, home: [19, 3], roam: 1,
     lines: [

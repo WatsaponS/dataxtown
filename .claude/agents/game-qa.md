@@ -27,7 +27,7 @@ description: QA ของเกม DataX Town — ใช้ตรวจสอบ
 ## Checklist มาตรฐาน (รันตามนี้เว้นแต่ถูกสั่งเฉพาะจุด)
 
 1. **Static**: ไฟล์หลักตอบ 200 (index.html, js/main.js, assets/scb_floor7_map_large3x.json, assets/avatars.png)
-2. **Render smoke**: cdp_shot จุดเกิด main_entrance → เช็คด้วยตา: แผนที่ถูกต้อง, ผู้เล่น+NPC ผู้บริหาร 5 คนใน online list, minimap, badge 🏆/🎵
+2. **Render smoke**: cdp_shot จุดเกิด main_entrance → เช็คด้วยตา: แผนที่ถูกต้อง, ผู้เล่น+NPC ผู้บริหาร 6 คนใน online list (CEO/CTO/CCO/CRO/CDO/CFO), minimap, badge 🏆/🎵
 3. **Multiplayer**: PUT ผู้เล่นจำลองเข้า `rooms/main/players/qa_bot.json` (พิกัด px: tile 24px, entrance ≈ x=372 y=540) → screenshot ต้องเห็นตัวละคร qa_bot + จำนวน online เพิ่ม → DELETE ทิ้งเสมอ
 4. **Quest/Quiz**: eval script: teleport ไป `__world.quests.spots[0]` → คลิก #quest-hint → วนตอบข้อถูกด้วย `s.order.indexOf(item.a)` 3 ข้อ → คาดหวัง `points=30`, session ปิด, spots ยังมี 3 จุด
 5. **Leaderboard**: หลังข้อ 4 GET `<db>/leaderboard.json` ต้องมี entry ของ tester → **DELETE uid ทดสอบทิ้งเสมอ** (อย่าให้คะแนนปลอมค้างบนกระดานจริง)

@@ -431,10 +431,12 @@ if SPACE_SCALE == 3:
     # The desk chair is omitted here because its pedestal would fall directly
     # on the centered south-door axis; visitor seating remains off-axis.
     executive_desk(10.35,3.45,1.28,show_chair=False); guest_chairs(11.66,3.66,.46)
-    # Centre: general six-seat Meeting Room. A single shared table and presentation
-    # screen make its purpose legible at gameplay zoom while retaining a clear door aisle.
-    window_panel(13.35,2.35,2.3); whiteboard(13.45,3.25,2.35)
-    north_meeting_table()
+    # Centre: Chief Risk Officer (คุณ Manis). Risk-monitor dashboard and records
+    # cabinet on the back wall, executive desk west of the centered door aisle
+    # (x15) with visitor seating east of it — same grammar as the flanking offices.
+    window_panel(13.35,2.35,2.3)
+    finance_dashboard(13.45,3.25,1.65); cabinet(15.35,3.25,.55,.72)
+    executive_desk(13.6,4.4,1.35); guest_chairs(15.7,4.7,.5)
     # Right: Chief Data Officer. Cool multi-panel analytics wall, executive desk,
     # technical library and one visitor chair form a distinct data-focused office.
     window_panel(17.35,2.35,3.3); data_dashboard(17.55,3.22,2.8)
@@ -757,7 +759,7 @@ data = {
     {"id":"east_workspace","tile":[26,17] if SPACE_SCALE==3 else [22,14]}],
   "interactionZones":[
     {"id":"cco_office","type":"executive_consultation","rect":[10,2,3,4],"anchor":[11,5]},
-    {"id":"north_meeting_room","type":"meeting","rect":[13,2,4,4],"anchor":[15,5]},
+    {"id":"cro_office","type":"risk_executive","rect":[13,2,4,4],"anchor":[15,5]},
     {"id":"cdo_office","type":"data_executive","rect":[17,2,5,4],"anchor":[19,5]},
     {"id":"playback","type":"presentation","rect":[10,6,12,4]},
     {"id":"phone_booth_northwest","type":"private_audio","rect":[8,2,2,4]},
