@@ -57,6 +57,7 @@ export function createMusic() {
   let muted = localStorage.getItem("dataxtown.music") === "off";
   let moodName = "default";
   let mood = MOODS.default;
+  let melodyOct = 0; // latch ค่าจาก mood ที่ต้นบาร์เท่านั้น — เมโลดี้ไม่กระโดด octave กลางวลี
 
   function ensureCtx() {
     if (!ctx) {
@@ -133,9 +134,10 @@ export function createMusic() {
       chord.forEach((n, i) => tone(n, t + i * 0.014, 0.55, { vol: 0.032 * mood.chordBoost, cutoff: 1500 }));
     }
 
-    // เมโลดี้ (บนเวทียกขึ้น 1 octave ให้สว่าง)
+    // เมโลดี้ (บนเวทียกขึ้น 1 octave ให้สว่าง — สลับที่ต้นบาร์, cutoff เปิดตามช่วงเสียง)
+    if (inBar === 0) melodyOct = mood.melodyOct;
     for (const [ms, midi, len] of MELODY[bar]) {
-      if (ms === inBar) tone(midi + mood.melodyOct, t, len, { type: "square", vol: 0.04, cutoff: 1200 });
+      if (ms === inBar) tone(midi + melodyOct, t, len, { type: "square", vol: 0.04, cutoff: melodyOct ? 2400 : 1200 });
     }
   }
 
@@ -182,11 +184,17 @@ export function createMusic() {
       moodName = name;
       mood = MOODS[name];
       if (ctx && master) {
+        // anchor ค่าปัจจุบันก่อน ramp — กัน jump/คลิกตอนสลับโซนเร็ว หรือ ramp แรกสุด
         const t = ctx.currentTime;
+        const g = master.gain.value;
         master.gain.cancelScheduledValues(t);
+        master.gain.setValueAtTime(g, t);
         master.gain.linearRampToValueAtTime(BASE_GAIN * mood.gain, t + 1.0);
+        const f = Math.max(masterFilter.frequency.value, 40);
         masterFilter.frequency.cancelScheduledValues(t);
-        masterFilter.frequency.linearRampToValueAtTime(mood.cutoff, t + 1.0);
+        masterFilter.frequency.setValueAtTime(f, t);
+        // exponential ให้ sweep สม่ำเสมอตามการได้ยิน (linear Hz จะไปกระจุกท้าย ramp)
+        masterFilter.frequency.exponentialRampToValueAtTime(mood.cutoff, t + 1.0);
       }
     },
     zoneMood: () => moodName, // สำหรับ automated test

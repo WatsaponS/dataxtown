@@ -6,7 +6,7 @@ export const CONFIG = {
   avatarMeta: "assets/avatars.json",
   walkSpeed: 90,          // px/วินาที
   runMultiplier: 1.6,
-  proximityRadius: 64,    // 4 tiles — ระยะ "ได้ยินกัน"
+  proximityRadius: 88,    // ~3.7 tiles (tile 24px) — ระยะ "ได้ยินกัน" ครอบกลุ่มโซฟา/คลัสเตอร์คุยงาน
   bubbleSeconds: 6,
   defaultZoom: 2,
   frameW: 16, frameH: 24,
@@ -53,7 +53,7 @@ export const PRIVATE_ZONE_TYPES = new Set([
 // ทีมผู้บริหาร DataX (NPC) — home คือ tile ประจำ (grid 32, tile 48px) แต่ละคนประจำห้อง/โซนของตัวเอง
 // variant: 0-7 ชาย, 8-15 หญิง (ดู build_avatars.py) — บทพูดสุ่มจาก lines เมื่อผู้เล่นเข้าใกล้
 export const NPCS = [
-  { name: "พี่หนุ่ม", role: "CEO", variant: 0, home: [16, 8], roam: 3,
+  { name: "พี่หนุ่ม", role: "CEO", variant: 0, home: [15, 8], roam: 2,
     lines: [
       "DataX จะไปได้ไกลแค่ไหน อยู่ที่พวกเราทุกคนครับ 🚀",
       "ล้มได้ แต่ลุกให้เร็ว เรียนรู้ให้ไวนะครับ",

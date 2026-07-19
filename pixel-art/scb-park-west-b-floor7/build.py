@@ -757,7 +757,7 @@ data = {
     {"id":"cco_office","type":"executive_consultation","rect":[10,2,3,4],"anchor":[11,5]},
     {"id":"north_meeting_room","type":"meeting","rect":[13,2,4,4],"anchor":[15,5]},
     {"id":"cdo_office","type":"data_executive","rect":[17,2,5,4],"anchor":[19,5]},
-    {"id":"playback","type":"presentation","rect":[12,6,9,4]},
+    {"id":"playback","type":"presentation","rect":[10,6,12,4]},
     {"id":"phone_booth_northwest","type":"private_audio","rect":[8,2,2,4]},
     {"id":"cfo_finance","type":"executive_finance","rect":[22,11,6,5],"anchor":[22,13]},
     {"id":"cto_technology","type":"technology","rect":[1,21,4,4],"anchor":[4,22]},
