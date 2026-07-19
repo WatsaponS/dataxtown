@@ -14,6 +14,13 @@ description: Develop and modify the DataX Town game (Gather Town-style virtual o
 - มี Python 3.11 + Pillow — ใช้สร้าง asset ทุกชิ้น (deterministic scripts, ห้ามแก้ PNG ตรง ๆ)
 - ต้องเปิดผ่าน http server (ES modules ใช้ file:// ไม่ได้)
 
+## Agents ประจำโปรเจกต์ (.claude/agents/)
+
+- **game-qa** — ตรวจเกมครบทุกระบบด้วยหลักฐานจริง (checklist 8 ข้อ: render, multiplayer,
+  quest, leaderboard, มือถือ, เพลง) — ใช้หลังแก้โค้ด/ก่อน push
+- **map-design-review** — รีวิวการออกแบบแผนที่ (collision overlay, flood-fill reachability,
+  โซน/spawn, ความอ่านง่ายของ art) — ใช้เมื่อจะแก้ build.py หรือปรับผัง
+
 ## รัน / ทดสอบ
 
 ```powershell
