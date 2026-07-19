@@ -1,7 +1,7 @@
 // Bootstrap + game loop ของ DataX Town
 
 import { CONFIG, NPCS, HAIR_COLORS, SHIRT_COLORS } from "./data.js";
-import { loadWorld, spawnPoint } from "./world.js";
+import { loadWorld, spawnPoint, zoneAt } from "./world.js";
 import { makeEntity, updatePlayer, updateNPC } from "./entities.js";
 import { makeCustomSheet } from "./avatar.js";
 import { connectNet, updateRemotes } from "./net.js";
@@ -255,6 +255,7 @@ function loop(now) {
   for (const ent of world.entities) if (ent.kind === "npc") updateNPC(world, ent, dt);
   updateRemotes(world, dt);
   updateQuests(world);
+  music.setZone(zoneAt(world, world.player.x, world.player.y)); // เพลงเปลี่ยนตามโซน
 
   updateCamera(cam, world, canvas);
   draw(ctx, world, cam);

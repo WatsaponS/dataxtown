@@ -1,6 +1,9 @@
 // เพลงประกอบ lo-fi/chiptune สังเคราะห์สดด้วย Web Audio API — ไม่ใช้ไฟล์เสียง
 // ลูป 8 บาร์ @96 BPM สวิงเบา ๆ: เบส + คอร์ดสแต็บ + เมโลดี้เพนทาโทนิก + กลองจากสัญญาณ noise
 // เริ่มเล่นได้หลัง user gesture เท่านั้น (นโยบาย autoplay ของเบราว์เซอร์) — main.js จัดการให้
+// Zone-aware: เพลงเปลี่ยนคาแรกเตอร์ตามโซนที่ผู้เล่นยืน (main.js เรียก music.setZone ทุกเฟรม)
+
+import { PRIVATE_ZONE_TYPES } from "./data.js";
 
 const BPM = 96;
 const SPB = 60 / BPM;          // วินาทีต่อ beat
@@ -30,16 +33,41 @@ const MELODY = [
 
 const mtof = m => 440 * Math.pow(2, (m - 69) / 12);
 
+const BASE_GAIN = 0.2; // ดังขึ้นจากเดิม (0.14) แต่ยังเป็น background ไม่กลบการคุยงาน
+
+// คาแรกเตอร์เพลงต่อโซน — gain คูณกับ BASE_GAIN, cutoff คือ lowpass ปลายทาง (Hz)
+// hatBoost/chordBoost คูณความดังราย instrument, melodyOct ยกเมโลดี้ขึ้นทั้ง octave
+const MOODS = {
+  default: { gain: 1.0,  cutoff: 18000, hatBoost: 1.0, chordBoost: 1.0,  melodyOct: 0 },  // ทางเดิน/ทั่วไป
+  stage:   { gain: 1.15, cutoff: 18000, hatBoost: 1.6, chordBoost: 1.25, melodyOct: 12 }, // เวที: คึกคัก สว่าง
+  social:  { gain: 1.05, cutoff: 18000, hatBoost: 0.7, chordBoost: 1.35, melodyOct: 0 },  // pantry/โซฟา: อบอุ่น
+  muffled: { gain: 0.5,  cutoff: 650,   hatBoost: 0.4, chordBoost: 1.0,  melodyOct: 0 },  // ห้องปิด: ลอดผนัง
+};
+
+function moodForZone(zone) {
+  if (!zone) return "default";
+  if (zone.type === "presentation") return "stage";
+  if (zone.type === "social" || zone.type === "refreshment") return "social";
+  if (PRIVATE_ZONE_TYPES.has(zone.type)) return "muffled";
+  return "default"; // transit ฯลฯ
+}
+
 export function createMusic() {
-  let ctx = null, master = null, timer = null, step = 0, nextTime = 0;
+  let ctx = null, master = null, masterFilter = null, timer = null, step = 0, nextTime = 0;
   let muted = localStorage.getItem("dataxtown.music") === "off";
+  let moodName = "default";
+  let mood = MOODS.default;
 
   function ensureCtx() {
     if (!ctx) {
       ctx = new (window.AudioContext || window.webkitAudioContext)();
+      masterFilter = ctx.createBiquadFilter();
+      masterFilter.type = "lowpass";
+      masterFilter.frequency.value = mood.cutoff;
       master = ctx.createGain();
-      master.gain.value = 0.14; // เบา ๆ เป็น background
-      master.connect(ctx.destination);
+      master.gain.value = BASE_GAIN * mood.gain;
+      master.connect(masterFilter);
+      masterFilter.connect(ctx.destination);
     }
   }
 
@@ -91,9 +119,9 @@ export function createMusic() {
     const [bass, chord] = PROG[bar % 4];
 
     // กลอง: hat ทุก 8th (เว้นจังหวะแผ่ว), kick ต้น/กลางบาร์, rim ที่ beat 2 กับ 4
-    if (!(bar % 2 === 1 && inBar === 7)) noiseHit(t, 0.04, inBar % 2 ? 0.018 : 0.032, 7500, 1.5);
+    if (!(bar % 2 === 1 && inBar === 7)) noiseHit(t, 0.04, (inBar % 2 ? 0.018 : 0.032) * mood.hatBoost, 7500, 1.5);
     if (inBar === 0 || inBar === 4) kick(t);
-    if (inBar === 2 || inBar === 6) noiseHit(t, 0.07, 0.05, 1900, 0.9);
+    if (inBar === 2 || inBar === 6) noiseHit(t, 0.07, 0.05 * mood.hatBoost, 1900, 0.9);
 
     // เบส: root ต้นบาร์, คั่นด้วยคู่ 5 และ root ท้ายบาร์
     if (inBar === 0) tone(bass, t, 0.9, { vol: 0.09, cutoff: 700 });
@@ -102,12 +130,12 @@ export function createMusic() {
 
     // คอร์ดสแต็บ off-beat แบบ roll นิด ๆ ให้ฟังนุ่ม
     if (inBar === 2 || inBar === 5) {
-      chord.forEach((n, i) => tone(n, t + i * 0.014, 0.55, { vol: 0.032, cutoff: 1500 }));
+      chord.forEach((n, i) => tone(n, t + i * 0.014, 0.55, { vol: 0.032 * mood.chordBoost, cutoff: 1500 }));
     }
 
-    // เมโลดี้
+    // เมโลดี้ (บนเวทียกขึ้น 1 octave ให้สว่าง)
     for (const [ms, midi, len] of MELODY[bar]) {
-      if (ms === inBar) tone(midi, t, len, { type: "square", vol: 0.04, cutoff: 1200 });
+      if (ms === inBar) tone(midi + mood.melodyOct, t, len, { type: "square", vol: 0.04, cutoff: 1200 });
     }
   }
 
@@ -147,5 +175,20 @@ export function createMusic() {
       return muted;
     },
     isMuted: () => muted,
+    // เรียกได้ทุกเฟรม — เปลี่ยน mood เฉพาะเมื่อโซนเปลี่ยน แล้ว ramp นุ่ม ๆ ~1 วินาที
+    setZone(zone) {
+      const name = moodForZone(zone);
+      if (name === moodName) return;
+      moodName = name;
+      mood = MOODS[name];
+      if (ctx && master) {
+        const t = ctx.currentTime;
+        master.gain.cancelScheduledValues(t);
+        master.gain.linearRampToValueAtTime(BASE_GAIN * mood.gain, t + 1.0);
+        masterFilter.frequency.cancelScheduledValues(t);
+        masterFilter.frequency.linearRampToValueAtTime(mood.cutoff, t + 1.0);
+      }
+    },
+    zoneMood: () => moodName, // สำหรับ automated test
   };
 }
