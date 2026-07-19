@@ -509,9 +509,11 @@ if SPACE_SCALE == 3:
     s.polygon([(int(11.3*TILE),ay),(int(11.72*TILE),ay-Z(14)),(int(11.72*TILE),ay-Z(6)),
                (int(12.5*TILE),ay-Z(6)),(int(12.5*TILE),ay+Z(6)),
                (int(11.72*TILE),ay+Z(6)),(int(11.72*TILE),ay+Z(14))],P["white"])
-    s.polygon([(int(19.7*TILE),ay),(int(19.28*TILE),ay-Z(14)),(int(19.28*TILE),ay-Z(6)),
-               (int(18.5*TILE),ay-Z(6)),(int(18.5*TILE),ay+Z(6)),
-               (int(19.28*TILE),ay+Z(6)),(int(19.28*TILE),ay+Z(14))],P["white"])
+    # East arrow mirrors the west one about the core axis: sits fully outside the
+    # portal threshold (tail 19.5 -> tip 20.7) instead of overlapping it.
+    s.polygon([(int(20.7*TILE),ay),(int(20.28*TILE),ay-Z(14)),(int(20.28*TILE),ay-Z(6)),
+               (int(19.5*TILE),ay-Z(6)),(int(19.5*TILE),ay+Z(6)),
+               (int(20.28*TILE),ay+Z(6)),(int(20.28*TILE),ay+Z(14))],P["white"])
     # South chevrons mark the preserved exit at tiles 15/16 -> 18.
     for k in range(2):
         sy=int((18.0+k*.42)*TILE)
@@ -552,7 +554,7 @@ if SPACE_SCALE == 3:
     cabinet(26.65,12.35,.65,1.05)
     meeting_table(23.0,13.35,25.9,14.15,4)
     whiteboard(22.55,12.0,1.75)
-    R(20,18,21,19,P["carpet"],P["wall"])
+    # (พรมชมพูข้าง core ถูกถอดออก — เคยอ่านเป็น "ห้องลับ" ที่ไม่มีป้าย/ฟังก์ชัน)
     # West-side collaboration mass balances the denser east workstation wing.
     wall_picture(7.65,8.0,.95,.55); cabinet(7.35,9.05,.8,1.0)
     tv_console(5.0,20.15,1.8)
@@ -588,7 +590,7 @@ doors = [(10,4,"v"),(10,8,"h"),
          (10,25,"h"),(14,25,"h"),(18,25,"h"),(22,25,"h"),(24,25,"h"),(28,25,"h")]
 if SPACE_SCALE == 3:
     doors = [v for v in doors if v not in [(24,22,"v"),(27,21,"h")]]
-    doors += [(22,13,"v"),(20,19,"v")]
+    doors += [(22,13,"v")]
 for tx,ty,d in doors:
     x,y=tx*TILE,ty*TILE
     opening=Z(7); half=(TILE-opening)//2; jamb=Z(2)

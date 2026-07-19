@@ -223,6 +223,7 @@ body.touch #controls-hint { display: none; }
   background: #212842; border: 1px solid #394158;
   border-radius: 14px; padding: 32px 36px; width: 360px;
   box-shadow: 0 12px 40px rgba(0,0,0,.5);
+  max-height: 92dvh; overflow-y: auto;
 }
 #start-card h1 { font-size: 28px; color: #e7b94f; }
 #start-card p { font-size: 13px; opacity: .75; margin: 4px 0 20px; }
@@ -273,6 +274,25 @@ body.touch #controls-hint { display: none; }
   width: 64px; height: 96px; image-rendering: pixelated;
   background: #171b2c; border: 2px solid #394158; border-radius: 10px;
 }
+
+#howto {
+  margin-top: 18px; padding: 12px 14px;
+  background: rgba(231,185,79,.08); border: 1px dashed rgba(231,185,79,.45);
+  border-radius: 10px;
+}
+#howto label { margin: 0 0 8px; color: #e7b94f; font-weight: 700; opacity: 1; }
+#howto-row { display: flex; gap: 12px; align-items: center; }
+#quest-demo {
+  flex: 0 0 auto; width: 38px; height: 38px; border-radius: 50%;
+  background: #e7b94f; border: 3px solid #171b2c;
+  color: #171b2c; font-size: 20px; font-weight: 800;
+  display: flex; align-items: center; justify-content: center;
+  animation: quest-demo-bob 1.4s ease-in-out infinite;
+  box-shadow: 0 0 0 3px rgba(231,185,79,.3);
+}
+@keyframes quest-demo-bob { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-4px); } }
+#howto-text { font-size: 12px; line-height: 1.65; opacity: .92; }
+#howto-text b { color: #e7b94f; }
 
 #start-btn {
   margin-top: 22px; width: 100%; padding: 12px;
