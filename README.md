@@ -2,6 +2,12 @@
 
 เกมออฟฟิศเสมือนแนว Gather Town — จำลองบริษัท **DataX** ชั้น 7 อาคาร **SCB Park West B**
 
+## 🌐 เล่นออนไลน์ (URL ถาวร)
+
+**https://watsapons.github.io/dataxtown/** — เปิดจากที่ไหนก็ได้ มือถือก็ได้
+multiplayer ผ่าน Firebase Realtime Database (ทุกคนที่เปิดลิงก์นี้เห็นกันหมด)
+อัปเดตเกม: push ขึ้น branch `main` → GitHub Actions deploy ให้อัตโนมัติ
+
 ## เริ่มเล่น (multiplayer)
 
 ```powershell
