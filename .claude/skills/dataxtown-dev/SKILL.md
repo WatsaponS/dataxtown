@@ -18,8 +18,11 @@ description: Develop and modify the DataX Town game (Gather Town-style virtual o
 
 - **game-qa** — ตรวจเกมครบทุกระบบด้วยหลักฐานจริง (checklist 8 ข้อ: render, multiplayer,
   quest, leaderboard, มือถือ, เพลง) — ใช้หลังแก้โค้ด/ก่อน push
-- **map-design-review** — รีวิวการออกแบบแผนที่ (collision overlay, flood-fill reachability,
-  โซน/spawn, ความอ่านง่ายของ art) — ใช้เมื่อจะแก้ build.py หรือปรับผัง
+- **map-design-review** — รีวิวการออกแบบแผนที่ทั้งเชิงเทคนิค (collision overlay, flood-fill
+  reachability, โซน/spawn) และเชิง interior design (zoning, circulation, wayfinding,
+  เฟอร์นิเจอร์, สี/แสง) — ใช้เมื่อจะแก้ build.py หรือปรับผัง
+- **game-audio** — งานดนตรี/เสียงทั้งหมด: แต่ง/ปรับลูปเพลง (PROG/MELODY ใน audio.js),
+  เพิ่ม SFX, จูน mix, แก้ปัญหาเสียง — รู้ข้อจำกัด no-audio-files + autoplay policy
 
 ## รัน / ทดสอบ
 
