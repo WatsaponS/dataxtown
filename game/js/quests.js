@@ -165,7 +165,7 @@ function finishQuiz(world, ui) {
   savePoints(world);
   updateBadge(world);
   addSystemLine(ui, `🏁 จบ quiz: ตอบถูก ${s.correct}/${s.questions.length} ได้ +${gained} คะแนน (รวม ${q.points})`);
-  if (world.onQuizDone) world.onQuizDone();
+  if (world.onQuizDone) world.onQuizDone(s.correct); // ส่งจำนวนข้อถูกไปด้วย (missions.js ใช้เช็คว่าถูกอย่างน้อย 1 ข้อไหม)
   // จุดเดิมหายไป เกิดจุดใหม่ที่อื่น
   const idx = q.spots.indexOf(s.spot);
   if (idx >= 0) q.spots[idx] = randomSpot(world, q);

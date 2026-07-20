@@ -239,6 +239,7 @@ export async function openRoom(world, uid, fallbackName) {
     // ยังไม่เคยแต่งห้อง = ห้องเปล่า แต่ยังโชว์ชื่อ/บอทของเจ้าของได้
     if (!home && fallbackName) home = { name: fallbackName, spent: 0, items: [] };
     dec.viewing = { uid, home, mine: false };
+    if (world.onRoomVisit) world.onRoomVisit();
   }
   dec.selected = null;
   toggleRoom(world, true);

@@ -13,6 +13,7 @@ import { addSystemLine } from "./ui.js";
 import { awardPoints } from "./quests.js";
 import { spawnBurst } from "./fx.js";
 import { bumpStat } from "./achievements.js";
+import { bumpMission } from "./missions.js";
 
 const WIN_POINTS = 20;
 const DUEL_RANGE = 60; // px — ต้องเดินเข้าไปใกล้จริง ๆ ถึงจะขึ้นป้ายชวนดวล
@@ -260,6 +261,7 @@ function showDuelResult(world, ui, v) {
     awardPoints(world, WIN_POINTS);
     addSystemLine(ui, `⚔️ ชนะ ${duel.oppName} เป่ายิ้งฉุบ 2 ใน 3! +${WIN_POINTS} แต้ม 🎉`);
     bumpStat(world, ui, "duelWins", 1);
+    bumpMission(world, ui, "duel_win", 1);
   }
   renderDuelHistory(world, v);
   setTimeout(() => { if (duel && duel.status === "done") finishDuelCleanup(world); }, 3500);

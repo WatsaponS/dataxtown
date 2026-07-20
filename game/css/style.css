@@ -227,7 +227,13 @@ body.touch #history-btn { left: auto; right: 20px; bottom: 96px; }
   font-size: 16px; cursor: pointer;
   background: rgba(23,27,44,.8); border: 1px solid #394158;
 }
-#shop-btn:hover, #home-btn:hover, #gift-btn:hover, #tutorial-btn:hover, #pet-btn:hover, #emote-btn:hover, #achv-btn:hover { border-color: #e7b94f; }
+#missions-btn {
+  top: 14px; right: 642px;
+  width: 36px; height: 36px; border-radius: 50%;
+  font-size: 16px; cursor: pointer;
+  background: rgba(23,27,44,.8); border: 1px solid #394158;
+}
+#shop-btn:hover, #home-btn:hover, #gift-btn:hover, #tutorial-btn:hover, #pet-btn:hover, #emote-btn:hover, #achv-btn:hover, #missions-btn:hover { border-color: #e7b94f; }
 
 #achv-current { font-size: 13px; color: #e7b94f; font-weight: 700; margin-bottom: 12px; }
 #achv-grid {
@@ -278,7 +284,28 @@ body.touch #history-btn { left: auto; right: 20px; bottom: 96px; }
   padding: 4px 9px; border-radius: 12px;
 }
 .tutorial-row.done .tut-reward { color: #57b06b; background: rgba(87,176,107,.15); }
-#tutorial-close {
+
+#missions-streak { font-size: 13px; color: #e7b94f; font-weight: 700; margin-bottom: 12px; }
+#missions-list { max-height: 46dvh; overflow-y: auto; }
+.mission-row {
+  display: flex; gap: 12px; align-items: center;
+  padding: 9px 10px; border-radius: 10px; margin-bottom: 6px;
+  background: #171b2c; border: 1px solid #394158;
+}
+.mission-row.done { border-color: #57b06b; opacity: .75; }
+.mission-icon { font-size: 20px; flex: 0 0 auto; }
+.mission-body { flex: 1; }
+.mission-title { font-size: 13px; font-weight: 700; }
+.mission-row.done .mission-title { text-decoration: line-through; }
+.mission-desc { font-size: 11px; opacity: .65; margin-top: 1px; }
+.mission-reward {
+  flex: 0 0 auto; font-size: 12px; font-weight: 800;
+  color: #e7b94f; background: rgba(231,185,79,.12);
+  padding: 4px 9px; border-radius: 12px;
+}
+.mission-row.done .mission-reward { color: #57b06b; background: rgba(87,176,107,.15); }
+#missions-bonus { margin-top: 10px; font-size: 12px; font-weight: 700; color: #e7b94f; text-align: center; }
+#tutorial-close, #achv-close, #missions-close {
   margin-top: 12px; width: 100%; padding: 12px;
   font-size: 15px; font-weight: 800; cursor: pointer;
   background: #e7b94f; color: #171b2c; border: none; border-radius: 8px;
@@ -380,16 +407,16 @@ body.touch #history-btn { left: auto; right: 20px; bottom: 96px; }
 #board-list [data-uid]:hover { outline: 1px solid rgba(231,185,79,.5); }
 
 #quiz-overlay, #board-overlay, #history-overlay, #shop-overlay, #room-overlay, #login-overlay, #tutorial-overlay, #pet-overlay,
-#duel-incoming-overlay, #duel-overlay, #gacha-overlay, #achv-overlay {
+#duel-incoming-overlay, #duel-overlay, #gacha-overlay, #achv-overlay, #missions-overlay {
   position: fixed; inset: 0; z-index: 60;
   background: rgba(23,27,44,.85);
   display: flex; align-items: center; justify-content: center;
 }
 #quiz-overlay.hidden, #board-overlay.hidden, #history-overlay.hidden,
 #shop-overlay.hidden, #room-overlay.hidden, #login-overlay.hidden, #tutorial-overlay.hidden, #pet-overlay.hidden,
-#duel-incoming-overlay.hidden, #duel-overlay.hidden, #gacha-overlay.hidden, #achv-overlay.hidden { display: none; }
+#duel-incoming-overlay.hidden, #duel-overlay.hidden, #gacha-overlay.hidden, #achv-overlay.hidden, #missions-overlay.hidden { display: none; }
 
-#quiz-card, #board-card, #history-card, #shop-card, #room-card, #login-card, #tutorial-card, #pet-card, #gacha-card, #achv-card {
+#quiz-card, #board-card, #history-card, #shop-card, #room-card, #login-card, #tutorial-card, #pet-card, #gacha-card, #achv-card, #missions-card {
   background: #212842; border: 1px solid #e7b94f;
   border-radius: 14px; padding: 26px 30px; width: min(480px, 92vw);
   max-height: 88dvh; overflow-y: auto;
@@ -458,7 +485,7 @@ body.touch #history-btn { left: auto; right: 20px; bottom: 96px; }
 }
 #quiz-next.hidden { display: none; }
 
-#board-card h2, #history-card h2, #shop-card h2, #room-card h2, #login-card h2, #tutorial-card h2, #pet-card h2, #gacha-card h2, #achv-card h2 { color: #e7b94f; margin-bottom: 14px; }
+#board-card h2, #history-card h2, #shop-card h2, #room-card h2, #login-card h2, #tutorial-card h2, #pet-card h2, #gacha-card h2, #achv-card h2, #missions-card h2 { color: #e7b94f; margin-bottom: 14px; }
 .board-row {
   display: flex; justify-content: space-between;
   padding: 8px 10px; border-radius: 6px; font-size: 14px;
@@ -521,6 +548,7 @@ body.touch #controls-hint { display: none; }
   #emote-btn { top: 48px; right: 314px; width: 32px; height: 32px; font-size: 14px; }
   #emote-panel { top: 84px; right: 10px; }
   #achv-btn { top: 48px; right: 354px; width: 32px; height: 32px; font-size: 14px; }
+  #missions-btn { top: 48px; right: 394px; width: 32px; height: 32px; font-size: 14px; }
   #room-canvas { width: 100%; height: auto; }
   #quest-hint { bottom: 150px; font-size: 13px; }
   #online-badge { display: flex; }

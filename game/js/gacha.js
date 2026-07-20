@@ -7,6 +7,7 @@ import { balance, saveHome, iconFor } from "./decor.js";
 import { addSystemLine } from "./ui.js";
 import { spawnBurst } from "./fx.js";
 import { bumpStat } from "./achievements.js";
+import { bumpMission } from "./missions.js";
 
 export { GACHA_X, GACHA_Y };
 const SPRITE_BOTTOM_Y = 648; // ขอบล่างของ sprite ให้แนบพื้น (27*24)
@@ -100,6 +101,7 @@ function pull(world, ui) {
   bumpStat(world, ui, "gachaTotalPulls", 1);
   if (won.tier === "mythic") bumpStat(world, ui, "gachaMythicPulls", 1);
   else if (won.tier === "legendary") bumpStat(world, ui, "gachaLegendaryPulls", 1);
+  bumpMission(world, ui, "gacha_pull", 1);
 
   setTimeout(() => {
     pulling = false;
