@@ -5,6 +5,8 @@
 // - เปิดดูห้องคนอื่นได้จากการคลิกชื่อใน online list (read-only), ห้องตัวเองจัดวางของได้
 
 import { addSystemLine } from "./ui.js";
+import { makeCustomSheet } from "./avatar.js";
+import { spriteFrame } from "./entities.js";
 
 // ลำดับต้องตรงกับ sprite ใน assets/items.png (สร้างจาก assets/build_items.py)
 export const ITEMS = [
@@ -32,16 +34,24 @@ export const ITEMS = [
 const SPRITE = Object.fromEntries(ITEMS.map((it, i) => [it.id, i]));
 const CELL = 24, SHEET_COLS = 5;
 const ROOM_COLS = 8, ROOM_ROWS = 6;
+const S = 2; // canvas ห้องวาดที่ 2x (384×288) ให้ป้ายชื่อ/ตัวอักษรคมชัด
+const DEFAULT_GREETING = name => `สวัสดี! ยินดีต้อนรับสู่ห้องของ ${name} 👋`;
 
 export function initDecor(world, ui) {
   const dec = {
     img: null,
-    myHome: { name: world.player.name, spent: 0, items: [] },
+    myHome: {
+      name: world.player.name, spent: 0, items: [], greeting: "",
+      avatar: { variant: world.player.variant, hair: world.player.hair || null, shirt: world.player.shirt || null },
+    },
     selected: null,       // index ใน myHome.items ที่เลือกจาก inventory
     viewing: null,        // { uid, home, mine }
     warned: false,
+    anim: null,           // สถานะบอทเจ้าของห้องที่เดินไปมา
+    world,
   };
   world.decor = dec;
+  window.__openRoom = uid => openRoom(world, uid); // hook สำหรับ automated test
 
   const img = new Image();
   img.onload = () => { dec.img = img; };
@@ -53,7 +63,11 @@ export function initDecor(world, ui) {
     fb.get(fb.ref(fb.db, `homes/${world.net.uid}`)).then(snap => {
       const v = snap.val();
       if (v) {
-        dec.myHome = { name: world.player.name, spent: v.spent || 0, items: v.items || [] };
+        dec.myHome = {
+          name: world.player.name, spent: v.spent || 0, items: v.items || [],
+          greeting: v.greeting || "",
+          avatar: { variant: world.player.variant, hair: world.player.hair || null, shirt: world.player.shirt || null },
+        };
       }
     }).catch(() => {});
   }
@@ -62,11 +76,20 @@ export function initDecor(world, ui) {
   document.getElementById("home-btn").addEventListener("click", () => openRoom(world, "me"));
   document.getElementById("shop-close").addEventListener("click", () => toggleShop(world, false));
   document.getElementById("room-close").addEventListener("click", () => toggleRoom(world, false));
-  for (const oid of ["shop-overlay", "room-overlay"]) {
-    const el = document.getElementById(oid);
-    el.addEventListener("click", e => { if (e.target === el) el.classList.add("hidden"); });
-  }
+  const shopOv = document.getElementById("shop-overlay");
+  shopOv.addEventListener("click", e => { if (e.target === shopOv) toggleShop(world, false); });
+  const roomOv = document.getElementById("room-overlay");
+  roomOv.addEventListener("click", e => { if (e.target === roomOv) toggleRoom(world, false); });
   document.getElementById("room-canvas").addEventListener("click", e => onRoomClick(world, e));
+  document.getElementById("greeting-save").addEventListener("click", () => {
+    const input = document.getElementById("greeting-input");
+    dec.myHome.greeting = input.value.trim().slice(0, 100);
+    saveHome(world);
+    if (dec.anim) dec.anim.bubbleUntil = performance.now() / 1000 + 4; // โชว์คำใหม่ทันที
+    const btn = document.getElementById("greeting-save");
+    btn.textContent = "บันทึกแล้ว ✓";
+    setTimeout(() => { btn.textContent = "บันทึก"; }, 1500);
+  });
 
   // คลิกชื่อผู้เล่นใน online list เพื่อเปิดดูห้อง
   ui.onlineList.addEventListener("click", e => {
@@ -169,6 +192,7 @@ export async function openRoom(world, uid) {
 export function toggleRoom(world, open) {
   document.getElementById("room-overlay").classList.toggle("hidden", !open);
   if (open) renderRoom(world);
+  else stopRoomAnim(world.decor);
 }
 
 function renderRoom(world) {
@@ -180,8 +204,83 @@ function renderRoom(world) {
     v.mine ? `🏠 ห้องของคุณ (${world.player.name})` : `🏠 ห้องของ ${home && home.name || "?"}`;
   document.getElementById("room-balance").textContent =
     v.mine ? `คงเหลือ ${balance(world)} แต้ม · เลือกของด้านล่างแล้วคลิกตำแหน่งในห้อง (คลิกของในห้องเพื่อเก็บ)` : "";
-  drawRoom(world);
+  const greetRow = document.getElementById("room-greeting-row");
+  greetRow.classList.toggle("hidden", !v.mine);
+  if (v.mine) document.getElementById("greeting-input").value = dec.myHome.greeting || "";
+  startRoomAnim(world);
   renderInventory(world);
+}
+
+// ---------- บอทเจ้าของห้อง: เดินไปมา + ทักทายผู้มาเยือน ----------
+
+function startRoomAnim(world) {
+  const dec = world.decor;
+  stopRoomAnim(dec);
+  const v = dec.viewing;
+  const home = v.home;
+  const av = v.mine
+    ? dec.myHome.avatar
+    : (home && home.avatar) || { variant: 0, hair: null, shirt: null };
+  let sheet = null;
+  try { sheet = makeCustomSheet(world, av.variant || 0, { hair: av.hair, shirt: av.shirt }); } catch {}
+  const ownerName = v.mine ? world.player.name : (home && home.name) || "?";
+  const now = performance.now() / 1000;
+  dec.anim = {
+    sheet, ownerName,
+    greeting: () => (v.mine ? dec.myHome.greeting : home && home.greeting) || DEFAULT_GREETING(ownerName),
+    bot: { x: 96, y: 104, tx: 96, ty: 104, dir: "down", moving: false, animTime: 0, timer: 1.2 },
+    bubbleUntil: now + 4, nextBubble: now + 10,
+    last: performance.now(), raf: 0,
+  };
+  const loop = ts => {
+    if (!dec.anim) return;
+    const a = dec.anim;
+    const dt = Math.min((ts - a.last) / 1000, 0.1);
+    a.last = ts;
+    updateBot(a, dt);
+    drawRoom(world);
+    a.raf = requestAnimationFrame(loop);
+  };
+  dec.anim.raf = requestAnimationFrame(loop);
+}
+
+function stopRoomAnim(dec) {
+  if (dec.anim) {
+    cancelAnimationFrame(dec.anim.raf);
+    dec.anim = null;
+  }
+}
+
+function updateBot(a, dt) {
+  const b = a.bot;
+  const now = performance.now() / 1000;
+  if (b.moving) {
+    const dx = b.tx - b.x, dy = b.ty - b.y;
+    const dist = Math.hypot(dx, dy);
+    const step = 34 * dt;
+    if (dist <= step) {
+      b.x = b.tx; b.y = b.ty;
+      b.moving = false;
+      b.timer = 1 + Math.random() * 2;
+    } else {
+      b.x += dx / dist * step;
+      b.y += dy / dist * step;
+      b.dir = Math.abs(dx) > Math.abs(dy) ? (dx < 0 ? "left" : "right") : (dy < 0 ? "up" : "down");
+      b.animTime += dt;
+    }
+  } else {
+    b.timer -= dt;
+    if (b.timer <= 0) {
+      // เป้าหมายใหม่ในพื้นห้อง (base scale 192×144, เว้นผนัง/ขอบ)
+      b.tx = 16 + Math.random() * (192 - 32);
+      b.ty = CELL * 2 + 14 + Math.random() * (144 - CELL * 2 - 22);
+      b.moving = true;
+    }
+  }
+  if (now >= a.nextBubble) {
+    a.bubbleUntil = now + 4.5;
+    a.nextBubble = now + 10 + Math.random() * 5;
+  }
 }
 
 function drawRoom(world) {
@@ -189,28 +288,80 @@ function drawRoom(world) {
   const canvas = document.getElementById("room-canvas");
   const c = canvas.getContext("2d");
   c.imageSmoothingEnabled = false;
-  // ผนัง + พื้น สไตล์เดียวกับแผนที่
+  // ผนัง + พื้น สไตล์เดียวกับแผนที่ (วาดที่สเกล S)
   c.fillStyle = "#31566d";
-  c.fillRect(0, 0, canvas.width, CELL * 2);
+  c.fillRect(0, 0, canvas.width, CELL * 2 * S);
   c.fillStyle = "#47788a";
-  c.fillRect(0, CELL * 2 - 4, canvas.width, 4);
+  c.fillRect(0, (CELL * 2 - 4) * S, canvas.width, 4 * S);
   for (let y = 2; y < ROOM_ROWS; y++) {
     for (let x = 0; x < ROOM_COLS; x++) {
       c.fillStyle = (x + y) % 2 ? "#f0e8d8" : "#e6dcc8";
-      c.fillRect(x * CELL, y * CELL, CELL, CELL);
+      c.fillRect(x * CELL * S, y * CELL * S, CELL * S, CELL * S);
     }
   }
   const home = dec.viewing && dec.viewing.home;
-  if (!home || !home.items) return;
-  const placed = home.items
-    .map((it, idx) => ({ ...it, idx }))
-    .filter(it => it.x != null && it.y != null)
-    .sort((a, b) => a.y - b.y || a.x - b.x);
-  for (const it of placed) {
-    const s = SPRITE[it.id];
-    if (s == null || !dec.img) continue;
-    c.drawImage(dec.img, (s % SHEET_COLS) * CELL, Math.floor(s / SHEET_COLS) * CELL, CELL, CELL,
-      it.x * CELL, it.y * CELL, CELL, CELL);
+  if (home && home.items && dec.img) {
+    const placed = home.items
+      .map((it, idx) => ({ ...it, idx }))
+      .filter(it => it.x != null && it.y != null)
+      .sort((a, b) => a.y - b.y || a.x - b.x);
+    for (const it of placed) {
+      const s = SPRITE[it.id];
+      if (s == null) continue;
+      c.drawImage(dec.img, (s % SHEET_COLS) * CELL, Math.floor(s / SHEET_COLS) * CELL, CELL, CELL,
+        it.x * CELL * S, it.y * CELL * S, CELL * S, CELL * S);
+    }
+  }
+  drawBot(world, c);
+}
+
+function drawBot(world, c) {
+  const a = world.decor.anim;
+  if (!a || !a.sheet) return;
+  const b = a.bot;
+  const col = spriteFrame(b); // ใช้ logic เฟรมเดียวกับตัวละครในเกม
+  const dx = Math.round(b.x - 8) * S, dy = Math.round(b.y - 23) * S;
+  c.fillStyle = "rgba(0,0,0,0.25)";
+  c.fillRect(Math.round(b.x - 5) * S, Math.round(b.y - 2) * S, 10 * S, 3 * S);
+  c.drawImage(a.sheet, col * 16, 0, 16, 24, dx, dy, 16 * S, 24 * S);
+  // ป้ายชื่อ
+  c.font = `700 ${5.5 * S}px 'Segoe UI', 'Leelawadee UI', sans-serif`;
+  c.textAlign = "center";
+  c.textBaseline = "middle";
+  const nx = b.x * S, ny = (b.y - 27) * S;
+  const nw = c.measureText(a.ownerName).width + 8 * S / 2;
+  c.fillStyle = "rgba(23,27,44,0.75)";
+  c.fillRect(nx - nw / 2, ny - 4 * S, nw, 8 * S);
+  c.fillStyle = "#e7b94f";
+  c.fillText(a.ownerName, nx, ny);
+  // คำทักทาย
+  const now = performance.now() / 1000;
+  if (now < a.bubbleUntil) {
+    const text = a.greeting();
+    c.font = `${5.5 * S}px 'Segoe UI', 'Leelawadee UI', sans-serif`;
+    const maxW = 150 * S;
+    const words = String(text).split(" ");
+    const lines = [];
+    let cur = "";
+    for (const w of words) {
+      const t = cur ? cur + " " + w : w;
+      if (c.measureText(t).width > maxW && cur) { lines.push(cur); cur = w; }
+      else cur = t;
+    }
+    if (cur) lines.push(cur);
+    const shown = lines.slice(0, 3);
+    const bw = Math.min(maxW, Math.max(...shown.map(l => c.measureText(l).width))) + 10 * S;
+    const bh = shown.length * 8 * S + 6 * S;
+    let bx = b.x * S - bw / 2;
+    bx = Math.max(2 * S, Math.min(bx, ROOM_COLS * CELL * S - bw - 2 * S));
+    let by = (b.y - 33) * S - bh;
+    if (by < 2 * S) by = (b.y + 4) * S; // ถ้าชนขอบบน ย้ายลงใต้ตัว
+    c.fillStyle = "rgba(255,246,220,0.95)";
+    c.fillRect(bx, by, bw, bh);
+    c.fillStyle = "#171b2c";
+    c.textAlign = "left";
+    c.textBaseline = "top";
+    shown.forEach((l, i) => c.fillText(l, bx + 5 * S, by + 3 * S + i * 8 * S));
   }
 }
 

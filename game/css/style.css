@@ -164,6 +164,18 @@ body.touch #history-btn { left: auto; right: 20px; bottom: 96px; }
   image-rendering: pixelated; border: 2px solid #394158; border-radius: 8px;
   margin: 0 auto; cursor: pointer;
 }
+#room-greeting-row { display: flex; gap: 8px; margin-top: 12px; }
+#room-greeting-row.hidden { display: none; }
+#greeting-input {
+  flex: 1; padding: 8px 10px; font-size: 13px;
+  background: #171b2c; color: #fff6dc;
+  border: 1px solid #394158; border-radius: 8px; outline: none;
+}
+#greeting-input:focus { border-color: #e7b94f; }
+#greeting-save {
+  padding: 8px 14px; font-size: 13px; font-weight: 700; cursor: pointer;
+  background: #e7b94f; color: #171b2c; border: none; border-radius: 8px;
+}
 #room-inventory {
   display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px;
   padding: 10px; background: #171b2c; border-radius: 8px; min-height: 48px;
