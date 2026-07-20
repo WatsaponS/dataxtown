@@ -22,6 +22,7 @@ import { updateFx } from "./fx.js";
 import { initEmotes, toggleEmotePanel, isEmotePanelOpen } from "./emotes.js";
 import { initAchievements, toggleAchievements } from "./achievements.js";
 import { initMissions, toggleMissions } from "./missions.js";
+import { TEAMS } from "./teams_data.js";
 import { makeCamera, updateCamera, draw } from "./render.js";
 import {
   setupUI, isChatOpen, toggleChat, submitChat,
@@ -69,6 +70,7 @@ let chosenHair = saved.hair ?? null;    // null = สีเดิมของ va
 let chosenShirt = saved.shirt ?? null;
 let chosenPet = saved.pet ?? null;      // null = ไม่มีสัตว์เลี้ยง
 let chosenPetName = saved.petName ?? "";
+let chosenDept = saved.dept ?? TEAMS[Math.floor(Math.random() * TEAMS.length)].id; // สุ่มทีมให้ครั้งแรก เปลี่ยนได้เสมอ
 if (saved.name) document.getElementById("name-input").value = saved.name;
 
 const variantIndex = () => chosenGender * CPG + chosenColor;
@@ -129,6 +131,29 @@ function buildSwatchRow(elId, colors, getValue, setValue) {
 }
 buildSwatchRow("hair-picker", HAIR_COLORS, () => chosenHair, c => { chosenHair = c; });
 buildSwatchRow("shirt-picker", SHIRT_COLORS, () => chosenShirt, c => { chosenShirt = c; });
+
+// ---------- เลือกทีม ----------
+const teamPicker = document.getElementById("team-picker");
+function buildTeamPicker() {
+  teamPicker.textContent = "";
+  TEAMS.forEach(team => {
+    const opt = document.createElement("div");
+    opt.className = "team-opt" + (chosenDept === team.id ? " selected" : "");
+    opt.style.setProperty("--team-color", team.color);
+    const emoji = document.createElement("span");
+    emoji.className = "team-emoji";
+    emoji.textContent = team.emoji;
+    const label = document.createElement("span");
+    label.textContent = team.name;
+    opt.append(emoji, label);
+    opt.addEventListener("click", () => { chosenDept = team.id; refreshTeamPicker(); });
+    teamPicker.appendChild(opt);
+  });
+}
+function refreshTeamPicker() {
+  [...teamPicker.children].forEach((el, i) => el.classList.toggle("selected", TEAMS[i].id === chosenDept));
+}
+buildTeamPicker();
 
 // ---------- ตัวเลือกสัตว์เลี้ยง ----------
 const petPicker = document.getElementById("pet-picker");
@@ -192,6 +217,7 @@ if (params.get("hair")) chosenHair = "#" + params.get("hair").replace("#", "");
 if (params.get("shirt")) chosenShirt = "#" + params.get("shirt").replace("#", "");
 if (params.get("pet")) chosenPet = params.get("pet") === "none" ? null : params.get("pet");
 if (params.get("petname")) chosenPetName = params.get("petname");
+if (params.get("dept")) chosenDept = params.get("dept");
 if (params.get("autostart")) {
   document.getElementById("name-input").value = params.get("name") || "Tester";
   startGame();
@@ -210,6 +236,7 @@ function startGame() {
   world.player = makeEntity({ id: "player", name, variant: variantIndex(), x: sp.x, y: sp.y, kind: "player" });
   world.player.hair = chosenHair;
   world.player.shirt = chosenShirt;
+  world.player.dept = chosenDept;
   if (chosenHair || chosenShirt) {
     world.player.sheet = makeCustomSheet(world, variantIndex(), { hair: chosenHair, shirt: chosenShirt });
   }
@@ -217,7 +244,7 @@ function startGame() {
   world.entities.push(world.player);
   localStorage.setItem("dataxtown.avatar", JSON.stringify({
     name, variant: variantIndex(), hair: chosenHair, shirt: chosenShirt,
-    pet: chosenPet, petName: chosenPetName,
+    pet: chosenPet, petName: chosenPetName, dept: chosenDept,
   }));
 
   for (const n of NPCS) {

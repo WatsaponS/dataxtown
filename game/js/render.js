@@ -9,6 +9,7 @@ import { drawGachaMachine, GACHA_Y } from "./gacha.js";
 import { drawFx } from "./fx.js";
 import { emoteEmoji } from "./emotes_data.js";
 import { achievementById } from "./achievements_data.js";
+import { teamById } from "./teams_data.js";
 
 export function makeCamera(config) {
   return { x: 0, y: 0, zoom: config.defaultZoom };
@@ -65,7 +66,7 @@ export function draw(ctx, world, cam) {
   // ป้ายชื่อ + bubble วาดใน screen space (คมชัดทุกระดับซูม)
   for (const ent of sorted) {
     const sxp = (ent.x - cam.x) * cam.zoom, syp = (ent.y - cam.y) * cam.zoom;
-    drawNameTag(ctx, ent, sxp, syp - (config.frameH + 3) * cam.zoom, ent === p, titleIconFor(world, ent));
+    drawNameTag(ctx, ent, sxp, syp - (config.frameH + 3) * cam.zoom, ent === p, nameTagPrefix(world, ent));
     if (ent.bubble && world.time < ent.bubble.until && canHear(world, p, ent)) {
       drawBubble(ctx, ent.bubble.text, sxp, syp - (config.frameH + 12) * cam.zoom);
     }
@@ -140,24 +141,28 @@ function drawChar(ctx, world, ent) {
   ctx.drawImage(img, sx, sy, config.frameW, config.frameH, dx, dy, config.frameW, config.frameH);
 }
 
-// ตำแหน่ง (title) ที่เลือกไว้ — ของตัวเองอ่านตรงจาก decor state, ของคนอื่นอ่านจาก leaderboard
-// (mirror มาให้ตอนเลือก title ใน achievements.js กัน round-trip เพิ่ม)
-function titleIconFor(world, ent) {
+// ตำแหน่ง (title) + ทีม ที่เลือกไว้ — ของตัวเองอ่านตรงจาก decor/player state, ของคนอื่นอ่านจาก leaderboard
+// (mirror มาให้ตอนเลือก title / ตอนบันทึกแต้มใน achievements.js/quests.js กัน round-trip เพิ่ม)
+function nameTagPrefix(world, ent) {
+  let titleIcon = null, teamEmoji = null;
   if (ent === world.player) {
     const sel = world.decor && world.decor.myHome && world.decor.myHome.achievements && world.decor.myHome.achievements.selected;
     const ac = sel && achievementById(sel);
-    return ac ? ac.icon : null;
-  }
-  if (ent.id && ent.id.startsWith("remote_") && world.quests && world.quests.board) {
+    titleIcon = ac ? ac.icon : null;
+    const team = ent.dept && teamById(ent.dept);
+    teamEmoji = team ? team.emoji : null;
+  } else if (ent.id && ent.id.startsWith("remote_") && world.quests && world.quests.board) {
     const row = world.quests.board[ent.id.slice(7)];
     const ac = row && row.title && achievementById(row.title);
-    return ac ? ac.icon : null;
+    titleIcon = ac ? ac.icon : null;
+    const team = row && row.dept && teamById(row.dept);
+    teamEmoji = team ? team.emoji : null;
   }
-  return null;
+  return [teamEmoji, titleIcon].filter(Boolean).join(" ");
 }
 
-function drawNameTag(ctx, ent, x, y, isPlayer, titleIcon) {
-  const label = titleIcon ? `${titleIcon} ${ent.name}` : ent.name;
+function drawNameTag(ctx, ent, x, y, isPlayer, prefix) {
+  const label = prefix ? `${prefix} ${ent.name}` : ent.name;
   ctx.font = "600 11px 'Segoe UI', 'Leelawadee UI', sans-serif";
   const w = ctx.measureText(label).width + 10;
   ctx.fillStyle = "rgba(23,27,44,0.7)";

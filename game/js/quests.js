@@ -8,6 +8,7 @@ import { spawnBurst } from "./fx.js";
 import { bumpStat } from "./achievements.js";
 import { saveHome } from "./decor.js";
 import { SEASON_REWARD_ITEMS } from "./season_data.js";
+import { TEAMS, teamById } from "./teams_data.js";
 
 const SPOT_COUNT = 3;
 const INTERACT_RADIUS = 44;   // px — ระยะกดเริ่ม quiz
@@ -65,6 +66,7 @@ export function initQuests(world, ui) {
   document.getElementById("board-close").addEventListener("click", () => toggleBoard(world, false));
   document.getElementById("board-tab-all").addEventListener("click", () => setBoardMode(world, "alltime"));
   document.getElementById("board-tab-season").addEventListener("click", () => setBoardMode(world, "season"));
+  document.getElementById("board-tab-team").addEventListener("click", () => setBoardMode(world, "team"));
   addSystemLine(ui, "❓ มี Quiz Databricks ซ่อนอยู่ 3 จุดในออฟฟิศ — เดินไปหาแล้วกด E เพื่อสะสมคะแนน!");
 }
 
@@ -207,6 +209,7 @@ function savePoints(world) {
     points: world.quests.points,
     seasonPoints: world.quests.seasonPoints || 0,
     seasonId: seasonId(),
+    dept: world.player.dept || null,
     ts: Date.now(),
   }).catch(() => {});
 }
@@ -233,6 +236,7 @@ function setBoardMode(world, mode) {
   q.boardMode = mode;
   document.getElementById("board-tab-all").classList.toggle("active", mode === "alltime");
   document.getElementById("board-tab-season").classList.toggle("active", mode === "season");
+  document.getElementById("board-tab-team").classList.toggle("active", mode === "team");
   renderBoard(world);
 }
 
@@ -240,6 +244,9 @@ function renderBoard(world) {
   const q = world.quests;
   const list = q.el.boardList;
   list.textContent = "";
+
+  if (q.boardMode === "team") { renderTeamBoard(world, list); return; }
+
   const season = q.boardMode === "season";
   const sid = seasonId();
   const myUid = world.net && world.net.uid;
@@ -272,6 +279,38 @@ function renderBoard(world) {
     const medal = ["🥇", "🥈", "🥉"][i] || `${i + 1}.`;
     const nameSpan = document.createElement("span");
     nameSpan.textContent = `${medal} ${r.name}`;
+    const ptSpan = document.createElement("span");
+    ptSpan.textContent = `${r.points} คะแนน`;
+    row.append(nameSpan, ptSpan);
+    list.appendChild(row);
+  });
+}
+
+// รวมคะแนนตลอดกาลของทุกคนในแต่ละทีม (ข้อมูลจาก q.board ที่ subscribe ไว้แล้ว ไม่ต้อง fetch เพิ่ม)
+function renderTeamBoard(world, list) {
+  const q = world.quests;
+  const myUid = world.net && world.net.uid;
+  const totals = Object.fromEntries(TEAMS.map(t => [t.id, 0]));
+  const counts = Object.fromEntries(TEAMS.map(t => [t.id, 0]));
+  const entries = { ...q.board };
+  if (myUid) entries[myUid] = { ...(entries[myUid] || {}), points: q.points, dept: world.player.dept };
+  for (const v of Object.values(entries)) {
+    if (!v.dept || !(v.dept in totals)) continue;
+    totals[v.dept] += v.points || 0;
+    counts[v.dept] += 1;
+  }
+  const rows = TEAMS.map(t => ({ team: t, points: totals[t.id], count: counts[t.id] })).sort((a, b) => b.points - a.points);
+  if (rows.every(r => r.points === 0)) {
+    list.textContent = "ยังไม่มีทีมไหนทำคะแนนเลย — ไปตามหา ❓ ในออฟฟิศเลย!";
+    return;
+  }
+  rows.forEach((r, i) => {
+    const row = document.createElement("div");
+    row.className = "board-row" + (world.player.dept === r.team.id ? " me" : "");
+    const medal = ["🥇", "🥈", "🥉"][i] || `${i + 1}.`;
+    const nameSpan = document.createElement("span");
+    nameSpan.style.color = r.team.color;
+    nameSpan.textContent = `${medal} ${r.team.emoji} ${r.team.name} (${r.count} คน)`;
     const ptSpan = document.createElement("span");
     ptSpan.textContent = `${r.points} คะแนน`;
     row.append(nameSpan, ptSpan);
