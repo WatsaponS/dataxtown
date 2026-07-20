@@ -451,6 +451,22 @@ body.touch #controls-hint { display: none; }
   background: #171b2c; border: 2px solid #394158; border-radius: 10px;
 }
 
+#pet-picker {
+  display: grid; grid-template-columns: repeat(4, 1fr);
+  gap: 6px; max-height: 220px; overflow-y: auto;
+  padding-right: 2px;
+}
+.pet-opt {
+  display: flex; flex-direction: column; align-items: center; gap: 3px;
+  padding: 6px 3px; cursor: pointer;
+  background: #171b2c; border: 2px solid #394158; border-radius: 8px;
+}
+.pet-opt canvas { image-rendering: pixelated; }
+.pet-opt span { font-size: 10px; opacity: .8; text-align: center; line-height: 1.2; }
+.pet-opt.selected { border-color: #e7b94f; background: #26324a; }
+.pet-opt.none-opt { justify-content: center; }
+.pet-opt.none-opt .pet-emoji { font-size: 20px; opacity: .5; }
+
 #howto {
   margin-top: 18px; padding: 12px 14px;
   background: rgba(231,185,79,.08); border: 1px dashed rgba(231,185,79,.45);

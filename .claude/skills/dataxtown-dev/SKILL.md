@@ -94,6 +94,8 @@ python game/tools/cdp_shot.py --url "http://localhost:8700/index.html?autostart=
 | ห้องส่วนตัว + ร้านค้าไอเทม (แคตตาล็อก 20 ชิ้น, ยอดคงเหลือ = points − spent) | `game/js/decor.js` |
 | sprite ไอเทมตกแต่ง (ลำดับต้องตรงแคตตาล็อก) | `game/assets/build_items.py` → `items.png` |
 | ประวัติแชตรวม (โหลดจาก rooms/main/chat) | `game/js/history.js` |
+| สัตว์เลี้ยง 15 ชนิด — เดินตามเจ้าของด้วย trail-follow, sync ผ่าน join payload | `game/js/pets.js`, `game/js/pets_data.js` |
+| sprite สัตว์เลี้ยง (15 แถว × 2 เฟรม, ลำดับต้องตรง pets_data.js) | `game/assets/build_pets.py` → `pets.png` |
 | multiplayer server + protocol (JSON: join/move/chat) | `game/server.py` |
 | **ผังชั้น 7** (ห้อง, โต๊ะ, collision, spawn, โซน) | `pixel-art/scb-park-west-b-floor7/build.py` |
 | หน้าตา avatar | `game/assets/build_avatars.py` |

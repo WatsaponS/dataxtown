@@ -2,6 +2,7 @@
 
 import { canHear, spriteFrame } from "./entities.js";
 import { drawQuestMarkers } from "./quests.js";
+import { drawPet } from "./pets.js";
 
 export function makeCamera(config) {
   return { x: 0, y: 0, zoom: config.defaultZoom };
@@ -40,19 +41,15 @@ export function draw(ctx, world, cam) {
   ctx.lineWidth = 1;
   ctx.stroke();
 
-  // วาดตัวละครเรียงตาม y (คนอยู่ล่างบังคนอยู่บน)
+  // วาดตัวละคร+สัตว์เลี้ยงเรียงตาม y รวมกัน (อะไรอยู่ล่างบังอันที่อยู่บน)
   const sorted = [...world.entities].sort((a, b) => a.y - b.y);
+  const drawables = [];
   for (const ent of sorted) {
-    const col = spriteFrame(ent);
-    // ent.sheet = spritesheet เฉพาะตัว (custom สี, 1 แถว) — ไม่มีก็ใช้ sheet รวมตาม variant
-    const img = ent.sheet || world.sheetImg;
-    const sx = col * config.frameW, sy = ent.sheet ? 0 : ent.variant * config.frameH;
-    const dx = Math.round(ent.x - config.frameW / 2), dy = Math.round(ent.y - config.frameH + 1);
-    // เงาใต้เท้า
-    ctx.fillStyle = "rgba(0,0,0,0.25)";
-    ctx.fillRect(dx + 3, Math.round(ent.y) - 2, 10, 3);
-    ctx.drawImage(img, sx, sy, config.frameW, config.frameH, dx, dy, config.frameW, config.frameH);
+    drawables.push({ y: ent.y, draw: () => drawChar(ctx, world, ent) });
+    if (ent.petId && ent.pet) drawables.push({ y: ent.pet.y, draw: () => drawPet(ctx, ent) });
   }
+  drawables.sort((a, b) => a.y - b.y);
+  for (const d of drawables) d.draw();
   ctx.restore();
 
   drawQuestMarkers(ctx, world, cam);
@@ -65,6 +62,18 @@ export function draw(ctx, world, cam) {
       drawBubble(ctx, ent.bubble.text, sxp, syp - (config.frameH + 12) * cam.zoom);
     }
   }
+}
+
+function drawChar(ctx, world, ent) {
+  const config = world.config;
+  const col = spriteFrame(ent);
+  // ent.sheet = spritesheet เฉพาะตัว (custom สี, 1 แถว) — ไม่มีก็ใช้ sheet รวมตาม variant
+  const img = ent.sheet || world.sheetImg;
+  const sx = col * config.frameW, sy = ent.sheet ? 0 : ent.variant * config.frameH;
+  const dx = Math.round(ent.x - config.frameW / 2), dy = Math.round(ent.y - config.frameH + 1);
+  ctx.fillStyle = "rgba(0,0,0,0.25)";
+  ctx.fillRect(dx + 3, Math.round(ent.y) - 2, 10, 3);
+  ctx.drawImage(img, sx, sy, config.frameW, config.frameH, dx, dy, config.frameW, config.frameH);
 }
 
 function drawNameTag(ctx, ent, x, y, isPlayer) {

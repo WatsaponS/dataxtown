@@ -7,6 +7,7 @@
 import { speak } from "./entities.js";
 import { refreshOnlineList, addSystemLine } from "./ui.js";
 import { findRemote, addRemote } from "./net.js";
+import { setPet } from "./pets.js";
 import { FIREBASE_CONFIG } from "./firebase-config.js";
 
 const SDK = "https://www.gstatic.com/firebasejs/10.12.2";
@@ -38,6 +39,7 @@ export async function connectFirebase(world, ui) {
     const meRef = ref(db, `rooms/main/players/${uid}`);
     await set(meRef, {
       name: p.name, variant: p.variant, hair: p.hair || null, shirt: p.shirt || null,
+      pet: p.petId || null,
       x: p.x, y: p.y, dir: p.dir, moving: false, ts: serverTimestamp(),
     });
     onDisconnect(meRef).remove(); // หลุด/ปิดแท็บ = หายจากห้องอัตโนมัติ

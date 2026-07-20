@@ -3,6 +3,7 @@
 
 import { makeEntity, speak } from "./entities.js";
 import { makeCustomSheet } from "./avatar.js";
+import { setPet } from "./pets.js";
 import { refreshOnlineList, addSystemLine } from "./ui.js";
 
 export function connectNet(world, ui) {
@@ -25,7 +26,7 @@ export function connectNet(world, ui) {
 
   ws.addEventListener("open", () => {
     net.connected = true;
-    send({ t: "join", key: accessKey, name: p.name, variant: p.variant, hair: p.hair, shirt: p.shirt, x: p.x, y: p.y, dir: p.dir });
+    send({ t: "join", key: accessKey, name: p.name, variant: p.variant, hair: p.hair, shirt: p.shirt, pet: p.petId, x: p.x, y: p.y, dir: p.dir });
     addSystemLine(ui, "🟢 ออนไลน์แล้ว — คนอื่นในออฟฟิศจะเห็นคุณ");
 
     // ส่งตำแหน่งเมื่อมีการเปลี่ยนแปลง (จังหวะ 10 ครั้ง/วินาที)
@@ -117,6 +118,7 @@ export function addRemote(world, info) {
   if (info.hair || info.shirt) {
     ent.sheet = makeCustomSheet(world, ent.variant, { hair: info.hair, shirt: info.shirt });
   }
+  if (info.pet) setPet(ent, info.pet);
   world.entities.push(ent);
 }
 

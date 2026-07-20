@@ -142,6 +142,7 @@ class GameHandler(SimpleHTTPRequestHandler):
                         "name": str(data.get("name", "Guest"))[:24],
                         "variant": int(data.get("variant", 0)),
                         "hair": data.get("hair"), "shirt": data.get("shirt"),
+                        "pet": data.get("pet"),
                         "x": float(data.get("x", 0)), "y": float(data.get("y", 0)),
                         "dir": data.get("dir", "down"), "moving": False,
                     }
