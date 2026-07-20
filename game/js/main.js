@@ -11,6 +11,7 @@ import { createMusic } from "./audio.js";
 import { initQuests, updateQuests, tryStartQuiz, isQuizOpen, toggleBoard } from "./quests.js";
 import { initHistory, toggleHistory } from "./history.js";
 import { initDecor, toggleShop, toggleRoom } from "./decor.js";
+import { initLoginRewards, toggleLogin } from "./login_rewards.js";
 import { makeCamera, updateCamera, draw } from "./render.js";
 import {
   setupUI, isChatOpen, toggleChat, submitChat,
@@ -182,6 +183,7 @@ function startGame() {
     initQuests(world, ui); // quest ต้องรอ net เพื่อผูก leaderboard
     initHistory(world, ui);
     initDecor(world, ui);  // ร้านค้า + ห้องส่วนตัว (ใช้แต้มจาก quests และ uid จาก net)
+    initLoginRewards(world, ui); // daily login 30 วัน (popup อัตโนมัติเมื่อมีของให้รับ)
   });
   requestAnimationFrame(loop);
 }
@@ -204,7 +206,7 @@ window.addEventListener("keydown", e => {
   if (e.code === "KeyH") toggleHistory(world, document.getElementById("history-overlay").classList.contains("hidden"));
   if (e.key === "Escape") {
     toggleBoard(world, false); toggleHistory(world, false);
-    toggleShop(world, false); toggleRoom(world, false);
+    toggleShop(world, false); toggleRoom(world, false); toggleLogin(world, false);
   }
   input.add(e.code);
 });

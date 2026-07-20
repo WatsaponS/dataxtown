@@ -7,6 +7,7 @@
 import { addSystemLine } from "./ui.js";
 import { makeCustomSheet } from "./avatar.js";
 import { spriteFrame } from "./entities.js";
+import { LOGIN_ITEMS, LOGIN_SHEET_COLS, loginItemName } from "./login_data.js";
 
 // ลำดับต้องตรงกับ sprite ใน assets/items.png (สร้างจาก assets/build_items.py)
 export const ITEMS = [
@@ -56,21 +57,26 @@ export function initDecor(world, ui) {
   const img = new Image();
   img.onload = () => { dec.img = img; };
   img.src = "assets/items.png";
+  const loginImg = new Image();
+  loginImg.onload = () => { dec.loginImg = loginImg; };
+  loginImg.src = "assets/items_login.png";
 
-  // โหลดห้องตัวเองจาก Firebase (ถ้ามี)
+  // โหลดห้องตัวเองจาก Firebase (ถ้ามี) — dec.ready ให้โมดูลอื่นรอก่อนแตะ myHome
   const fb = world.net && world.net.fb;
-  if (fb && world.net.uid) {
-    fb.get(fb.ref(fb.db, `homes/${world.net.uid}`)).then(snap => {
+  dec.ready = (async () => {
+    if (!fb || !world.net.uid) return;
+    try {
+      const snap = await fb.get(fb.ref(fb.db, `homes/${world.net.uid}`));
       const v = snap.val();
       if (v) {
         dec.myHome = {
           name: world.player.name, spent: v.spent || 0, items: v.items || [],
-          greeting: v.greeting || "",
+          greeting: v.greeting || "", login: v.login || null,
           avatar: { variant: world.player.variant, hair: world.player.hair || null, shirt: world.player.shirt || null },
         };
       }
-    }).catch(() => {});
-  }
+    } catch {}
+  })();
 
   document.getElementById("shop-btn").addEventListener("click", () => toggleShop(world, true));
   document.getElementById("home-btn").addEventListener("click", () => openRoom(world, "me"));
@@ -109,7 +115,24 @@ export function initDecor(world, ui) {
 const earned = world => (world.quests ? world.quests.points : 0);
 export const balance = world => Math.max(0, earned(world) - (world.decor.myHome.spent || 0));
 
-function saveHome(world) {
+// อ้างอิง sprite ของไอเทมทุกชนิด — ร้านค้า (items.png) และ login exclusive (items_login.png)
+export function spriteRef(dec, id) {
+  if (id && id.startsWith("login")) {
+    const n = parseInt(id.slice(5), 10) - 1;
+    if (n >= 0 && n < LOGIN_ITEMS.length) return { img: dec.loginImg, idx: n, cols: LOGIN_SHEET_COLS };
+    return null;
+  }
+  const idx = SPRITE[id];
+  return idx == null ? null : { img: dec.img, idx, cols: SHEET_COLS };
+}
+
+export function itemName(id) {
+  if (id && id.startsWith("login")) return loginItemName(id) + " ✨";
+  const idx = SPRITE[id];
+  return idx == null ? id : ITEMS[idx].name;
+}
+
+export function saveHome(world) {
   const dec = world.decor;
   const fb = world.net && world.net.fb;
   if (!fb || !world.net.uid) {
@@ -316,9 +339,9 @@ function drawRoom(world) {
       .filter(it => it.x != null && it.y != null)
       .sort((a, b) => a.y - b.y || a.x - b.x);
     for (const it of placed) {
-      const s = SPRITE[it.id];
-      if (s == null) continue;
-      c.drawImage(dec.img, (s % SHEET_COLS) * CELL, Math.floor(s / SHEET_COLS) * CELL, CELL, CELL,
+      const ref = spriteRef(dec, it.id);
+      if (!ref || !ref.img) continue;
+      c.drawImage(ref.img, (ref.idx % ref.cols) * CELL, Math.floor(ref.idx / ref.cols) * CELL, CELL, CELL,
         it.x * CELL * S, it.y * CELL * S, CELL * S, CELL * S);
     }
   }
@@ -392,10 +415,10 @@ function renderInventory(world) {
     return;
   }
   for (const it of unplaced) {
-    const cell = iconCanvas(dec, SPRITE[it.id], 2);
+    const cell = iconFor(dec, it.id, 2);
     cell.classList.add("inv-item");
     if (dec.selected === it.idx) cell.classList.add("selected");
-    cell.title = (ITEMS[SPRITE[it.id]] || {}).name || it.id;
+    cell.title = itemName(it.id);
     cell.addEventListener("click", () => {
       dec.selected = dec.selected === it.idx ? null : it.idx;
       renderInventory(world);
@@ -428,6 +451,27 @@ function onRoomClick(world, e) {
   }
   drawRoom(world);
   renderInventory(world);
+}
+
+// ไอคอนจาก item id (รองรับทั้งไอเทมร้านค้าและ login exclusive)
+export function iconFor(dec, id, scale) {
+  const c = document.createElement("canvas");
+  c.width = CELL; c.height = CELL;
+  c.style.width = CELL * scale + "px";
+  c.style.height = CELL * scale + "px";
+  const ctx = c.getContext("2d");
+  ctx.imageSmoothingEnabled = false;
+  const draw = () => {
+    const ref = spriteRef(dec, id);
+    if (ref && ref.img) {
+      ctx.drawImage(ref.img, (ref.idx % ref.cols) * CELL, Math.floor(ref.idx / ref.cols) * CELL,
+        CELL, CELL, 0, 0, CELL, CELL);
+    }
+  };
+  const ref = spriteRef(dec, id);
+  if (ref && ref.img) draw();
+  else setTimeout(draw, 400);
+  return c;
 }
 
 function iconCanvas(dec, spriteIdx, scale) {

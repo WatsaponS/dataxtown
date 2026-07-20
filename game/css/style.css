@@ -139,7 +139,50 @@ body.touch #history-btn { left: auto; right: 20px; bottom: 96px; }
 }
 #shop-btn { right: 320px; }
 #home-btn { right: 366px; }
-#shop-btn:hover, #home-btn:hover { border-color: #e7b94f; }
+#gift-btn {
+  top: 14px; right: 412px;
+  width: 36px; height: 36px; border-radius: 50%;
+  font-size: 16px; cursor: pointer;
+  background: rgba(23,27,44,.8); border: 1px solid #394158;
+}
+#shop-btn:hover, #home-btn:hover, #gift-btn:hover { border-color: #e7b94f; }
+
+#login-sub { font-size: 12px; color: #e7b94f; margin-bottom: 12px; }
+#login-grid {
+  display: grid; grid-template-columns: repeat(5, 1fr);
+  gap: 8px; max-height: 52dvh; overflow-y: auto;
+}
+.login-cell {
+  position: relative; display: flex; flex-direction: column;
+  align-items: center; gap: 2px; padding: 8px 4px 6px;
+  background: #171b2c; border: 2px solid #394158; border-radius: 10px;
+}
+.login-cell canvas { image-rendering: pixelated; }
+.login-cell span { font-size: 10px; opacity: .75; }
+.login-cell.locked { opacity: .4; }
+.login-cell.claimed { border-color: #57b06b; }
+.login-cell.today {
+  border-color: #e7b94f; opacity: 1;
+  box-shadow: 0 0 0 3px rgba(231,185,79,.3);
+  animation: login-pulse 1.2s ease-in-out infinite;
+}
+@keyframes login-pulse { 0%,100% { transform: scale(1); } 50% { transform: scale(1.06); } }
+.login-check {
+  position: absolute; top: 2px; right: 5px;
+  color: #57b06b; font-weight: 800; font-size: 12px !important; opacity: 1 !important;
+}
+#login-status { margin-top: 12px; font-size: 13px; font-weight: 600; min-height: 18px; color: #e7b94f; }
+#login-claim {
+  margin-top: 10px; width: 100%; padding: 12px;
+  font-size: 15px; font-weight: 800; cursor: pointer;
+  background: #e7b94f; color: #171b2c; border: none; border-radius: 8px;
+}
+#login-claim.hidden { display: none; }
+#login-close {
+  margin-top: 10px; width: 100%; padding: 10px;
+  font-size: 14px; font-weight: 700; cursor: pointer;
+  background: #394158; color: #fff6dc; border: none; border-radius: 8px;
+}
 
 #shop-balance, #room-balance { font-size: 12px; color: #e7b94f; margin-bottom: 12px; min-height: 16px; }
 #shop-list {
@@ -199,15 +242,15 @@ body.touch #history-btn { left: auto; right: 20px; bottom: 96px; }
 #board-list [data-uid] { cursor: pointer; }
 #board-list [data-uid]:hover { outline: 1px solid rgba(231,185,79,.5); }
 
-#quiz-overlay, #board-overlay, #history-overlay, #shop-overlay, #room-overlay {
+#quiz-overlay, #board-overlay, #history-overlay, #shop-overlay, #room-overlay, #login-overlay {
   position: fixed; inset: 0; z-index: 60;
   background: rgba(23,27,44,.85);
   display: flex; align-items: center; justify-content: center;
 }
 #quiz-overlay.hidden, #board-overlay.hidden, #history-overlay.hidden,
-#shop-overlay.hidden, #room-overlay.hidden { display: none; }
+#shop-overlay.hidden, #room-overlay.hidden, #login-overlay.hidden { display: none; }
 
-#quiz-card, #board-card, #history-card, #shop-card, #room-card {
+#quiz-card, #board-card, #history-card, #shop-card, #room-card, #login-card {
   background: #212842; border: 1px solid #e7b94f;
   border-radius: 14px; padding: 26px 30px; width: min(480px, 92vw);
   max-height: 88dvh; overflow-y: auto;
@@ -233,7 +276,7 @@ body.touch #history-btn { left: auto; right: 20px; bottom: 96px; }
 }
 #quiz-next.hidden { display: none; }
 
-#board-card h2, #history-card h2, #shop-card h2, #room-card h2 { color: #e7b94f; margin-bottom: 14px; }
+#board-card h2, #history-card h2, #shop-card h2, #room-card h2, #login-card h2 { color: #e7b94f; margin-bottom: 14px; }
 .board-row {
   display: flex; justify-content: space-between;
   padding: 8px 10px; border-radius: 6px; font-size: 14px;
@@ -290,6 +333,7 @@ body.touch #controls-hint { display: none; }
   #score-badge { top: 10px; right: 154px; padding: 6px 11px; font-size: 12px; }
   #shop-btn { top: 48px; right: 114px; width: 32px; height: 32px; font-size: 14px; }
   #home-btn { top: 48px; right: 154px; width: 32px; height: 32px; font-size: 14px; }
+  #gift-btn { top: 48px; right: 194px; width: 32px; height: 32px; font-size: 14px; }
   #room-canvas { width: 100%; height: auto; }
   #quest-hint { bottom: 150px; font-size: 13px; }
   #online-badge { display: flex; }
