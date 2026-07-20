@@ -1,6 +1,8 @@
-"""สัตว์เลี้ยง 15 ชนิด — spritesheet 2 คอลัมน์ (เฟรมเดิน 2 เฟรม) x 15 แถว ช่องละ 16x16 px
+"""สัตว์เลี้ยง — spritesheet 2 คอลัมน์ (เฟรมเดิน 2 เฟรม) x 18 แถว ช่องละ 16x16 px
 
-สไปรต์หันหน้าไปทางซ้าย (เกม flip เองเมื่อเดินขวา) ลำดับแถวต้องตรงกับ PETS
+แถว 0-14 = สัตว์พื้นฐาน 15 ชนิด (เลือกได้ตั้งแต่แรก)
+แถว 15-17 = สัตว์ legendary ปลดล็อกจาก Daily Login (วัน 10/20/30)
+สไปรต์หันหน้าไปทางซ้าย (เกม flip เองเมื่อเดินขวา) ลำดับแถวต้องตรงกับ ALL_PETS
 ใน game/js/pets_data.js  รัน: python build_pets.py
 """
 from pathlib import Path
@@ -9,6 +11,7 @@ from PIL import Image, ImageDraw
 OUT = Path(__file__).resolve().parent
 CELL = 16
 FRAMES = 2
+ROWS = 18
 
 P = {
     "tan": "#d9a441", "tan_d": "#b08631", "cream": "#fff6dc",
@@ -17,10 +20,11 @@ P = {
     "green": "#57b06b", "green_d": "#3c7b57", "teal": "#65a9c2",
     "blue": "#4f8fdd", "orange": "#d97a55", "red": "#b84d5a",
     "yellow": "#e7b94f", "brown": "#8b563f", "brown_d": "#5b3a32",
-    "gold": "#e7b94f",
+    "gold": "#e7b94f", "gold_d": "#b08631", "purple": "#9867a8",
+    "fire": "#e0703f", "fire_d": "#b84d2f", "lilac": "#c9a6e8",
 }
 
-img = Image.new("RGBA", (CELL * FRAMES, CELL * 15), (0, 0, 0, 0))
+img = Image.new("RGBA", (CELL * FRAMES, CELL * ROWS), (0, 0, 0, 0))
 d = ImageDraw.Draw(img)
 
 
@@ -226,5 +230,48 @@ def dragon(ox, oy, f):
     legs(ox, oy, f, "green_d")
 draw_pet(14, dragon)
 
+# ---------- Legendary (ปลดล็อกจาก Daily Login) ----------
+
+# 15 ยูนิคอร์นสายรุ้ง (วัน 10)
+def unicorn(ox, oy, f):
+    b = -1 if f else 0
+    R(ox, oy, 3, 7 + b, 12, 12 + b, "white")
+    R(ox, oy, 1, 4 + b, 6, 9 + b, "white")
+    R(ox, oy, 0, 2 + b, 1, 5 + b, "gold")          # เขา
+    R(ox, oy, 1, 2 + b, 3, 3 + b, "purple")         # แผงคอสี
+    R(ox, oy, 1, 3 + b, 3, 4 + b, "pink")
+    R(ox, oy, 1, 4 + b, 3, 5 + b, "teal")
+    PX(ox, oy, 2, 6 + b, "black")
+    R(ox, oy, 12, 5 + b, 14, 9 + b, "pink")         # หางสายรุ้ง
+    R(ox, oy, 13, 6 + b, 15, 10 + b, "teal")
+    legs(ox, oy, f, "grey_d")
+draw_pet(15, unicorn)
+
+# 16 ฟีนิกซ์เพลิง (วัน 20)
+def phoenix(ox, oy, f):
+    w = 1 if f else 0
+    R(ox, oy, 4, 6, 11, 12, "fire")
+    R(ox, oy, 3, 4, 7, 8, "fire")
+    PX(ox, oy, 4, 5, "black")
+    R(ox, oy, 1, 6, 2, 7, "gold")                  # ปาก
+    R(ox, oy, 2, 2, 4, 4, "gold"); R(ox, oy, 5, 1, 6, 4, "fire_d")  # หงอนไฟ
+    wy = 4 if f else 7
+    R(ox, oy, 7, wy, 10, wy + 3, "gold")           # ปีกไฟ
+    R(ox, oy, 11, 4 - w, 15, 8 - w, "fire_d")      # หางเพลิง
+    R(ox, oy, 6, 13, 6, 15, "gold"); R(ox, oy, 9, 13, 9, 15, "gold")
+draw_pet(16, phoenix)
+
+# 17 สิงโตทองผู้พิทักษ์ (วัน 30)
+def guardian_lion(ox, oy, f):
+    b = -1 if f else 0
+    R(ox, oy, 0, 3 + b, 7, 10 + b, "gold_d")       # แผงคอ
+    R(ox, oy, 3, 7 + b, 13, 12 + b, "gold")
+    R(ox, oy, 1, 5 + b, 6, 9 + b, "gold")
+    PX(ox, oy, 2, 6 + b, "black"); PX(ox, oy, 0, 7 + b, "black")
+    R(ox, oy, 13, 5 + b, 14, 8 + b, "gold_d")      # หางพู่
+    PX(ox, oy, 14, 4 + b, "gold_d")
+    legs(ox, oy, f, "gold_d")
+draw_pet(17, guardian_lion)
+
 img.save(OUT / "pets.png")
-print(f"wrote pets.png {img.size[0]}x{img.size[1]} (15 pets x {FRAMES} frames)")
+print(f"wrote pets.png {img.size[0]}x{img.size[1]} ({ROWS} rows x {FRAMES} frames)")

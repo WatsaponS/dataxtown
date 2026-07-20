@@ -1,13 +1,19 @@
 // ห้องส่วนตัว + ร้านค้าไอเทมตกแต่ง
 // - แต้มซื้อของ = แต้มสะสมจาก quest (leaderboard) ลบด้วยยอดที่ใช้ไป (spent)
 //   ซื้อของหักเฉพาะ "ยอดคงเหลือ" — คะแนนบน leaderboard ไม่ลดลง
-// - ห้องเก็บใน Firebase ที่ homes/<uid> = { name, spent, items:[{id, x, y}] } (x,y = null คือยังไม่วาง)
+// - ห้องเก็บใน Firebase ที่ homes/<uid> = { name, spent, items:[{id, x, y}], greeting,
+//   pet, petName, unlockedPets:[legendary pet id] } (x,y = null คือยังไม่วาง)
 // - เปิดดูห้องคนอื่นได้จากการคลิกชื่อใน online list (read-only), ห้องตัวเองจัดวางของได้
+// - สัตว์เลี้ยงของเจ้าของห้องเดินเล่น+โผล่ทริกในห้องด้วย (ดู updateRoomPet/drawRoomPet)
 
 import { addSystemLine } from "./ui.js";
 import { makeCustomSheet } from "./avatar.js";
 import { spriteFrame } from "./entities.js";
 import { LOGIN_ITEMS, LOGIN_SHEET_COLS, loginItemName } from "./login_data.js";
+import { petImageEl, setPet } from "./pets.js";
+import { PET_FRAME, petIndexOf } from "./pets_data.js";
+
+const ROOM_TRICKS = ["💤", "🎾", "🦴", "💫", "✨", "😽"];
 
 // ลำดับต้องตรงกับ sprite ใน assets/items.png (สร้างจาก assets/build_items.py)
 export const ITEMS = [
@@ -43,6 +49,7 @@ export function initDecor(world, ui) {
     img: null,
     myHome: {
       name: world.player.name, spent: 0, items: [], greeting: "",
+      pet: world.player.petId || null, petName: world.player.petName || null, unlockedPets: [],
       avatar: { variant: world.player.variant, hair: world.player.hair || null, shirt: world.player.shirt || null },
     },
     selected: null,       // index ใน myHome.items ที่เลือกจาก inventory
@@ -72,8 +79,11 @@ export function initDecor(world, ui) {
         dec.myHome = {
           name: world.player.name, spent: v.spent || 0, items: v.items || [],
           greeting: v.greeting || "", login: v.login || null,
+          pet: v.pet || null, petName: v.petName || null, unlockedPets: v.unlockedPets || [],
           avatar: { variant: world.player.variant, hair: world.player.hair || null, shirt: world.player.shirt || null },
         };
+        // ห้องมีสัตว์เลี้ยงบันทึกไว้แต่ผู้เล่นยังไม่ได้ setPet ในเซสชันนี้ (เช่น localStorage ถูกล้าง) — ให้ตรงกัน
+        if (v.pet && !world.player.petId) setPet(world.player, v.pet, v.petName);
       }
     } catch {}
   })();
@@ -258,11 +268,18 @@ function startRoomAnim(world) {
   let sheet = null;
   try { sheet = makeCustomSheet(world, av.variant || 0, { hair: av.hair, shirt: av.shirt }); } catch {}
   const ownerName = v.mine ? world.player.name : (home && home.name) || "?";
+  const petId = v.mine ? dec.myHome.pet : (home && home.pet);
+  const petName = v.mine ? dec.myHome.petName : (home && home.petName);
   const now = performance.now() / 1000;
   dec.anim = {
     sheet, ownerName,
     greeting: () => (v.mine ? dec.myHome.greeting : home && home.greeting) || DEFAULT_GREETING(ownerName),
     bot: { x: 96, y: 104, tx: 96, ty: 104, dir: "down", moving: false, animTime: 0, timer: 1.2 },
+    pet: petId ? {
+      petId, petName,
+      x: 150, y: 110, tx: 150, ty: 110, dir: "down", moving: false, animTime: 0, timer: 1.5,
+      trickUntil: 0, trickEmoji: "💤", nextTrick: now + 3 + Math.random() * 3,
+    } : null,
     bubbleUntil: now + 4, nextBubble: now + 10,
     last: performance.now(), raf: 0,
   };
@@ -272,10 +289,44 @@ function startRoomAnim(world) {
     const dt = Math.min((ts - a.last) / 1000, 0.1);
     a.last = ts;
     updateBot(a, dt);
+    if (a.pet) updateRoomPet(a, dt);
     drawRoom(world);
     a.raf = requestAnimationFrame(loop);
   };
   dec.anim.raf = requestAnimationFrame(loop);
+}
+
+// สัตว์เลี้ยงในห้อง: เดินเล่นอิสระ (ไม่ตามเจ้าของ) + โผล่ทริกเป็นอิโมจิเป็นระยะ
+function updateRoomPet(a, dt) {
+  const b = a.pet;
+  const now = performance.now() / 1000;
+  if (b.moving) {
+    const dx = b.tx - b.x, dy = b.ty - b.y;
+    const dist = Math.hypot(dx, dy);
+    const step = 22 * dt;
+    if (dist <= step) {
+      b.x = b.tx; b.y = b.ty;
+      b.moving = false;
+      b.timer = 0.8 + Math.random() * 1.8;
+    } else {
+      b.x += dx / dist * step;
+      b.y += dy / dist * step;
+      b.dir = Math.abs(dx) > Math.abs(dy) ? (dx < 0 ? "left" : "right") : (dy < 0 ? "up" : "down");
+      b.animTime += dt;
+    }
+  } else {
+    b.timer -= dt;
+    if (b.timer <= 0) {
+      b.tx = 16 + Math.random() * (192 - 32);
+      b.ty = CELL * 2 + 14 + Math.random() * (144 - CELL * 2 - 22);
+      b.moving = true;
+    }
+  }
+  if (now >= b.nextTrick) {
+    b.trickEmoji = ROOM_TRICKS[Math.floor(Math.random() * ROOM_TRICKS.length)];
+    b.trickUntil = now + 1.6;
+    b.nextTrick = now + 4 + Math.random() * 5;
+  }
 }
 
 function stopRoomAnim(dec) {
@@ -346,7 +397,41 @@ function drawRoom(world) {
         it.x * CELL * S, it.y * CELL * S, CELL * S, CELL * S);
     }
   }
+  drawRoomPet(world, c);
   drawBot(world, c);
+}
+
+function drawRoomPet(world, c) {
+  const a = world.decor.anim;
+  if (!a || !a.pet) return;
+  const img = petImageEl();
+  if (!img || !img.complete) return;
+  const idx = petIndexOf(a.pet.petId);
+  if (idx < 0) return;
+  const b = a.pet;
+  const col = b.moving ? Math.floor(b.animTime * 6) % 2 : 0;
+  const flip = b.dir === "right";
+  const size = PET_FRAME;
+  const dx = Math.round(b.x - size / 2) * S, dy = Math.round(b.y - size + 3) * S;
+  c.fillStyle = "rgba(0,0,0,0.22)";
+  c.fillRect(Math.round(b.x - 6) * S, Math.round(b.y - 1) * S, 12 * S, 2 * S);
+  if (flip) {
+    c.save();
+    c.translate(dx + size * S, dy);
+    c.scale(-1, 1);
+    c.drawImage(img, col * size, idx * size, size, size, 0, 0, size * S, size * S);
+    c.restore();
+  } else {
+    c.drawImage(img, col * size, idx * size, size, size, dx, dy, size * S, size * S);
+  }
+  const now = performance.now() / 1000;
+  if (now < b.trickUntil) {
+    const bob = Math.sin((b.trickUntil - now) * 10) * 2 * S;
+    c.font = `${8 * S}px sans-serif`;
+    c.textAlign = "center";
+    c.textBaseline = "middle";
+    c.fillText(b.trickEmoji, b.x * S, (b.y - size - 3) * S - bob);
+  }
 }
 
 function drawBot(world, c) {

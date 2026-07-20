@@ -2,7 +2,7 @@
 // สัตว์เดินตามจุดบนเส้นทางที่ห่างจากเจ้าของปัจจุบันไปทางท้ายเส้นตามระยะที่กำหนด (lag)
 // ข้อดี: เดินตามได้โดยไม่มีทางชนกำแพง เพราะเจ้าของเดินผ่านช่องเดินได้จริงมาแล้วเสมอ
 
-import { PETS, PET_FRAME } from "./pets_data.js";
+import { PET_FRAME, petIndexOf } from "./pets_data.js";
 
 const LAG_DIST = 30;        // px — ระยะห่างจากเจ้าของตามเส้นทาง
 const SAMPLE_MIN_DIST = 5;  // px — บันทึกจุดใหม่เมื่อเจ้าของขยับเกินนี้
@@ -18,15 +18,21 @@ export function loadPetImage() {
   }
   return petImg;
 }
+export function petImageEl() { return petImg; } // ให้โมดูลอื่น (decor.js) ใช้ sheet เดียวกัน
 
-// เรียกครั้งเดียวตอนกำหนด/เปลี่ยนสัตว์เลี้ยงให้ entity (ผู้เล่นหรือ remote)
-export function setPet(ent, petId) {
+// เรียกตอนกำหนด/เปลี่ยนสัตว์เลี้ยงให้ entity (ผู้เล่นหรือ remote) — เปลี่ยนชนิดจะรีเซ็ต trail,
+// แต่แค่เปลี่ยนชื่อ (petId เดิม) จะไม่รีเซ็ตตำแหน่ง/เส้นทางที่กำลังเดินตามอยู่
+export function setPet(ent, petId, petName) {
+  const speciesChanged = ent.petId !== (petId || null);
   ent.petId = petId || null;
+  ent.petName = petId ? (petName || null) : null;
   if (!ent.petId) { ent.pet = null; return; }
-  ent.pet = {
-    x: ent.x, y: ent.y, dir: ent.dir || "down", moving: false, animTime: 0,
-    trail: [{ x: ent.x, y: ent.y }],
-  };
+  if (speciesChanged || !ent.pet) {
+    ent.pet = {
+      x: ent.x, y: ent.y, dir: ent.dir || "down", moving: false, animTime: 0,
+      trail: [{ x: ent.x, y: ent.y }],
+    };
+  }
 }
 
 export function updatePets(world, dt) {
@@ -80,7 +86,7 @@ const DIR_FLIP = { left: false, right: true, up: false, down: false }; // sprite
 export function drawPet(ctx, ent) {
   const img = petImg;
   if (!img || !img.complete || !ent.pet) return;
-  const idx = PETS.findIndex(p => p.id === ent.petId);
+  const idx = petIndexOf(ent.petId);
   if (idx < 0) return;
   const col = ent.pet.moving ? (Math.floor(ent.pet.animTime * 6) % 2) : 0;
   const flip = DIR_FLIP[ent.pet.dir];

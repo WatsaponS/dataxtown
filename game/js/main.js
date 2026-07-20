@@ -15,6 +15,7 @@ import { initLoginRewards, toggleLogin } from "./login_rewards.js";
 import { initTutorial, updateTutorial, toggleTutorial } from "./tutorial.js";
 import { setPet, updatePets, loadPetImage } from "./pets.js";
 import { PETS, PET_FRAME } from "./pets_data.js";
+import { initPetMenu, togglePetMenu } from "./pet_menu.js";
 import { makeCamera, updateCamera, draw } from "./render.js";
 import {
   setupUI, isChatOpen, toggleChat, submitChat,
@@ -60,6 +61,7 @@ let chosenColor = savedVariant % CPG;
 let chosenHair = saved.hair ?? null;    // null = สีเดิมของ variant
 let chosenShirt = saved.shirt ?? null;
 let chosenPet = saved.pet ?? null;      // null = ไม่มีสัตว์เลี้ยง
+let chosenPetName = saved.petName ?? "";
 if (saved.name) document.getElementById("name-input").value = saved.name;
 
 const variantIndex = () => chosenGender * CPG + chosenColor;
@@ -123,6 +125,9 @@ buildSwatchRow("shirt-picker", SHIRT_COLORS, () => chosenShirt, c => { chosenShi
 
 // ---------- ตัวเลือกสัตว์เลี้ยง ----------
 const petPicker = document.getElementById("pet-picker");
+const petNameInput = document.getElementById("pet-name-input");
+petNameInput.value = chosenPetName;
+petNameInput.addEventListener("input", () => { chosenPetName = petNameInput.value.trim().slice(0, 16); });
 function drawPetIcon(canvas, petIndex) {
   const cc = canvas.getContext("2d");
   cc.imageSmoothingEnabled = false;
@@ -155,8 +160,10 @@ function refreshPetPicker() {
   petPicker.querySelectorAll(".pet-opt").forEach(el => {
     el.classList.toggle("selected", (el.dataset.pet || null) === chosenPet);
   });
+  petNameInput.classList.toggle("hidden", !chosenPet);
 }
 buildPetPicker();
+refreshPetPicker();
 
 function updatePreview() {
   const sheet = makeCustomSheet(world, variantIndex(), { hair: chosenHair, shirt: chosenShirt });
@@ -177,6 +184,7 @@ const params = new URLSearchParams(location.search);
 if (params.get("hair")) chosenHair = "#" + params.get("hair").replace("#", "");
 if (params.get("shirt")) chosenShirt = "#" + params.get("shirt").replace("#", "");
 if (params.get("pet")) chosenPet = params.get("pet") === "none" ? null : params.get("pet");
+if (params.get("petname")) chosenPetName = params.get("petname");
 if (params.get("autostart")) {
   document.getElementById("name-input").value = params.get("name") || "Tester";
   startGame();
@@ -198,10 +206,11 @@ function startGame() {
   if (chosenHair || chosenShirt) {
     world.player.sheet = makeCustomSheet(world, variantIndex(), { hair: chosenHair, shirt: chosenShirt });
   }
-  setPet(world.player, chosenPet); // ต้องเรียกก่อน connect net เพื่อให้ payload join มี pet ติดไปด้วย
+  setPet(world.player, chosenPet, chosenPetName); // เรียกก่อน connect net ให้ payload join มี pet ติดไปด้วย
   world.entities.push(world.player);
   localStorage.setItem("dataxtown.avatar", JSON.stringify({
-    name, variant: variantIndex(), hair: chosenHair, shirt: chosenShirt, pet: chosenPet,
+    name, variant: variantIndex(), hair: chosenHair, shirt: chosenShirt,
+    pet: chosenPet, petName: chosenPetName,
   }));
 
   for (const n of NPCS) {
@@ -229,6 +238,7 @@ function startGame() {
     initDecor(world, ui);  // ร้านค้า + ห้องส่วนตัว (ใช้แต้มจาก quests และ uid จาก net)
     initLoginRewards(world, ui); // daily login 30 วัน (popup อัตโนมัติเมื่อมีของให้รับ)
     initTutorial(world, ui);     // ภารกิจแนะนำเกม 8 อย่าง ภารกิจละ 30 แต้ม
+    initPetMenu(world, ui);      // เมนู 🐾 เปลี่ยน/ตั้งชื่อสัตว์เลี้ยง + สัตว์ legendary จาก login
   });
   requestAnimationFrame(loop);
 }
@@ -252,7 +262,7 @@ window.addEventListener("keydown", e => {
   if (e.key === "Escape") {
     toggleBoard(world, false); toggleHistory(world, false);
     toggleShop(world, false); toggleRoom(world, false); toggleLogin(world, false);
-    toggleTutorial(world, false);
+    toggleTutorial(world, false); togglePetMenu(world, false);
   }
   input.add(e.code);
 });

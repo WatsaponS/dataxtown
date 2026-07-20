@@ -5,12 +5,14 @@
 ผู้เล่นเครื่องอื่นใน LAN:  http://<ip-เครื่องนี้>:8700  (สคริปต์พิมพ์ ip ให้ตอนสตาร์ต)
 
 Protocol (JSON ผ่าน WebSocket ที่ path /ws):
-  client -> server: {t:"join", name, variant, hair, shirt, x, y, dir}
+  client -> server: {t:"join", name, variant, hair, shirt, pet, petName, x, y, dir}
                     {t:"move", x, y, dir, moving}
+                    {t:"pet", petId, petName}
                     {t:"chat", text}
   server -> client: {t:"welcome", id, players:[...]}
                     {t:"join", player} / {t:"leave", id}
-                    {t:"move", id, x, y, dir, moving} / {t:"chat", id, text}
+                    {t:"move", id, x, y, dir, moving}
+                    {t:"pet", id, petId, petName} / {t:"chat", id, text}
 """
 import argparse
 import base64
@@ -142,7 +144,7 @@ class GameHandler(SimpleHTTPRequestHandler):
                         "name": str(data.get("name", "Guest"))[:24],
                         "variant": int(data.get("variant", 0)),
                         "hair": data.get("hair"), "shirt": data.get("shirt"),
-                        "pet": data.get("pet"),
+                        "pet": data.get("pet"), "petName": data.get("petName"),
                         "x": float(data.get("x", 0)), "y": float(data.get("y", 0)),
                         "dir": data.get("dir", "down"), "moving": False,
                     }
@@ -151,6 +153,12 @@ class GameHandler(SimpleHTTPRequestHandler):
                     client.info.update(x=float(data["x"]), y=float(data["y"]),
                                        dir=data.get("dir", "down"), moving=bool(data.get("moving")))
                     HUB.broadcast({"t": "move", "id": client.id, **{k: client.info[k] for k in ("x", "y", "dir", "moving")}},
+                                  exclude=client.id)
+                elif client and t == "pet":
+                    pet_id = data.get("petId")
+                    pet_name = data.get("petName")
+                    client.info.update(pet=pet_id, petName=pet_name)
+                    HUB.broadcast({"t": "pet", "id": client.id, "petId": pet_id, "petName": pet_name},
                                   exclude=client.id)
                 elif client and t == "chat":
                     text = str(data.get("text", ""))[:MAX_CHAT_LEN].strip()

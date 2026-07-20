@@ -151,7 +151,13 @@ body.touch #history-btn { left: auto; right: 20px; bottom: 96px; }
   font-size: 16px; cursor: pointer;
   background: rgba(23,27,44,.8); border: 1px solid #394158;
 }
-#shop-btn:hover, #home-btn:hover, #gift-btn:hover, #tutorial-btn:hover { border-color: #e7b94f; }
+#pet-btn {
+  top: 14px; right: 504px;
+  width: 36px; height: 36px; border-radius: 50%;
+  font-size: 16px; cursor: pointer;
+  background: rgba(23,27,44,.8); border: 1px solid #394158;
+}
+#shop-btn:hover, #home-btn:hover, #gift-btn:hover, #tutorial-btn:hover, #pet-btn:hover { border-color: #e7b94f; }
 
 #tutorial-progress { font-size: 12px; color: #e7b94f; margin-bottom: 12px; }
 #tutorial-list { max-height: 58dvh; overflow-y: auto; }
@@ -273,15 +279,15 @@ body.touch #history-btn { left: auto; right: 20px; bottom: 96px; }
 #board-list [data-uid] { cursor: pointer; }
 #board-list [data-uid]:hover { outline: 1px solid rgba(231,185,79,.5); }
 
-#quiz-overlay, #board-overlay, #history-overlay, #shop-overlay, #room-overlay, #login-overlay, #tutorial-overlay {
+#quiz-overlay, #board-overlay, #history-overlay, #shop-overlay, #room-overlay, #login-overlay, #tutorial-overlay, #pet-overlay {
   position: fixed; inset: 0; z-index: 60;
   background: rgba(23,27,44,.85);
   display: flex; align-items: center; justify-content: center;
 }
 #quiz-overlay.hidden, #board-overlay.hidden, #history-overlay.hidden,
-#shop-overlay.hidden, #room-overlay.hidden, #login-overlay.hidden, #tutorial-overlay.hidden { display: none; }
+#shop-overlay.hidden, #room-overlay.hidden, #login-overlay.hidden, #tutorial-overlay.hidden, #pet-overlay.hidden { display: none; }
 
-#quiz-card, #board-card, #history-card, #shop-card, #room-card, #login-card, #tutorial-card {
+#quiz-card, #board-card, #history-card, #shop-card, #room-card, #login-card, #tutorial-card, #pet-card {
   background: #212842; border: 1px solid #e7b94f;
   border-radius: 14px; padding: 26px 30px; width: min(480px, 92vw);
   max-height: 88dvh; overflow-y: auto;
@@ -307,7 +313,7 @@ body.touch #history-btn { left: auto; right: 20px; bottom: 96px; }
 }
 #quiz-next.hidden { display: none; }
 
-#board-card h2, #history-card h2, #shop-card h2, #room-card h2, #login-card h2, #tutorial-card h2 { color: #e7b94f; margin-bottom: 14px; }
+#board-card h2, #history-card h2, #shop-card h2, #room-card h2, #login-card h2, #tutorial-card h2, #pet-card h2 { color: #e7b94f; margin-bottom: 14px; }
 .board-row {
   display: flex; justify-content: space-between;
   padding: 8px 10px; border-radius: 6px; font-size: 14px;
@@ -366,6 +372,7 @@ body.touch #controls-hint { display: none; }
   #home-btn { top: 48px; right: 154px; width: 32px; height: 32px; font-size: 14px; }
   #gift-btn { top: 48px; right: 194px; width: 32px; height: 32px; font-size: 14px; }
   #tutorial-btn { top: 48px; right: 234px; width: 32px; height: 32px; font-size: 14px; }
+  #pet-btn { top: 48px; right: 274px; width: 32px; height: 32px; font-size: 14px; }
   #room-canvas { width: 100%; height: auto; }
   #quest-hint { bottom: 150px; font-size: 13px; }
   #online-badge { display: flex; }
@@ -466,6 +473,41 @@ body.touch #controls-hint { display: none; }
 .pet-opt.selected { border-color: #e7b94f; background: #26324a; }
 .pet-opt.none-opt { justify-content: center; }
 .pet-opt.none-opt .pet-emoji { font-size: 20px; opacity: .5; }
+.pet-opt.locked { cursor: default; opacity: .55; position: relative; }
+.pet-opt.locked canvas { filter: grayscale(1); }
+.pet-opt .lock-badge {
+  font-size: 9px; color: #e7b94f; opacity: 1 !important;
+  background: rgba(23,27,44,.7); border-radius: 4px; padding: 1px 4px; margin-top: 1px;
+}
+
+#pet-name-input {
+  width: 100%; margin-top: 8px; padding: 9px 12px; font-size: 13px;
+  background: #171b2c; color: #fff6dc;
+  border: 1px solid #394158; border-radius: 8px; outline: none;
+}
+#pet-name-input:focus { border-color: #e7b94f; }
+#pet-name-input.hidden { display: none; }
+
+#pet-menu-grid {
+  display: grid; grid-template-columns: repeat(5, 1fr);
+  gap: 6px; max-height: 46dvh; overflow-y: auto; margin-bottom: 4px;
+}
+#pet-menu-name {
+  width: 100%; margin-top: 12px; padding: 9px 12px; font-size: 13px;
+  background: #171b2c; color: #fff6dc;
+  border: 1px solid #394158; border-radius: 8px; outline: none;
+}
+#pet-menu-name:focus { border-color: #e7b94f; }
+#pet-menu-save {
+  margin-top: 10px; width: 100%; padding: 11px;
+  font-size: 14px; font-weight: 700; cursor: pointer;
+  background: #e7b94f; color: #171b2c; border: none; border-radius: 8px;
+}
+#pet-menu-close {
+  margin-top: 8px; width: 100%; padding: 10px;
+  font-size: 14px; font-weight: 700; cursor: pointer;
+  background: #394158; color: #fff6dc; border: none; border-radius: 8px;
+}
 
 #howto {
   margin-top: 18px; padding: 12px 14px;

@@ -94,8 +94,10 @@ python game/tools/cdp_shot.py --url "http://localhost:8700/index.html?autostart=
 | ห้องส่วนตัว + ร้านค้าไอเทม (แคตตาล็อก 20 ชิ้น, ยอดคงเหลือ = points − spent) | `game/js/decor.js` |
 | sprite ไอเทมตกแต่ง (ลำดับต้องตรงแคตตาล็อก) | `game/assets/build_items.py` → `items.png` |
 | ประวัติแชตรวม (โหลดจาก rooms/main/chat) | `game/js/history.js` |
-| สัตว์เลี้ยง 15 ชนิด — เดินตามเจ้าของด้วย trail-follow, sync ผ่าน join payload | `game/js/pets.js`, `game/js/pets_data.js` |
-| sprite สัตว์เลี้ยง (15 แถว × 2 เฟรม, ลำดับต้องตรง pets_data.js) | `game/assets/build_pets.py` → `pets.png` |
+| สัตว์เลี้ยง — เดินตามเจ้าของด้วย trail-follow, sync ผ่าน join payload | `game/js/pets.js`, `game/js/pets_data.js` |
+| sprite สัตว์เลี้ยง (18 แถว × 2 เฟรม: 0-14 พื้นฐาน, 15-17 legendary — ลำดับต้องตรง pets_data.js) | `game/assets/build_pets.py` → `pets.png` |
+| เมนู 🐾 เปลี่ยน/ตั้งชื่อสัตว์เลี้ยงในเกม + lock legendary ที่ยังไม่ปลดล็อก | `game/js/pet_menu.js` |
+| สัตว์เลี้ยงเดินเล่น+โผล่ทริกในห้องส่วนตัว (แยกจาก trail-follow นอกห้อง) | `updateRoomPet`/`drawRoomPet` ใน `game/js/decor.js` |
 | multiplayer server + protocol (JSON: join/move/chat) | `game/server.py` |
 | **ผังชั้น 7** (ห้อง, โต๊ะ, collision, spawn, โซน) | `pixel-art/scb-park-west-b-floor7/build.py` |
 | หน้าตา avatar | `game/assets/build_avatars.py` |
@@ -162,6 +164,14 @@ Copy-Item scb_floor7_map_large3x.json ..\..\game\assets\ -Force
 ## เพิ่มแผนที่ชั้น/อาคารใหม่
 
 สร้างโฟลเดอร์ใหม่ใต้ `pixel-art/` ที่ export PNG + JSON format เดียวกัน แล้วชี้ `CONFIG.mapJson` ใน `data.js` — โค้ดเกมไม่ผูกกับแผนที่ใด
+
+## กติกาสำคัญ: ห้องส่วนตัว (decor.js) ใช้ระบบพิกัด "base" ไม่ใช่ "scaled"
+
+`room-canvas` วาดที่ 384×288 แต่ทุกพิกัด (ตำแหน่งบอท/สัตว์เลี้ยง/เป้าหมายเดิน) เก็บเป็น
+พิกัด **base** (192×144, ยังไม่คูณ `S=2`) แล้วค่อยคูณ `S` ตอนวาดจริงเท่านั้น — ถ้าเผลอ spawn
+ตำแหน่งเป็นพิกัด scaled (เช่น y > 144) วัตถุจะไปโผล่นอกกรอบห้องโดยไม่มี error ให้เห็น (เจอบั๊กนี้
+ตอนทำสัตว์เลี้ยงในห้อง — spawn y:190 เกิน 144 ไปแล้ว) ก่อนเพิ่มวัตถุเคลื่อนไหวใหม่ในห้อง
+ให้เช็คช่วง x∈[16,176] y∈[62,136] (ช่วงที่ `updateRoomPet`/`updateBot` สุ่มเป้าหมายจริง)
 
 ## Multiplayer (เฟส 2 — ใช้งานได้แล้ว, มี 2 โหมด)
 

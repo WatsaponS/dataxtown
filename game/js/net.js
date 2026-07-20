@@ -26,8 +26,12 @@ export function connectNet(world, ui) {
 
   ws.addEventListener("open", () => {
     net.connected = true;
-    send({ t: "join", key: accessKey, name: p.name, variant: p.variant, hair: p.hair, shirt: p.shirt, pet: p.petId, x: p.x, y: p.y, dir: p.dir });
+    send({
+      t: "join", key: accessKey, name: p.name, variant: p.variant, hair: p.hair, shirt: p.shirt,
+      pet: p.petId, petName: p.petName, x: p.x, y: p.y, dir: p.dir,
+    });
     addSystemLine(ui, "🟢 ออนไลน์แล้ว — คนอื่นในออฟฟิศจะเห็นคุณ");
+    net.updatePet = (petId, petName) => send({ t: "pet", petId, petName });
 
     // ส่งตำแหน่งเมื่อมีการเปลี่ยนแปลง (จังหวะ 10 ครั้ง/วินาที)
     let last = "";
@@ -81,6 +85,11 @@ export function connectNet(world, ui) {
         }
         break;
       }
+      case "pet": {
+        const ent = findRemote(world, data.id);
+        if (ent) setPet(ent, data.petId, data.petName);
+        break;
+      }
       case "chat": {
         const ent = findRemote(world, data.id);
         if (ent) speak(world, ent, data.text); // bubble + log ผ่านกติกา canHear ปกติ
@@ -118,7 +127,7 @@ export function addRemote(world, info) {
   if (info.hair || info.shirt) {
     ent.sheet = makeCustomSheet(world, ent.variant, { hair: info.hair, shirt: info.shirt });
   }
-  if (info.pet) setPet(ent, info.pet);
+  if (info.pet) setPet(ent, info.pet, info.petName);
   world.entities.push(ent);
 }
 

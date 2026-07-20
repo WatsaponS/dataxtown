@@ -3,6 +3,7 @@
 import { canHear, spriteFrame } from "./entities.js";
 import { drawQuestMarkers } from "./quests.js";
 import { drawPet } from "./pets.js";
+import { petDisplayName } from "./pets_data.js";
 
 export function makeCamera(config) {
   return { x: 0, y: 0, zoom: config.defaultZoom };
@@ -61,7 +62,23 @@ export function draw(ctx, world, cam) {
     if (ent.bubble && world.time < ent.bubble.until && canHear(world, p, ent)) {
       drawBubble(ctx, ent.bubble.text, sxp, syp - (config.frameH + 12) * cam.zoom);
     }
+    if (ent.petId && ent.pet) {
+      const psx = (ent.pet.x - cam.x) * cam.zoom, psy = (ent.pet.y - cam.y) * cam.zoom;
+      drawPetTag(ctx, ent.petName || petDisplayName(ent.petId), psx, psy - (config.frameW + 2) * cam.zoom);
+    }
   }
+}
+
+function drawPetTag(ctx, text, x, y) {
+  ctx.font = "600 9px 'Segoe UI', 'Leelawadee UI', sans-serif";
+  const w = ctx.measureText(text).width + 8;
+  ctx.fillStyle = "rgba(23,27,44,0.55)";
+  roundRect(ctx, x - w / 2, y - 11, w, 11, 4);
+  ctx.fill();
+  ctx.fillStyle = "#c9d4e3";
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  ctx.fillText(text, x, y - 5.5);
 }
 
 function drawChar(ctx, world, ent) {

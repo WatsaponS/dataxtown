@@ -18,6 +18,7 @@
     <button id="home-btn" type="button" title="ห้องส่วนตัวของฉัน">🏠</button>
     <button id="gift-btn" type="button" title="Daily Login Rewards">🎁</button>
     <button id="tutorial-btn" type="button" title="Tutorial — ภารกิจแนะนำเกม">🎓</button>
+    <button id="pet-btn" type="button" title="เปลี่ยน/ตั้งชื่อสัตว์เลี้ยง">🐾</button>
     <div id="score-badge" title="เปิด leaderboard (L)">🏆 0</div>
     <div id="online-badge">👥 1</div>
     <div id="online-list"></div>
@@ -90,6 +91,16 @@
     </div>
   </div>
 
+  <div id="pet-overlay" class="hidden">
+    <div id="pet-card">
+      <h2>🐾 สัตว์เลี้ยงของฉัน</h2>
+      <div id="pet-menu-grid"></div>
+      <input id="pet-menu-name" type="text" maxlength="16" placeholder="ตั้งชื่อสัตว์เลี้ยง (ไม่บังคับ)">
+      <button id="pet-menu-save" type="button">บันทึก</button>
+      <button id="pet-menu-close" type="button">ปิด</button>
+    </div>
+  </div>
+
   <div id="room-overlay" class="hidden">
     <div id="room-card">
       <h2 id="room-title">🏠 ห้องส่วนตัว</h2>
@@ -131,6 +142,7 @@
       </div>
       <label>สัตว์เลี้ยงคู่ใจ (เดินตามคุณในเกม)</label>
       <div id="pet-picker"></div>
+      <input id="pet-name-input" type="text" maxlength="16" placeholder="ตั้งชื่อสัตว์เลี้ยง (ไม่บังคับ)" class="hidden">
       <div id="howto">
         <label>วิธีเล่น Quest สะสมคะแนน</label>
         <div id="howto-row">
