@@ -7,6 +7,7 @@ import { petDisplayName } from "./pets_data.js";
 import { getDuelPrompt } from "./duel.js";
 import { drawGachaMachine, GACHA_Y } from "./gacha.js";
 import { drawFx } from "./fx.js";
+import { emoteEmoji } from "./emotes_data.js";
 
 export function makeCamera(config) {
   return { x: 0, y: 0, zoom: config.defaultZoom };
@@ -71,6 +72,9 @@ export function draw(ctx, world, cam) {
       const psx = (ent.pet.x - cam.x) * cam.zoom, psy = (ent.pet.y - cam.y) * cam.zoom;
       drawPetTag(ctx, ent.petName || petDisplayName(ent.petId), psx, psy - (config.frameW + 2) * cam.zoom);
     }
+    if (ent.emoteType && Date.now() < (ent.emoteUntil || 0)) {
+      drawEmote(ctx, world, ent.emoteType, sxp, syp - (config.frameH + 20) * cam.zoom);
+    }
   }
 
   drawDuelPrompt(ctx, world, cam);
@@ -98,6 +102,17 @@ function drawDuelPrompt(ctx, world, cam) {
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
   ctx.fillText(text, sxp, syp + 1);
+}
+
+// อีโมทท่าทางลอยเด้งเหนือหัว — ใหญ่กว่าป้ายชื่อให้เห็นชัดจากระยะไกล
+function drawEmote(ctx, world, type, x, y) {
+  const emoji = emoteEmoji(type);
+  if (!emoji) return;
+  const bob = Math.sin(world.time * 6) * 4;
+  ctx.font = "20px 'Segoe UI Emoji', 'Segoe UI', sans-serif";
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  ctx.fillText(emoji, x, y - bob);
 }
 
 function drawPetTag(ctx, text, x, y) {

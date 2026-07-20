@@ -9,6 +9,7 @@ import { refreshOnlineList, addSystemLine } from "./ui.js";
 import { findRemote, addRemote } from "./net.js";
 import { setPet } from "./pets.js";
 import { FIREBASE_CONFIG } from "./firebase-config.js";
+import { EMOTE_DURATION_MS } from "./emotes_data.js";
 
 const SDK = "https://www.gstatic.com/firebasejs/10.12.2";
 
@@ -69,6 +70,8 @@ export async function connectFirebase(world, ui) {
         // เปลี่ยนแค่ชื่อสัตว์เลี้ยง (ชนิดเดิม) ไม่ต้องรีเซ็ต trail ที่กำลังเดินตามอยู่
         if (v.pet !== ent.petId) setPet(ent, v.pet, v.petName);
         else if (ent.petId) ent.petName = v.petName || null;
+        // ท่าทาง — ใช้เวลาที่รับสดบนเครื่องเราเอง (กันนาฬิกา client เพี้ยนกับ serverTimestamp)
+        if (v.emote) { ent.emoteType = v.emote.type; ent.emoteUntil = Date.now() + EMOTE_DURATION_MS; }
       }
     });
     onChildRemoved(playersRef, snap => {
