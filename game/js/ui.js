@@ -45,6 +45,17 @@ export function submitChat(ui, world) {
   toggleChat(ui, world, false);
 }
 
+const MSG_LIFETIME_MS = 8000; // ข้อความค้างจอได้แค่นี้ก่อนจางหาย กันบังฉากเกมนานเกินไป (โดยเฉพาะจอมือถือ)
+const MSG_FADE_MS = 600;
+
+// จางแล้วลบตัวเองทิ้งหลังครบเวลา — ประวัติเต็มยังดูย้อนได้ผ่านปุ่ม 📜 (history.js อ่านจาก Firebase ตรง ๆ)
+function scheduleFade(div) {
+  setTimeout(() => {
+    div.classList.add("msg-fade");
+    setTimeout(() => div.remove(), MSG_FADE_MS);
+  }, MSG_LIFETIME_MS);
+}
+
 export function addChatLine(ui, name, text, self) {
   const div = document.createElement("div");
   div.className = "msg";
@@ -55,6 +66,7 @@ export function addChatLine(ui, name, text, self) {
   ui.chatLog.appendChild(div);
   while (ui.chatLog.children.length > 30) ui.chatLog.firstChild.remove();
   ui.chatLog.scrollTop = ui.chatLog.scrollHeight;
+  scheduleFade(div);
 }
 
 export function addSystemLine(ui, text) {
@@ -63,6 +75,7 @@ export function addSystemLine(ui, text) {
   div.textContent = text;
   ui.chatLog.appendChild(div);
   ui.chatLog.scrollTop = ui.chatLog.scrollHeight;
+  scheduleFade(div);
 }
 
 // แบนเนอร์เมื่อผู้เล่นเข้า/ออกโซน

@@ -66,7 +66,9 @@ html, body {
   background: rgba(23,27,44,.75); border-radius: 6px;
   padding: 3px 8px; margin-top: 3px; max-width: 100%;
   text-shadow: 0 1px 2px rgba(0,0,0,.5);
+  transition: opacity .6s ease;
 }
+#chat-log .msg.msg-fade { opacity: 0; }
 #chat-log .msg b { color: #e7b94f; }
 #chat-log .msg.sys { color: #77b9b4; font-style: italic; }
 
@@ -480,7 +482,8 @@ body.touch #controls-hint { display: none; }
   #online-list { display: none; top: 152px; right: 10px; width: 150px; font-size: 11px; }
   #online-list.open { display: block; }
   #zone-banner { font-size: 12px; padding: 6px 14px; top: 12px; max-width: 60vw; text-align: center; }
-  #chat-log { left: 12px; bottom: 158px; width: 58vw; max-width: 250px; max-height: 130px; font-size: 12px; }
+  #chat-log { left: 12px; bottom: 158px; width: 58vw; max-width: 230px; max-height: 96px; font-size: 12px; }
+  #chat-log .msg { padding: 2px 7px; }
   body.touch #chat-bar { left: 12px; right: 86px; width: auto; bottom: 16px; z-index: 30; }
   #start-card { width: 92vw; max-width: 380px; padding: 20px 22px; max-height: 92dvh; overflow-y: auto; }
   #start-card h1 { font-size: 22px; }
