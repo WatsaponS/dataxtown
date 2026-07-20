@@ -11,6 +11,7 @@ import { makeCustomSheet } from "./avatar.js";
 import { spriteFrame } from "./entities.js";
 import { LOGIN_ITEMS, LOGIN_SHEET_COLS, loginItemName } from "./login_data.js";
 import { GACHA_SHEET_COLS, gachaItemName } from "./gacha_data.js";
+import { SEASON_SHEET_COLS, seasonItemName } from "./season_data.js";
 import { petImageEl, setPet } from "./pets.js";
 import { PET_FRAME, petIndexOf } from "./pets_data.js";
 
@@ -71,6 +72,9 @@ export function initDecor(world, ui) {
   const gachaImg = new Image();
   gachaImg.onload = () => { dec.gachaImg = gachaImg; };
   gachaImg.src = "assets/gacha_items.png";
+  const seasonImg = new Image();
+  seasonImg.onload = () => { dec.seasonImg = seasonImg; };
+  seasonImg.src = "assets/season_items.png";
 
   // โหลดห้องตัวเองจาก Firebase (ถ้ามี) — dec.ready ให้โมดูลอื่นรอก่อนแตะ myHome
   const fb = world.net && world.net.fb;
@@ -80,7 +84,10 @@ export function initDecor(world, ui) {
       const snap = await fb.get(fb.ref(fb.db, `homes/${world.net.uid}`));
       const v = snap.val();
       if (v) {
+        // ...v ก่อน แล้วค่อย override เฉพาะฟิลด์ที่ต้อง normalize — กันฟิลด์ใหม่ที่โมดูลอื่นเพิ่ม
+        // ทีหลัง (achievements, daily, seasonReward, ...) หายไปเงียบ ๆ ตอนโหลดรอบถัดไป
         dec.myHome = {
+          ...v,
           name: world.player.name, spent: v.spent || 0, items: v.items || [],
           greeting: v.greeting || "", login: v.login || null,
           pet: v.pet || null, petName: v.petName || null, unlockedPets: v.unlockedPets || [],
@@ -142,6 +149,11 @@ export function spriteRef(dec, id) {
     if (n >= 0 && n < LOGIN_ITEMS.length) return { img: dec.loginImg, idx: n, cols: LOGIN_SHEET_COLS };
     return null;
   }
+  if (id && id.startsWith("season")) {
+    const n = parseInt(id.slice(6), 10);
+    if (n >= 0) return { img: dec.seasonImg, idx: n, cols: SEASON_SHEET_COLS };
+    return null;
+  }
   const idx = SPRITE[id];
   return idx == null ? null : { img: dec.img, idx, cols: SHEET_COLS };
 }
@@ -149,6 +161,7 @@ export function spriteRef(dec, id) {
 export function itemName(id) {
   if (id && id.startsWith("gacha")) return gachaItemName(id) + " 🎰";
   if (id && id.startsWith("login")) return loginItemName(id) + " ✨";
+  if (id && id.startsWith("season")) return seasonItemName(id) + " 🏆";
   const idx = SPRITE[id];
   return idx == null ? id : ITEMS[idx].name;
 }

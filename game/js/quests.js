@@ -6,6 +6,8 @@ import { tileBlocked } from "./world.js";
 import { addSystemLine } from "./ui.js";
 import { spawnBurst } from "./fx.js";
 import { bumpStat } from "./achievements.js";
+import { saveHome } from "./decor.js";
+import { SEASON_REWARD_ITEMS } from "./season_data.js";
 
 const SPOT_COUNT = 3;
 const INTERACT_RADIUS = 44;   // px — ระยะกดเริ่ม quiz
@@ -17,7 +19,9 @@ export function initQuests(world, ui) {
     spots: [],
     session: null,      // { questions:[...], idx, correct, spot }
     points: 0,
-    board: {},          // uid -> { name, points }
+    seasonPoints: 0,    // คะแนนสัปดาห์นี้ (รีเซ็ตทุกสัปดาห์ แยกจาก points ตลอดกาล)
+    boardMode: "alltime", // "alltime" | "season" — แท็บที่กำลังดูอยู่ใน leaderboard
+    board: {},          // uid -> { name, points, seasonPoints, seasonId, title, dept }
     nearSpot: null,
     el: {
       hint: document.getElementById("quest-hint"),
@@ -43,8 +47,13 @@ export function initQuests(world, ui) {
       q.board = snap.val() || {};
       const mine = q.board[world.net.uid];
       if (mine && mine.points > q.points) q.points = mine.points; // resume คะแนนเดิม
+      // resume คะแนนสัปดาห์นี้เฉพาะถ้ายังเป็นสัปดาห์เดียวกัน (ข้ามสัปดาห์แล้ว = เริ่มนับใหม่จาก 0)
+      if (mine && mine.seasonId === seasonId() && (mine.seasonPoints || 0) > q.seasonPoints) {
+        q.seasonPoints = mine.seasonPoints;
+      }
       updateBadge(world);
       if (!q.el.board.classList.contains("hidden")) renderBoard(world);
+      checkSeasonRollover(world, ui);
     });
   }
   updateBadge(world);
@@ -54,7 +63,19 @@ export function initQuests(world, ui) {
   q.el.badge.addEventListener("click", () => toggleBoard(world, true));
   q.el.next.addEventListener("click", () => advanceQuiz(world, ui));
   document.getElementById("board-close").addEventListener("click", () => toggleBoard(world, false));
+  document.getElementById("board-tab-all").addEventListener("click", () => setBoardMode(world, "alltime"));
+  document.getElementById("board-tab-season").addEventListener("click", () => setBoardMode(world, "season"));
   addSystemLine(ui, "❓ มี Quiz Databricks ซ่อนอยู่ 3 จุดในออฟฟิศ — เดินไปหาแล้วกด E เพื่อสะสมคะแนน!");
+}
+
+// รูปแบบสัปดาห์ ISO 8601 เช่น "2026-W30" — ใช้แบ่งฤดูกาล leaderboard รายสัปดาห์
+export function seasonId(d = new Date()) {
+  const date = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+  const dayNum = date.getUTCDay() || 7; // จันทร์=1 ... อาทิตย์=7
+  date.setUTCDate(date.getUTCDate() + 4 - dayNum);
+  const yearStart = new Date(Date.UTC(date.getUTCFullYear(), 0, 1));
+  const weekNo = Math.ceil((((date - yearStart) / 86400000) + 1) / 7);
+  return `${date.getUTCFullYear()}-W${String(weekNo).padStart(2, "0")}`;
 }
 
 function randomSpot(world, q) {
@@ -149,11 +170,12 @@ function advanceQuiz(world, ui) {
   }
 }
 
-// ให้แต้มจากระบบอื่น (เช่น tutorial) — บันทึกขึ้น leaderboard ทันที
+// ให้แต้มจากระบบอื่น (เช่น tutorial/duel/quiz) — บันทึกขึ้น leaderboard ทันที (ทั้ง all-time และสัปดาห์นี้)
 export function awardPoints(world, n) {
   const q = world.quests;
   if (!q) return;
   q.points += n;
+  q.seasonPoints = (q.seasonPoints || 0) + n;
   savePoints(world);
   updateBadge(world);
 }
@@ -161,9 +183,7 @@ export function awardPoints(world, n) {
 function finishQuiz(world, ui) {
   const q = world.quests, s = q.session;
   const gained = s.correct * POINTS_PER_CORRECT;
-  q.points += gained;
-  savePoints(world);
-  updateBadge(world);
+  awardPoints(world, gained);
   addSystemLine(ui, `🏁 จบ quiz: ตอบถูก ${s.correct}/${s.questions.length} ได้ +${gained} คะแนน (รวม ${q.points})`);
   if (world.onQuizDone) world.onQuizDone(s.correct); // ส่งจำนวนข้อถูกไปด้วย (missions.js ใช้เช็คว่าถูกอย่างน้อย 1 ข้อไหม)
   // จุดเดิมหายไป เกิดจุดใหม่ที่อื่น
@@ -185,6 +205,8 @@ function savePoints(world) {
   fb.update(fb.ref(fb.db, `leaderboard/${world.net.uid}`), {
     name: world.player.name,
     points: world.quests.points,
+    seasonPoints: world.quests.seasonPoints || 0,
+    seasonId: seasonId(),
     ts: Date.now(),
   }).catch(() => {});
 }
@@ -205,18 +227,42 @@ export function toggleBoard(world, open) {
   }
 }
 
+function setBoardMode(world, mode) {
+  const q = world.quests;
+  if (!q) return;
+  q.boardMode = mode;
+  document.getElementById("board-tab-all").classList.toggle("active", mode === "alltime");
+  document.getElementById("board-tab-season").classList.toggle("active", mode === "season");
+  renderBoard(world);
+}
+
 function renderBoard(world) {
   const q = world.quests;
   const list = q.el.boardList;
   list.textContent = "";
-  const rows = Object.entries(q.board)
-    .map(([uid, v]) => ({ uid, name: v.name || "?", points: v.points || 0 }));
-  if (!rows.some(r => r.uid === (world.net && world.net.uid))) {
-    rows.push({ uid: world.net && world.net.uid, name: world.player.name + " (คุณ)", points: q.points });
+  const season = q.boardMode === "season";
+  const sid = seasonId();
+  const myUid = world.net && world.net.uid;
+
+  let rows;
+  if (season) {
+    rows = Object.entries(q.board)
+      .filter(([, v]) => v.seasonId === sid)
+      .map(([uid, v]) => ({ uid, name: v.name || "?", points: v.seasonPoints || 0 }));
+    if (myUid && !rows.some(r => r.uid === myUid)) {
+      rows.push({ uid: myUid, name: world.player.name + " (คุณ)", points: q.seasonPoints || 0 });
+    }
+  } else {
+    rows = Object.entries(q.board).map(([uid, v]) => ({ uid, name: v.name || "?", points: v.points || 0 }));
+    if (!rows.some(r => r.uid === myUid)) {
+      rows.push({ uid: myUid, name: world.player.name + " (คุณ)", points: q.points });
+    }
   }
   rows.sort((a, b) => b.points - a.points);
-  if (rows.length === 0) {
-    list.textContent = "ยังไม่มีคะแนน — ไปตามหา ❓ ในออฟฟิศเลย!";
+  if (rows.length === 0 || (rows.length === 1 && rows[0].points === 0)) {
+    list.textContent = season
+      ? "สัปดาห์นี้ยังไม่มีใครทำคะแนนเลย — ไปลุยก่อนเลย!"
+      : "ยังไม่มีคะแนน — ไปตามหา ❓ ในออฟฟิศเลย!";
     return;
   }
   rows.slice(0, 20).forEach((r, i) => {
@@ -231,6 +277,43 @@ function renderBoard(world) {
     row.append(nameSpan, ptSpan);
     list.appendChild(row);
   });
+}
+
+// ---------- จบฤดูกาลรายสัปดาห์: เช็คแค่ครั้งเดียวต่อ session ว่าติดอันดับ 1-3 ของสัปดาห์ที่เพิ่งจบไหม ----------
+// หมายเหตุ: เป็นการประมาณจาก snapshot ล่าสุดที่มี ณ ตอนเช็ค (ไม่มี backend ตัดสินกลาง เหมือนระบบดวลที่ไว้ใจฝั่ง "a")
+let seasonRolloverChecked = false;
+
+function checkSeasonRollover(world, ui) {
+  if (seasonRolloverChecked) return;
+  const q = world.quests;
+  const myUid = world.net && world.net.uid;
+  const mine = myUid && q.board[myUid];
+  if (!mine || !mine.seasonId) { seasonRolloverChecked = true; return; }
+  const curWeek = seasonId();
+  if (mine.seasonId === curWeek) { seasonRolloverChecked = true; return; } // ยังสัปดาห์เดิม ไม่มีอะไรต้องทำ
+  seasonRolloverChecked = true;
+
+  const endedWeek = mine.seasonId;
+  const rows = Object.entries(q.board)
+    .filter(([, v]) => v.seasonId === endedWeek && (v.seasonPoints || 0) > 0)
+    .map(([uid, v]) => ({ uid, points: v.seasonPoints || 0 }))
+    .sort((a, b) => b.points - a.points);
+  const myRank = rows.findIndex(r => r.uid === myUid) + 1; // 0 = ไม่ติดอันดับ/ไม่มีคะแนน
+  if (myRank >= 1 && myRank <= 3) claimSeasonReward(world, ui, endedWeek, myRank);
+}
+
+async function claimSeasonReward(world, ui, weekId, rank) {
+  const dec = world.decor;
+  if (!dec) return;
+  await (dec.ready || Promise.resolve());
+  if (!dec.myHome.seasonReward) dec.myHome.seasonReward = { claimedFor: "" };
+  if (dec.myHome.seasonReward.claimedFor === weekId) return; // เคลมไปแล้ว กันซ้ำ
+  dec.myHome.seasonReward.claimedFor = weekId;
+  const item = SEASON_REWARD_ITEMS[rank - 1];
+  dec.myHome.items.push({ id: item.id, x: null, y: null });
+  saveHome(world);
+  const medal = ["🥇", "🥈", "🥉"][rank - 1];
+  addSystemLine(ui, `${medal} สัปดาห์ที่แล้วคุณติดอันดับ ${rank} บน Leaderboard! ได้ "${item.name}" เป็นรางวัล 🎁 ไปจัดวางในห้องได้เลย!`);
 }
 
 // ---------- วาด marker (screen space — เรียกจาก render.js) ----------

@@ -402,6 +402,12 @@ body.touch #history-btn { left: auto; right: 20px; bottom: 96px; }
 }
 #online-list [data-uid] { cursor: pointer; }
 #online-list [data-uid]:hover { color: #e7b94f; }
+#board-tabs { display: flex; gap: 6px; margin-bottom: 10px; }
+#board-tabs button {
+  flex: 1; padding: 7px; font-size: 12px; font-weight: 700; cursor: pointer;
+  background: #171b2c; color: #c9d4e3; border: 1px solid #394158; border-radius: 8px;
+}
+#board-tabs button.active { background: #e7b94f; color: #171b2c; border-color: #e7b94f; }
 #board-hint { font-size: 11px; opacity: .65; margin: -8px 0 10px; }
 #board-list [data-uid] { cursor: pointer; }
 #board-list [data-uid]:hover { outline: 1px solid rgba(231,185,79,.5); }
