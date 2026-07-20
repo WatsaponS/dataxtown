@@ -45,6 +45,7 @@ export function initDuel(world, ui) {
       world.net.fb.update(duel.ref, { [field]: btn.dataset.choice }).catch(() => {});
     });
   });
+  document.getElementById("duel-hint").addEventListener("click", () => tryDuelNearby(world, ui));
 
   const fb = world.net && world.net.fb;
   if (!fb || !world.net.uid) return; // โหมด WebSocket/ออฟไลน์: ปุ่มยังกดได้แต่ sendChallenge จะแจ้งเตือนแทน
@@ -69,7 +70,11 @@ export function initDuel(world, ui) {
 
 // เรียกทุกเฟรมจาก game loop — หาผู้เล่นจริงที่ใกล้เราที่สุดในระยะ DUEL_RANGE
 export function updateDuelProximity(world) {
-  if (duel || !world.player) { nearbyTarget = null; return; }
+  if (duel || !world.player) {
+    nearbyTarget = null;
+    document.getElementById("duel-hint").classList.add("hidden");
+    return;
+  }
   let best = null, bestDist = DUEL_RANGE;
   for (const ent of world.entities) {
     if (ent.kind !== "remote") continue;
@@ -77,6 +82,7 @@ export function updateDuelProximity(world) {
     if (d <= bestDist) { bestDist = d; best = ent; }
   }
   nearbyTarget = best ? { ent: best, uid: best.id.slice(7), name: best.name } : null;
+  document.getElementById("duel-hint").classList.toggle("hidden", !nearbyTarget);
 }
 
 // ให้ render.js เรียกดูว่าตอนนี้ควรวาดป้ายชวนดวลเหนือหัวใครไหม

@@ -120,6 +120,16 @@ html, body {
 }
 #gacha-hint.hidden { display: none; }
 
+#duel-hint {
+  position: fixed; bottom: 180px; left: 50%; transform: translateX(-50%);
+  background: rgba(231,185,79,.95); color: #171b2c;
+  padding: 10px 20px; border-radius: 22px;
+  font-size: 14px; font-weight: 700; cursor: pointer;
+  box-shadow: 0 4px 16px rgba(0,0,0,.4); z-index: 15;
+  animation: quest-bob 1.2s ease-in-out infinite;
+}
+#duel-hint.hidden { display: none; }
+
 #gacha-balance { font-size: 12px; color: #e7b94f; margin-bottom: 10px; }
 #gacha-rates {
   display: grid; grid-template-columns: 1fr 1fr; gap: 4px 10px;
