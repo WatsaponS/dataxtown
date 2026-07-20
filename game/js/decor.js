@@ -96,6 +96,14 @@ export function initDecor(world, ui) {
     const row = e.target.closest("[data-uid]");
     if (row && row.dataset.uid) openRoom(world, row.dataset.uid);
   });
+  // คลิกแถวใน leaderboard = ส่องห้องของคนนั้น (ได้แม้เจ้าตัวออฟไลน์ — ห้องอยู่ใน Firebase)
+  document.getElementById("board-list").addEventListener("click", e => {
+    const row = e.target.closest("[data-uid]");
+    if (row && row.dataset.uid) {
+      document.getElementById("board-overlay").classList.add("hidden");
+      openRoom(world, row.dataset.uid, row.dataset.name);
+    }
+  });
 }
 
 const earned = world => (world.quests ? world.quests.points : 0);
@@ -171,7 +179,7 @@ function buy(world, it) {
 
 // ---------- ห้องส่วนตัว ----------
 
-export async function openRoom(world, uid) {
+export async function openRoom(world, uid, fallbackName) {
   const dec = world.decor;
   const myUid = (world.net && world.net.uid) || "me";
   const mine = uid === "me" || uid === myUid;
@@ -183,6 +191,8 @@ export async function openRoom(world, uid) {
     if (fb) {
       try { home = (await fb.get(fb.ref(fb.db, `homes/${uid}`))).val(); } catch {}
     }
+    // ยังไม่เคยแต่งห้อง = ห้องเปล่า แต่ยังโชว์ชื่อ/บอทของเจ้าของได้
+    if (!home && fallbackName) home = { name: fallbackName, spent: 0, items: [] };
     dec.viewing = { uid, home, mine: false };
   }
   dec.selected = null;

@@ -201,6 +201,7 @@ function renderBoard(world) {
   rows.slice(0, 20).forEach((r, i) => {
     const row = document.createElement("div");
     row.className = "board-row" + (world.net && r.uid === world.net.uid ? " me" : "");
+    if (r.uid) { row.dataset.uid = r.uid; row.dataset.name = r.name; } // คลิกเพื่อส่องห้อง (decor.js ผูก handler)
     const medal = ["🥇", "🥈", "🥉"][i] || `${i + 1}.`;
     const nameSpan = document.createElement("span");
     nameSpan.textContent = `${medal} ${r.name}`;
