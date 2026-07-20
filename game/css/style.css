@@ -377,6 +377,18 @@ body.touch #history-btn { left: auto; right: 20px; bottom: 96px; }
 }
 .duel-choice:hover { border-color: #e7b94f; background: #26324a; }
 #duel-reveal { margin-top: 14px; font-size: 14px; font-weight: 600; min-height: 20px; }
+#duel-history {
+  margin-top: 14px; padding-top: 12px; border-top: 1px solid #394158;
+  text-align: left; font-size: 12px; color: #c9d4e3;
+}
+#duel-history.hidden { display: none; }
+#duel-history .duel-history-title { font-size: 12px; font-weight: 700; color: #e7b94f; margin-bottom: 6px; }
+.duel-history-row { padding: 3px 0; display: flex; align-items: center; gap: 8px; }
+.duel-history-row .rlabel { color: #8f9bb3; font-weight: 700; flex: 0 0 52px; }
+.duel-history-row .rboth { flex: 1; text-align: center; }
+.duel-history-row .rresult { font-weight: 700; flex: 0 0 32px; text-align: right; }
+.duel-history-row .rresult.win { color: #57b06b; }
+.duel-history-row .rresult.lose { color: #e2703a; }
 #duel-cancel-btn {
   margin-top: 16px; width: 100%; padding: 10px;
   font-size: 13px; font-weight: 700; cursor: pointer;

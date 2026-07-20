@@ -139,7 +139,7 @@ function handleDuelUpdate(world, ui, snap) {
       finishDuelCleanup(world);
       break;
     case "active":
-      showDuelPlay(v);
+      showDuelPlay(world, v);
       if (duel.isA && !duel.resolving && v.choiceA && v.choiceB) resolveRound(world, v);
       break;
     case "done":
@@ -161,6 +161,7 @@ function resolveRound(world, v) {
   } else {
     patch.winsA = v.winsA + (result === "a" ? 1 : 0);
     patch.winsB = v.winsB + (result === "b" ? 1 : 0);
+    patch[`history/${v.round}`] = { a: v.choiceA, b: v.choiceB, result }; // เก็บผลแต่ละตาไว้สรุปตอนจบ
     if (patch.winsA >= 2 || patch.winsB >= 2) {
       patch.status = "done";
       patch.winner = patch.winsA >= 2 ? v.a : v.b;
@@ -191,6 +192,7 @@ function showWaitingForAccept() {
   document.getElementById("duel-status").textContent = `รอ ${duel.oppName} ตอบรับคำท้า...`;
   document.getElementById("duel-choices").classList.add("hidden");
   document.getElementById("duel-reveal").textContent = "";
+  document.getElementById("duel-history").classList.add("hidden");
   document.getElementById("duel-cancel-btn").textContent = "ยกเลิกคำท้า";
 }
 
@@ -200,13 +202,14 @@ function showIncomingChallenge(v) {
   document.getElementById("duel-incoming-overlay").classList.remove("hidden");
 }
 
-function showDuelPlay(v) {
+function showDuelPlay(world, v) {
   document.getElementById("duel-incoming-overlay").classList.add("hidden");
   document.getElementById("duel-overlay").classList.remove("hidden");
   document.getElementById("duel-title").textContent = `⚔️ เป่ายิ้งฉุบ vs ${duel.oppName}`;
   const myWins = duel.isA ? v.winsA : v.winsB, oppWins = duel.isA ? v.winsB : v.winsA;
   document.getElementById("duel-score").textContent = `คุณ ${myWins} - ${oppWins} ${duel.oppName} · รอบที่ ${v.round}`;
   document.getElementById("duel-cancel-btn").textContent = "ยกเลิกดวล";
+  document.getElementById("duel-history").classList.add("hidden");
 
   const myChoice = duel.isA ? v.choiceA : v.choiceB;
   const oppChoice = duel.isA ? v.choiceB : v.choiceA;
@@ -220,13 +223,15 @@ function showDuelPlay(v) {
     statusEl.textContent = "เลือกไม้ของคุณ!";
   }
 
+  // ป้ายสรุปผลตาล่าสุด บอกชื่อจริงว่าใครออกอะไร (ไม่ใช่แค่ "คุณ")
   const revealEl = document.getElementById("duel-reveal");
   if (v.lastResult) {
     const mine = duel.isA ? v.lastChoiceA : v.lastChoiceB;
     const theirs = duel.isA ? v.lastChoiceB : v.lastChoiceA;
     const text = v.lastResult === "draw" ? "🤝 เสมอ! เล่นรอบนี้ใหม่"
       : (v.lastResult === "a") === duel.isA ? "🎉 คุณชนะรอบนี้!" : "😢 คุณแพ้รอบนี้";
-    revealEl.textContent = `${CHOICE_EMOJI[mine] || ""} vs ${CHOICE_EMOJI[theirs] || ""} — ${text}`;
+    revealEl.textContent =
+      `${world.player.name} ${CHOICE_EMOJI[mine] || ""} vs ${duel.oppName} ${CHOICE_EMOJI[theirs] || ""} — ${text}`;
   } else {
     revealEl.textContent = "";
   }
@@ -251,5 +256,44 @@ function showDuelResult(world, ui, v) {
     awardPoints(world, WIN_POINTS);
     addSystemLine(ui, `⚔️ ชนะ ${duel.oppName} เป่ายิ้งฉุบ 2 ใน 3! +${WIN_POINTS} แต้ม 🎉`);
   }
+  renderDuelHistory(world, v);
   setTimeout(() => { if (duel && duel.status === "done") finishDuelCleanup(world); }, 3500);
+}
+
+const ROUND_LABEL = ["ตาแรก", "ตาที่สอง", "ตาที่สาม"];
+
+// สรุปภาพรวมทุกตาตอนจบดวล — ใครออกอะไร ใครชนะ/แพ้/เสมอในแต่ละตา
+function renderDuelHistory(world, v) {
+  const el = document.getElementById("duel-history");
+  const hist = v.history || {};
+  const rounds = Object.keys(hist).map(Number).sort((a, b) => a - b);
+  if (!rounds.length) { el.classList.add("hidden"); return; }
+
+  el.innerHTML = "";
+  const title = document.createElement("div");
+  title.className = "duel-history-title";
+  title.textContent = "📋 สรุปผลแต่ละตา";
+  el.appendChild(title);
+
+  for (const rnd of rounds) {
+    const h = hist[rnd];
+    const myChoice = duel.isA ? h.a : h.b;
+    const oppChoice = duel.isA ? h.b : h.a;
+    const iWonRound = (h.result === "a") === duel.isA;
+    const row = document.createElement("div");
+    row.className = "duel-history-row";
+    const label = document.createElement("span");
+    label.className = "rlabel";
+    label.textContent = ROUND_LABEL[rnd - 1] || `ตาที่ ${rnd}`;
+    const mid = document.createElement("span");
+    mid.className = "rboth";
+    mid.textContent =
+      `${world.player.name} ${CHOICE_EMOJI[myChoice] || ""} vs ${CHOICE_EMOJI[oppChoice] || ""} ${duel.oppName}`;
+    const res = document.createElement("span");
+    res.className = "rresult " + (iWonRound ? "win" : "lose");
+    res.textContent = iWonRound ? "ชนะ" : "แพ้";
+    row.append(label, mid, res);
+    el.appendChild(row);
+  }
+  el.classList.remove("hidden");
 }
