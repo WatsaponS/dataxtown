@@ -42,6 +42,8 @@ export const ZONE_INFO = {
   lift_lobby:           { name: "🛗 โถงลิฟต์", note: "" },
   phone_booth_northwest:{ name: "📞 Phone Booth (เหนือ)", note: "คุยส่วนตัว" },
   phone_booths:         { name: "📞 Phone Booth", note: "คุยส่วนตัว" },
+  huddle_room:          { name: "🔒 Huddle Room", note: "ห้องคุยเล็กสำหรับ 2 คน เสียงไม่รั่วออกนอกห้อง" },
+  supply_closet:        { name: "🗄️ ห้องเก็บอุปกรณ์", note: "" },
 };
 
 // ประเภทโซนที่ "เสียงไม่รั่ว" — ต้องอยู่โซน id เดียวกันถึงได้ยินกัน (ใช้ใน canHear)

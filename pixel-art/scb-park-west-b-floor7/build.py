@@ -31,7 +31,7 @@ def Z(value):
 P = {
     "void": "#171b2c", "outline": "#26324a", "wall": "#e9d7b0",
     "wall_hi": "#fff0cf", "corridor": "#c8b58c", "floor": "#f0e8d8",
-    "floor_alt": "#f0e8d8", "carpet": "#d895bd", "meeting": "#dcb66f",
+    "floor_alt": "#e9ddc4", "carpet": "#d895bd", "meeting": "#dcb66f",
     "room": "#31566d", "room_hi": "#47788a", "core": "#586274",
     "core_hi": "#737e8d", "desk": "#795b46", "desk_hi": "#b4845c",
     "chair": "#26324a",
@@ -352,6 +352,32 @@ def finance_dashboard(tx,ty,width_tiles=2.6):
     s.line(x+Z(25),y+Z(12),x+Z(43),y+Z(15),P["book_red"])
     s.line(x+Z(43),y+Z(15),x+w-Z(8),y+Z(7),P["book_red"])
 
+def podium(tx, ty):
+    """Small lectern for the playback stage — same wood_dark/desk/accent grammar as cabinet()."""
+    x, y = int(tx*TILE), int(ty*TILE)
+    w, h = Z(14), Z(20)
+    s.rect(x+Z(2), y+h, x+w+Z(2), y+h+Z(4), P["shadow"])
+    s.rect(x, y, x+w, y+h, P["wood_dark"])
+    s.rect(x+Z(2), y+Z(2), x+w-Z(2), y+h-Z(6), P["desk"])
+    s.rect(x+Z(4), y+Z(5), x+w-Z(4), y+Z(9), P["accent"])
+
+def playback_bleachers():
+    """Three amphitheater tiers facing the stage screen, split by a center aisle
+    (x15-17) so spawn 'north_lounge' [16,9] and the CEO home tile [15,8] stay clear,
+    and the room keeps a straight walk-through from the corridor to the stage.
+    Reuses stepped_seating()'s riser/tread/cushion visual grammar."""
+    tiers = [(7.65, 0), (8.35, 0), (9.05, 0)]
+    for ty, _ in tiers:
+        for x0t, x1t in ((11.0, 15.0), (17.0, 21.0)):
+            x0, x1, y = int(x0t*TILE), int(x1t*TILE), int(ty*TILE)
+            s.rect(x0+Z(3), y+Z(20), x1+Z(3), y+Z(24), P["shadow"])
+            s.rect(x0, y+Z(4), x1, y+Z(20), P["wood_dark"])
+            s.rect(x0+Z(2), y+Z(7), x1-Z(2), y+Z(17), P["desk"])
+            s.rect(x0+Z(3), y, x1-Z(3), y+Z(9), P["fabric"])
+            s.rect(x0+Z(5), y+Z(1), x1-Z(5), y+Z(4), P["fabric_hi"])
+            for cx in range(x0+Z(16), x1-Z(4), Z(18)):
+                s.line(cx, y+Z(1), cx, y+Z(8), P["desk_hi"])
+
 def stepped_seating():
     """Three staggered lounge tiers with a clear north entry and east aisle."""
     tiers=((2.45,25.75,4.15),(2.70,26.65,3.75),(2.95,27.55,3.35))
@@ -456,13 +482,14 @@ if SPACE_SCALE == 3:
     # Clear doorway at the wide lower edge of the wedge.
     s.rect(int(8.5*TILE),int(5.76*TILE),int(9.18*TILE),6*TILE,P["floor"])
     s.line(int(8.48*TILE),int(5.72*TILE),int(8.48*TILE),6*TILE,P["outline"])
-R(10,6,21,9,P["meeting"],P["wall"])
+R(10,6,21,10,P["meeting"],P["wall"])
 s.polygon([(12*TILE,9*TILE),(15*TILE,6*TILE),(18*TILE,6*TILE),(21*TILE,9*TILE)],P["accent"])
 if SPACE_SCALE == 3:
     stage_screen(13.25,6.35,5.5)
-    # Warm, readable audience pods turn Playback into the primary landmark.
-    for tx,ty in ((12.1,8.35),(14.0,8.55),(16.0,8.35),(18.0,8.55),(19.7,8.35)):
-        armchair(tx,ty)
+    podium(15.45,7.2)
+    # Tiered bleacher seating (amphitheater) replaces the loose audience armchairs —
+    # turns Playback into a proper town-hall/demo-day stage.
+    playback_bleachers()
     cabinet(19.55,6.55,.65,.75)
 else:
     table(14,7,17,7)
@@ -558,7 +585,11 @@ if SPACE_SCALE == 3:
     whiteboard(22.55,12.0,1.75)
     # (พรมชมพูข้าง core ถูกถอดออก — เคยอ่านเป็น "ห้องลับ" ที่ไม่มีป้าย/ฟังก์ชัน)
     # West-side collaboration mass balances the denser east workstation wing.
+    # Note: the tapered facade clips anything west of ~x7 up here (boundary recedes
+    # to x6.15 only by y11, where the first monitor bank already sits) — this sliver
+    # is genuinely narrow, so add density rather than fighting the diagonal.
     wall_picture(7.65,8.0,.95,.55); cabinet(7.35,9.05,.8,1.0)
+    bookshelf(7.35,10.15,.8)
     tv_console(5.0,20.15,1.8)
 else:
     R(1,21,6,24,P["room"],P["wall"]); R(2,25,7,28,P["room"],P["wall"])
@@ -571,13 +602,18 @@ if SPACE_SCALE != 3:
     R(22,20,24,24,P["carpet"],P["wall"]); R(25,21,30,24,P["room"],P["wall"])
 
 # Bottom meeting suite and phone booths.
-R(8,25,11,28,P["room"],P["wall"]); R(12,25,16,28,P["meeting"],P["wall"])
-R(17,25,20,28,P["meeting"],P["wall"]); R(21,25,23,28,P["room"],P["wall"])
+R(8,25,11,28,P["meeting"],P["wall"]); R(12,25,16,28,P["meeting"],P["wall"])
+R(17,25,20,28,P["meeting"],P["wall"]); R(21,25,23,28,P["meeting"],P["wall"])
 R(24,25,25,26,P["booth"],P["wall"]); R(24,27,25,28,P["booth"],P["wall"])
 R(26,25,27,28,P["meeting"],P["wall"]); R(28,25,28,28,P["meeting"],P["wall"])
 if SPACE_SCALE == 3:
     window_panel(8.35,25.35,2.3); bookshelf(21.3,27.8,1.25)
-    wall_picture(12.4,25.35,1.15,.5); wall_picture(17.3,25.35,1.3,.5)
+    wall_picture(8.55,25.35,.95,.5); wall_picture(12.4,25.35,1.15,.5)
+    wall_picture(17.3,25.35,1.3,.5); wall_picture(21.3,25.35,.95,.5)
+    # Two former dead-end rooms east of the phone booths get real purposes + wall decor.
+    cabinet(26.3,25.5,.75,1.4); bookshelf(27.0,25.5,.85)
+    meeting_table(26.3,27.15,27.7,27.7,2)
+    server_rack(28.12,25.55,1.6)
 if SPACE_SCALE == 3:
     meeting_table(8.45,26.25,11.45,27.1,4)
     meeting_table(12.55,26.2,16.4,27.25,8)
@@ -761,7 +797,7 @@ data = {
     {"id":"cco_office","type":"executive_consultation","rect":[10,2,3,4],"anchor":[11,5]},
     {"id":"cro_office","type":"risk_executive","rect":[13,2,4,4],"anchor":[15,5]},
     {"id":"cdo_office","type":"data_executive","rect":[17,2,5,4],"anchor":[19,5]},
-    {"id":"playback","type":"presentation","rect":[10,6,12,4]},
+    {"id":"playback","type":"presentation","rect":[10,6,12,5]},
     {"id":"phone_booth_northwest","type":"private_audio","rect":[8,2,2,4]},
     {"id":"cfo_finance","type":"executive_finance","rect":[22,11,6,5],"anchor":[22,13]},
     {"id":"cto_technology","type":"technology","rect":[1,21,4,4],"anchor":[4,22]},
@@ -771,6 +807,8 @@ data = {
     {"id":"meeting_2","type":"meeting","rect":[12,25,5,4],"anchor":[14,25]},
     {"id":"meeting_3","type":"meeting","rect":[17,25,4,4],"anchor":[18,25]},
     {"id":"meeting_0","type":"meeting","rect":[21,25,3,4],"anchor":[22,25]},
+    {"id":"huddle_room","type":"meeting","rect":[26,25,2,4],"anchor":[26,25]},
+    {"id":"supply_closet","type":"utility","rect":[28,25,1,4],"anchor":[28,25]},
     {"id":"lift_lobby","type":"transit","rect":[12,15,8,4],"anchors":{"left":[12,15],"right":[19,15],"south":[16,18]}},
     {"id":"phone_booths","type":"private_audio","rect":[24,25,2,4]}],
   "workstations":([
