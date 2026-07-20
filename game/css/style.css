@@ -48,6 +48,13 @@ html, body {
   border-radius: 50%; margin-right: 6px;
 }
 #online-list .head { font-weight: 700; opacity: .8; margin-bottom: 2px; }
+.online-row { display: flex; align-items: center; justify-content: space-between; gap: 4px; }
+.online-row-label { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.duel-btn {
+  flex: 0 0 auto; background: none; border: none; cursor: pointer;
+  font-size: 12px; padding: 0 2px; opacity: .6; line-height: 1;
+}
+.duel-btn:hover { opacity: 1; transform: scale(1.15); }
 
 #chat-log {
   bottom: 64px; left: 16px; width: 320px; max-height: 220px;
@@ -279,19 +286,52 @@ body.touch #history-btn { left: auto; right: 20px; bottom: 96px; }
 #board-list [data-uid] { cursor: pointer; }
 #board-list [data-uid]:hover { outline: 1px solid rgba(231,185,79,.5); }
 
-#quiz-overlay, #board-overlay, #history-overlay, #shop-overlay, #room-overlay, #login-overlay, #tutorial-overlay, #pet-overlay {
+#quiz-overlay, #board-overlay, #history-overlay, #shop-overlay, #room-overlay, #login-overlay, #tutorial-overlay, #pet-overlay,
+#duel-incoming-overlay, #duel-overlay {
   position: fixed; inset: 0; z-index: 60;
   background: rgba(23,27,44,.85);
   display: flex; align-items: center; justify-content: center;
 }
 #quiz-overlay.hidden, #board-overlay.hidden, #history-overlay.hidden,
-#shop-overlay.hidden, #room-overlay.hidden, #login-overlay.hidden, #tutorial-overlay.hidden, #pet-overlay.hidden { display: none; }
+#shop-overlay.hidden, #room-overlay.hidden, #login-overlay.hidden, #tutorial-overlay.hidden, #pet-overlay.hidden,
+#duel-incoming-overlay.hidden, #duel-overlay.hidden { display: none; }
 
 #quiz-card, #board-card, #history-card, #shop-card, #room-card, #login-card, #tutorial-card, #pet-card {
   background: #212842; border: 1px solid #e7b94f;
   border-radius: 14px; padding: 26px 30px; width: min(480px, 92vw);
   max-height: 88dvh; overflow-y: auto;
   box-shadow: 0 12px 40px rgba(0,0,0,.5);
+}
+
+#duel-incoming-card, #duel-card {
+  background: #212842; border: 1px solid #e7b94f;
+  border-radius: 14px; padding: 24px 28px; width: min(360px, 90vw);
+  text-align: center; box-shadow: 0 12px 40px rgba(0,0,0,.5);
+}
+#duel-incoming-text { font-size: 15px; font-weight: 600; line-height: 1.5; margin-bottom: 18px; }
+#duel-incoming-actions { display: flex; gap: 10px; }
+#duel-accept-btn, #duel-decline-btn {
+  flex: 1; padding: 11px; font-size: 14px; font-weight: 700; cursor: pointer;
+  border: none; border-radius: 8px;
+}
+#duel-accept-btn { background: #57b06b; color: #171b2c; }
+#duel-decline-btn { background: #394158; color: #fff6dc; }
+
+#duel-title { color: #e7b94f; font-size: 18px; margin-bottom: 10px; }
+#duel-score { font-size: 14px; font-weight: 700; margin-bottom: 6px; }
+#duel-status { font-size: 13px; opacity: .85; min-height: 18px; margin-bottom: 14px; }
+#duel-choices { display: flex; gap: 10px; justify-content: center; }
+#duel-choices.hidden { display: none; }
+.duel-choice {
+  width: 64px; height: 64px; font-size: 30px; cursor: pointer;
+  background: #171b2c; border: 2px solid #394158; border-radius: 12px;
+}
+.duel-choice:hover { border-color: #e7b94f; background: #26324a; }
+#duel-reveal { margin-top: 14px; font-size: 14px; font-weight: 600; min-height: 20px; }
+#duel-cancel-btn {
+  margin-top: 16px; width: 100%; padding: 10px;
+  font-size: 13px; font-weight: 700; cursor: pointer;
+  background: #394158; color: #fff6dc; border: none; border-radius: 8px;
 }
 #quiz-progress { font-size: 12px; color: #e7b94f; font-weight: 700; margin-bottom: 10px; }
 #quiz-question { font-size: 17px; font-weight: 600; line-height: 1.5; margin-bottom: 16px; }

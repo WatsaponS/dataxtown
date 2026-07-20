@@ -16,6 +16,7 @@ import { initTutorial, updateTutorial, toggleTutorial } from "./tutorial.js";
 import { setPet, updatePets, loadPetImage } from "./pets.js";
 import { PETS, PET_FRAME } from "./pets_data.js";
 import { initPetMenu, togglePetMenu } from "./pet_menu.js";
+import { initDuel } from "./duel.js";
 import { makeCamera, updateCamera, draw } from "./render.js";
 import {
   setupUI, isChatOpen, toggleChat, submitChat,
@@ -239,6 +240,7 @@ function startGame() {
     initLoginRewards(world, ui); // daily login 30 วัน (popup อัตโนมัติเมื่อมีของให้รับ)
     initTutorial(world, ui);     // ภารกิจแนะนำเกม 8 อย่าง ภารกิจละ 30 แต้ม
     initPetMenu(world, ui);      // เมนู 🐾 เปลี่ยน/ตั้งชื่อสัตว์เลี้ยง + สัตว์ legendary จาก login
+    initDuel(world, ui);         // ท้าเป่ายิ้งฉุบผู้เล่นออนไลน์ ชนะ 2 ใน 3 ได้ 20 แต้ม
   });
   requestAnimationFrame(loop);
 }
@@ -263,6 +265,10 @@ window.addEventListener("keydown", e => {
     toggleBoard(world, false); toggleHistory(world, false);
     toggleShop(world, false); toggleRoom(world, false); toggleLogin(world, false);
     toggleTutorial(world, false); togglePetMenu(world, false);
+    // Esc บนคำท้าที่เข้ามา = ปฏิเสธจริง (ไม่ใช่แค่ซ่อน) กันสถานะ duel ค้างในหน่วยความจำ
+    if (!document.getElementById("duel-incoming-overlay").classList.contains("hidden")) {
+      document.getElementById("duel-decline-btn").click();
+    }
   }
   input.add(e.code);
 });

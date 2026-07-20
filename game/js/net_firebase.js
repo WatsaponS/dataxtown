@@ -25,8 +25,11 @@ export async function connectFirebase(world, ui) {
 
     const app = initializeApp(FIREBASE_CONFIG);
     const db = getDatabase(app);
-    // ให้โมดูลอื่นใช้ต่อ (quests = leaderboard, history = ประวัติแชต)
-    net.fb = { db, ref, get, set, update, onValue, push, query, orderByChild, limitToLast };
+    // ให้โมดูลอื่นใช้ต่อ (quests = leaderboard, history = ประวัติแชต, duel = ท้าเป่ายิ้งฉุบ)
+    net.fb = {
+      db, ref, get, set, update, onValue, onChildAdded, push,
+      query, orderByChild, startAt, limitToLast, serverTimestamp,
+    };
 
     // ไอดีประจำเครื่อง (ไม่ใช้ระบบ auth — เกมภายในบริษัท)
     let uid = localStorage.getItem("dataxtown.uid");
