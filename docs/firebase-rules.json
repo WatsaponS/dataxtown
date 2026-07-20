@@ -18,14 +18,6 @@
             ".write": "!data.exists()",
             ".validate": "newData.child('text').isString() && newData.child('text').val().length <= 200 && newData.child('name').isString()"
           }
-        },
-        "duels": {
-          ".read": true,
-          ".indexOn": "ts",
-          "$id": {
-            ".write": true,
-            ".validate": "newData.child('a').isString() && newData.child('b').isString() && newData.child('status').isString()"
-          }
         }
       }
     },
@@ -41,6 +33,14 @@
       "$uid": {
         ".write": true,
         ".validate": "newData.child('name').isString() && newData.child('name').val().length <= 24 && newData.child('spent').isNumber() && newData.child('spent').val() >= 0"
+      }
+    },
+    "duels": {
+      ".read": true,
+      ".indexOn": "ts",
+      "$id": {
+        ".write": true,
+        ".validate": "newData.child('a').isString() && newData.child('b').isString() && newData.child('status').isString()"
       }
     }
   }

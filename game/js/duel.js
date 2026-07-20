@@ -1,6 +1,6 @@
 // เป่ายิ้งฉุบท้าดวลระหว่างผู้เล่น — ชนะ 2 ใน 3 ได้ 20 แต้ม (Firebase เท่านั้น เหมือน quest/room)
 //
-// โครงข้อมูล rooms/main/duels/<id> = {
+// โครงข้อมูล duels/<id> (top-level — คนละ path กับ rooms/main/players|chat) = {
 //   a, aName, b, bName,                 // ผู้ท้า (a) กับผู้ถูกท้า (b)
 //   status: pending|declined|cancelled|active|done,
 //   choiceA, choiceB,                   // "rock"|"paper"|"scissors"|null — ล้างทุกจบรอบ
@@ -19,6 +19,7 @@ const CHOICE_EMOJI = { rock: "✊", paper: "✋", scissors: "✂️" };
 let duel = null; // ดวลที่กำลังดำเนินอยู่ (มีได้ทีละ 1 ดวลต่อผู้เล่น)
 
 export function initDuel(world, ui) {
+  window.__duelState = () => duel; // hook สำหรับ automated test (cdp_shot --eval)
   window.addEventListener("duel-challenge", e => sendChallenge(world, ui, e.detail.uid, e.detail.name));
 
   document.getElementById("duel-accept-btn").addEventListener("click", () => {
@@ -47,15 +48,15 @@ export function initDuel(world, ui) {
 
   // ฟังคำท้าที่พุ่งเข้ามาหาเรา (เฉพาะที่สร้างหลังต่อ Firebase กันโดนคำท้าเก่าค้าง)
   const connectedAt = Date.now();
-  fb.onChildAdded(fb.query(fb.ref(fb.db, "rooms/main/duels"), fb.orderByChild("ts"), fb.startAt(connectedAt - 3000)), snap => {
+  fb.onChildAdded(fb.query(fb.ref(fb.db, "duels"), fb.orderByChild("ts"), fb.startAt(connectedAt - 3000)), snap => {
     const v = snap.val();
     if (!v || v.b !== world.net.uid || v.status !== "pending") return;
     if (duel) { // กำลังท้าคนอื่นอยู่แล้ว — ปฏิเสธอัตโนมัติกันค้าง
-      fb.update(fb.ref(fb.db, `rooms/main/duels/${snap.key}`), { status: "declined" }).catch(() => {});
+      fb.update(fb.ref(fb.db, `duels/${snap.key}`), { status: "declined" }).catch(() => {});
       return;
     }
     duel = {
-      id: snap.key, ref: fb.ref(fb.db, `rooms/main/duels/${snap.key}`),
+      id: snap.key, ref: fb.ref(fb.db, `duels/${snap.key}`),
       isA: false, myUid: world.net.uid, oppUid: v.a, oppName: v.aName,
       status: "pending", awarded: false, resolving: false,
     };
@@ -71,7 +72,7 @@ function sendChallenge(world, ui, targetUid, targetName) {
   }
   if (duel) { addSystemLine(ui, "⚔️ คุณกำลังท้าใครอยู่แล้ว รอให้จบก่อนนะ"); return; }
 
-  const newRef = fb.push(fb.ref(fb.db, "rooms/main/duels"));
+  const newRef = fb.push(fb.ref(fb.db, "duels"));
   const data = {
     a: world.net.uid, aName: world.player.name, b: targetUid, bName: targetName,
     status: "pending", choiceA: null, choiceB: null,

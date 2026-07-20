@@ -49,7 +49,8 @@ URL params สำหรับทดสอบ: `autostart=1` ข้าม overlay
 รัน JS ในหน้าเกมได้ด้วย `cdp_shot.py --eval "<expr>"` (มี user gesture + await promise ให้)
 — ⚠️ PowerShell 5.1 ต้องเรียกแบบ `python --% cdp_shot.py ...` (stop-parsing) ไม่งั้น quote พัง
 และห้ามต่อคำสั่งอื่นหลัง `;` ในบรรทัดเดียวกับ `--%`
-hooks บน window: `__music` (เพลง), `__world` (world ทั้งก้อน — ใช้ teleport/เช็ค quests/points ได้
+hooks บน window: `__music` (เพลง), `__duelState()` (ดวลที่กำลังเล่นอยู่ — id/isA/status),
+`__world` (world ทั้งก้อน — ใช้ teleport/เช็ค quests/points ได้
 เช่น `__world.player.x = __world.quests.spots[0].x` แล้วคลิก #quest-hint เพื่อทำ quiz อัตโนมัติ
 ตัวอย่าง: `--eval "(async()=>{window.__err=null;addEventListener('error',e=>__err=e.message);__music.start();await new Promise(r=>setTimeout(r,2500));return 'err='+__err;})()"`)
 
@@ -97,7 +98,7 @@ python game/tools/cdp_shot.py --url "http://localhost:8700/index.html?autostart=
 | สัตว์เลี้ยง — เดินตามเจ้าของด้วย trail-follow, sync ผ่าน join payload | `game/js/pets.js`, `game/js/pets_data.js` |
 | sprite สัตว์เลี้ยง (18 แถว × 2 เฟรม: 0-14 พื้นฐาน, 15-17 legendary — ลำดับต้องตรง pets_data.js) | `game/assets/build_pets.py` → `pets.png` |
 | เมนู 🐾 เปลี่ยน/ตั้งชื่อสัตว์เลี้ยงในเกม + lock legendary ที่ยังไม่ปลดล็อก | `game/js/pet_menu.js` |
-| ท้าเป่ายิ้งฉุบผู้เล่นออนไลน์ (ชนะ 2/3 ได้ 20 แต้ม) — Firebase เท่านั้น | `game/js/duel.js` |
+| ท้าเป่ายิ้งฉุบผู้เล่นออนไลน์ (ชนะ 2/3 ได้ 20 แต้ม) — Firebase เท่านั้น, path `duels/<id>` (top-level) | `game/js/duel.js` |
 | สัตว์เลี้ยงเดินเล่น+โผล่ทริกในห้องส่วนตัว (แยกจาก trail-follow นอกห้อง) | `updateRoomPet`/`drawRoomPet` ใน `game/js/decor.js` |
 | multiplayer server + protocol (JSON: join/move/chat) | `game/server.py` |
 | **ผังชั้น 7** (ห้อง, โต๊ะ, collision, spawn, โซน) | `pixel-art/scb-park-west-b-floor7/build.py` |
@@ -183,6 +184,10 @@ uid สุ่มเก็บใน `localStorage["dataxtown.uid"]` (ไม่ใ
 - Rules อยู่ที่ `docs/firebase-rules.json` — วางใน console แท็บ Rules; เผื่อโครง points/leaderboard ไว้แล้ว (client เขียนไม่ได้)
   ทุกครั้งที่เพิ่ม path ใหม่ใต้ `rooms/main/*` หรือ top-level (เช่น `duels`, `homes`) ต้อง publish rules
   ใหม่ก่อนเสมอ ไม่งั้นได้ 401 Unauthorized เงียบ ๆ — เทสต์ผ่าน REST PUT ก่อนเชื่อว่าใช้ได้จริง
+  ⚠️ เวลาขอให้ user publish rules ก้อนใหม่ ให้แปะ**ทั้งไฟล์**เสมอ ไม่ใช่แค่ snippet ส่วนที่เพิ่ม —
+  เคยเกิดเหตุ user เข้าใจผิดวางเป็น top-level ทั้งที่โค้ดตั้งใจให้ nested (หรือกลับกัน) ทำให้ path
+  ไม่ตรงกัน แก้ไขได้ 2 ทาง: ขอให้ user แก้ rules ใหม่ (รอบที่ 2) หรือแก้โค้ดให้ตรง path ที่ publish
+  จริงแทน (เร็วกว่า ไม่ต้องรบกวน user ซ้ำ) — เช็ค path จริงด้วย REST PUT ตรง ๆ ก่อนสรุปว่า "รออะไร"
 - ทดสอบ/จำลองผู้เล่นผ่าน REST ได้ตรง ๆ: `PUT <databaseURL>/rooms/main/players/<id>.json`
 - ตั้ง `FIREBASE_CONFIG = null` = กลับไปใช้ WebSocket server ในเครื่องแบบเดิม
 
