@@ -147,6 +147,15 @@ function advanceQuiz(world, ui) {
   }
 }
 
+// ให้แต้มจากระบบอื่น (เช่น tutorial) — บันทึกขึ้น leaderboard ทันที
+export function awardPoints(world, n) {
+  const q = world.quests;
+  if (!q) return;
+  q.points += n;
+  savePoints(world);
+  updateBadge(world);
+}
+
 function finishQuiz(world, ui) {
   const q = world.quests, s = q.session;
   const gained = s.correct * POINTS_PER_CORRECT;
@@ -154,6 +163,7 @@ function finishQuiz(world, ui) {
   savePoints(world);
   updateBadge(world);
   addSystemLine(ui, `🏁 จบ quiz: ตอบถูก ${s.correct}/${s.questions.length} ได้ +${gained} คะแนน (รวม ${q.points})`);
+  if (world.onQuizDone) world.onQuizDone();
   // จุดเดิมหายไป เกิดจุดใหม่ที่อื่น
   const idx = q.spots.indexOf(s.spot);
   if (idx >= 0) q.spots[idx] = randomSpot(world, q);
@@ -181,7 +191,10 @@ export function toggleBoard(world, open) {
   const q = world.quests;
   if (!q) return;
   q.el.board.classList.toggle("hidden", !open);
-  if (open) renderBoard(world);
+  if (open) {
+    renderBoard(world);
+    if (world.onBoardOpen) world.onBoardOpen();
+  }
 }
 
 function renderBoard(world) {

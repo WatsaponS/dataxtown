@@ -94,4 +94,5 @@ function claim(world, ui) {
   saveHome(world);
   addSystemLine(ui, `🎁 รับ "${item.name}" (login วัน ${l.days}/30) — ไปจัดวางในห้อง 🏠 ได้เลย!`);
   render(world);
+  if (world.onLoginClaim) world.onLoginClaim();
 }

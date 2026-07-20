@@ -197,6 +197,7 @@ function buy(world, it) {
   dec.myHome.items.push({ id: it.id, x: null, y: null });
   saveHome(world);
   renderShop(world);
+  if (world.onShopBuy) world.onShopBuy();
   addSystemLine(worldUi(world), `🛍️ ซื้อ ${it.name} แล้ว! เปิด 🏠 เพื่อจัดวางในห้อง (คงเหลือ ${balance(world)} แต้ม)`);
 }
 
@@ -444,6 +445,7 @@ function onRoomClick(world, e) {
     dec.myHome.items[dec.selected].y = gy;
     dec.selected = null;
     saveHome(world);
+    if (world.onItemPlaced) world.onItemPlaced();
   } else {
     // คลิกของที่วางอยู่ = เก็บกลับเข้ากระเป๋า
     const hit = dec.myHome.items.find(it => it.x === gx && it.y === gy);
