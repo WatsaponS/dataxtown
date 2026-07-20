@@ -23,9 +23,8 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - uses: actions/checkout@v4
+      # ไม่ใช้ enablement: true — Pages เปิดใช้แล้ว การเรียก API สร้าง site ซ้ำทำให้ step ล้มเป็นพัก ๆ
       - uses: actions/configure-pages@v5
-        with:
-          enablement: true
       - uses: actions/upload-pages-artifact@v3
         with:
           path: game
