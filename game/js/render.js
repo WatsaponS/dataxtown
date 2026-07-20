@@ -6,6 +6,7 @@ import { drawPet } from "./pets.js";
 import { petDisplayName } from "./pets_data.js";
 import { getDuelPrompt } from "./duel.js";
 import { drawGachaMachine, GACHA_Y } from "./gacha.js";
+import { drawFx } from "./fx.js";
 
 export function makeCamera(config) {
   return { x: 0, y: 0, zoom: config.defaultZoom };
@@ -54,6 +55,7 @@ export function draw(ctx, world, cam) {
   drawables.push({ y: GACHA_Y + 12, draw: () => drawGachaMachine(ctx) }); // ตู้กาชา — ฐานอยู่ใต้จุดยืนเล็กน้อย
   drawables.sort((a, b) => a.y - b.y);
   for (const d of drawables) d.draw();
+  drawFx(ctx); // particle เอฟเฟกต์ — world-space เพื่อให้ยึดตำแหน่งบนแผนที่ถูก ไม่ลอยตามกล้อง
   ctx.restore();
 
   drawQuestMarkers(ctx, world, cam);

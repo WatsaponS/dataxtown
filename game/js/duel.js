@@ -11,6 +11,7 @@
 
 import { addSystemLine } from "./ui.js";
 import { awardPoints } from "./quests.js";
+import { spawnBurst } from "./fx.js";
 
 const WIN_POINTS = 20;
 const DUEL_RANGE = 60; // px — ต้องเดินเข้าไปใกล้จริง ๆ ถึงจะขึ้นป้ายชวนดวล
@@ -176,6 +177,8 @@ function finishDuelCleanup(world) {
   document.getElementById("duel-incoming-overlay").classList.add("hidden");
   document.getElementById("duel-overlay").classList.add("hidden");
   if (!duel) return;
+  // ระเบิด confetti ตอนโมดัลปิดพอดี (ตอนเปิดโมดัลบังฉากอยู่ เห็นตอนนี้ถึงจะสวย)
+  if (duel.awarded && world.player) spawnBurst(world.player.x, world.player.y - 10, { count: 26, life: 0.9 });
   if (duel.unsub) duel.unsub();
   if (duel.isA) {
     const ref = duel.ref, fb = world.net.fb;

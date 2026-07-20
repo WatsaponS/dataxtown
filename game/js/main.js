@@ -18,6 +18,7 @@ import { PETS, PET_FRAME } from "./pets_data.js";
 import { initPetMenu, togglePetMenu } from "./pet_menu.js";
 import { initDuel, updateDuelProximity, tryDuelNearby } from "./duel.js";
 import { initGacha, updateGachaProximity, toggleGacha, isNearGacha, loadGachaMachineImage } from "./gacha.js";
+import { updateFx } from "./fx.js";
 import { makeCamera, updateCamera, draw } from "./render.js";
 import {
   setupUI, isChatOpen, toggleChat, submitChat,
@@ -338,6 +339,7 @@ function loop(now) {
   updateTutorial(world);
   updateDuelProximity(world); // เดินเข้าใกล้ผู้เล่นอื่น = ขึ้นป้ายชวนดวลเหนือหัวเขา (กด F ท้า)
   updateGachaProximity(world); // เดินเข้าใกล้ตู้กาชา = ขึ้นป้ายกด G
+  updateFx(world, dt);
   music.setZone(zoneAt(world, world.player.x, world.player.y)); // เพลงเปลี่ยนตามโซน
 
   updateCamera(cam, world, canvas);

@@ -4,6 +4,7 @@
 import { QUIZ } from "./quiz_data.js";
 import { tileBlocked } from "./world.js";
 import { addSystemLine } from "./ui.js";
+import { spawnBurst } from "./fx.js";
 
 const SPOT_COUNT = 3;
 const INTERACT_RADIUS = 44;   // px — ระยะกดเริ่ม quiz
@@ -169,6 +170,10 @@ function finishQuiz(world, ui) {
   if (idx >= 0) q.spots[idx] = randomSpot(world, q);
   q.session = null;
   q.el.quiz.classList.add("hidden");
+  // ระเบิด confetti ตอนโมดัลปิดพอดี (ตอนทำ quiz อยู่บังฉากอยู่ เห็นตอนนี้ถึงจะสวย) — ยิ่งถูกเยอะยิ่งระเบิดใหญ่
+  if (s.correct > 0 && world.player) {
+    spawnBurst(world.player.x, world.player.y - 10, { count: 8 + s.correct * 6, life: 0.8 });
+  }
 }
 
 function savePoints(world) {

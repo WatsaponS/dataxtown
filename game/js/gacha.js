@@ -5,11 +5,13 @@
 import { GACHA_COST, GACHA_X, GACHA_Y, RARITY, rollGacha } from "./gacha_data.js";
 import { balance, saveHome, iconFor } from "./decor.js";
 import { addSystemLine } from "./ui.js";
+import { spawnBurst } from "./fx.js";
 
 export { GACHA_X, GACHA_Y };
 const SPRITE_BOTTOM_Y = 648; // ขอบล่างของ sprite ให้แนบพื้น (27*24)
 const INTERACT_RADIUS = 46;
 
+let pendingCelebration = false; // สุ่มได้ mythic/legendary รอบล่าสุด — ระเบิด confetti ตอนปิดโมดัล (ตอนเปิดอยู่บังฉากอยู่)
 let machineImg = null;
 export function loadGachaMachineImage() {
   if (!machineImg) { machineImg = new Image(); machineImg.src = "assets/gacha_machine.png"; }
@@ -44,7 +46,13 @@ export function toggleGacha(world, open) {
   const overlay = document.getElementById("gacha-overlay");
   overlay.classList.toggle("hidden", !open);
   if (open) render(world);
-  else document.getElementById("gacha-hint").classList.toggle("hidden", !near);
+  else {
+    document.getElementById("gacha-hint").classList.toggle("hidden", !near);
+    if (pendingCelebration) { // ปิดโมดัลพอดี ฉากโล่งแล้วค่อยระเบิด confetti ให้เห็น
+      pendingCelebration = false;
+      spawnBurst(GACHA_X, GACHA_Y - 20, { count: 30, life: 1, colors: ["#e14fd0", "#e7b94f", "#fff6dc"] });
+    }
+  }
 }
 
 // อัปเดตแค่ยอดคงเหลือ+ปุ่ม — เรียกได้บ่อย ๆ โดยไม่ไปยุ่งกับกล่องผลลัพธ์ที่อาจกำลังโชว์อยู่
@@ -111,7 +119,7 @@ function showResult(world, ui, won) {
   name.className = "gacha-result-name";
   name.textContent = won.name;
   box.append(label, name);
-  if (won.tier === "mythic" || won.tier === "legendary") box.classList.add("gacha-glow");
+  if (won.tier === "mythic" || won.tier === "legendary") { box.classList.add("gacha-glow"); pendingCelebration = true; }
   else box.classList.remove("gacha-glow");
 
   addSystemLine(ui, `🎰 สุ่มกาชาปองได้ "${won.name}" (${r.label} ${r.emoji}) — ไปจัดวางในห้อง 🏠 ได้เลย!`);
