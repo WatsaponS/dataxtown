@@ -98,7 +98,7 @@ python game/tools/cdp_shot.py --url "http://localhost:8700/index.html?autostart=
 | สัตว์เลี้ยง — เดินตามเจ้าของด้วย trail-follow, sync ผ่าน join payload | `game/js/pets.js`, `game/js/pets_data.js` |
 | sprite สัตว์เลี้ยง (18 แถว × 2 เฟรม: 0-14 พื้นฐาน, 15-17 legendary — ลำดับต้องตรง pets_data.js) | `game/assets/build_pets.py` → `pets.png` |
 | เมนู 🐾 เปลี่ยน/ตั้งชื่อสัตว์เลี้ยงในเกม + lock legendary ที่ยังไม่ปลดล็อก | `game/js/pet_menu.js` |
-| ท้าเป่ายิ้งฉุบผู้เล่นออนไลน์ (ชนะ 2/3 ได้ 20 แต้ม) — Firebase เท่านั้น, path `duels/<id>` (top-level) | `game/js/duel.js` |
+| ท้าเป่ายิ้งฉุบ (2/3=20 แต้ม, path `duels/<id>` top-level) — เดินใกล้+กด F หรือปุ่ม ⚔️ ใน online-list | `game/js/duel.js` |
 | สัตว์เลี้ยงเดินเล่น+โผล่ทริกในห้องส่วนตัว (แยกจาก trail-follow นอกห้อง) | `updateRoomPet`/`drawRoomPet` ใน `game/js/decor.js` |
 | multiplayer server + protocol (JSON: join/move/chat) | `game/server.py` |
 | **ผังชั้น 7** (ห้อง, โต๊ะ, collision, spawn, โซน) | `pixel-art/scb-park-west-b-floor7/build.py` |

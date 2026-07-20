@@ -13,13 +13,16 @@ import { addSystemLine } from "./ui.js";
 import { awardPoints } from "./quests.js";
 
 const WIN_POINTS = 20;
+const DUEL_RANGE = 60; // px — ต้องเดินเข้าไปใกล้จริง ๆ ถึงจะขึ้นป้ายชวนดวล
 const BEATS = { rock: "scissors", scissors: "paper", paper: "rock" };
 const CHOICE_EMOJI = { rock: "✊", paper: "✋", scissors: "✂️" };
 
 let duel = null; // ดวลที่กำลังดำเนินอยู่ (มีได้ทีละ 1 ดวลต่อผู้เล่น)
+let nearbyTarget = null; // ผู้เล่นคนที่อยู่ใกล้พอจะกด F ท้าได้ตอนนี้ (คำนวณทุกเฟรม)
 
 export function initDuel(world, ui) {
-  window.__duelState = () => duel; // hook สำหรับ automated test (cdp_shot --eval)
+  window.__duelState = () => duel; // hooks สำหรับ automated test (cdp_shot --eval)
+  window.__duelPrompt = () => nearbyTarget;
   window.addEventListener("duel-challenge", e => sendChallenge(world, ui, e.detail.uid, e.detail.name));
 
   document.getElementById("duel-accept-btn").addEventListener("click", () => {
@@ -62,6 +65,28 @@ export function initDuel(world, ui) {
     };
     duel.unsub = fb.onValue(duel.ref, s2 => handleDuelUpdate(world, ui, s2));
   });
+}
+
+// เรียกทุกเฟรมจาก game loop — หาผู้เล่นจริงที่ใกล้เราที่สุดในระยะ DUEL_RANGE
+export function updateDuelProximity(world) {
+  if (duel || !world.player) { nearbyTarget = null; return; }
+  let best = null, bestDist = DUEL_RANGE;
+  for (const ent of world.entities) {
+    if (ent.kind !== "remote") continue;
+    const d = Math.hypot(ent.x - world.player.x, ent.y - world.player.y);
+    if (d <= bestDist) { bestDist = d; best = ent; }
+  }
+  nearbyTarget = best ? { ent: best, uid: best.id.slice(7), name: best.name } : null;
+}
+
+// ให้ render.js เรียกดูว่าตอนนี้ควรวาดป้ายชวนดวลเหนือหัวใครไหม
+export function getDuelPrompt() {
+  return nearbyTarget;
+}
+
+// ผูกกับคีย์ F ใน main.js — ท้าคนที่ยืนใกล้เราที่สุดตอนนี้
+export function tryDuelNearby(world, ui) {
+  if (nearbyTarget && !duel) sendChallenge(world, ui, nearbyTarget.uid, nearbyTarget.name);
 }
 
 function sendChallenge(world, ui, targetUid, targetName) {

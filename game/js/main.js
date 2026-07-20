@@ -16,7 +16,7 @@ import { initTutorial, updateTutorial, toggleTutorial } from "./tutorial.js";
 import { setPet, updatePets, loadPetImage } from "./pets.js";
 import { PETS, PET_FRAME } from "./pets_data.js";
 import { initPetMenu, togglePetMenu } from "./pet_menu.js";
-import { initDuel } from "./duel.js";
+import { initDuel, updateDuelProximity, tryDuelNearby } from "./duel.js";
 import { makeCamera, updateCamera, draw } from "./render.js";
 import {
   setupUI, isChatOpen, toggleChat, submitChat,
@@ -259,6 +259,7 @@ window.addEventListener("keydown", e => {
   if (e.code === "KeyM") document.getElementById("minimap").classList.toggle("hidden");
   if (e.code === "KeyB") { music.toggle(); updateMusicBtn(); }
   if (e.code === "KeyE" && !isQuizOpen(world)) tryStartQuiz(world, ui);
+  if (e.code === "KeyF") tryDuelNearby(world, ui);
   if (e.code === "KeyL") toggleBoard(world, document.getElementById("board-overlay").classList.contains("hidden"));
   if (e.code === "KeyH") toggleHistory(world, document.getElementById("history-overlay").classList.contains("hidden"));
   if (e.key === "Escape") {
@@ -331,6 +332,7 @@ function loop(now) {
   updatePets(world, dt);
   updateQuests(world);
   updateTutorial(world);
+  updateDuelProximity(world); // เดินเข้าใกล้ผู้เล่นอื่น = ขึ้นป้ายชวนดวลเหนือหัวเขา (กด F ท้า)
   music.setZone(zoneAt(world, world.player.x, world.player.y)); // เพลงเปลี่ยนตามโซน
 
   updateCamera(cam, world, canvas);

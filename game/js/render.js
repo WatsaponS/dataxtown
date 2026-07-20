@@ -4,6 +4,7 @@ import { canHear, spriteFrame } from "./entities.js";
 import { drawQuestMarkers } from "./quests.js";
 import { drawPet } from "./pets.js";
 import { petDisplayName } from "./pets_data.js";
+import { getDuelPrompt } from "./duel.js";
 
 export function makeCamera(config) {
   return { x: 0, y: 0, zoom: config.defaultZoom };
@@ -67,6 +68,32 @@ export function draw(ctx, world, cam) {
       drawPetTag(ctx, ent.petName || petDisplayName(ent.petId), psx, psy - (config.frameW + 2) * cam.zoom);
     }
   }
+
+  drawDuelPrompt(ctx, world, cam);
+}
+
+// ป้ายชวนดวลลอยเหนือหัวผู้เล่นที่เดินเข้าใกล้เรามากพอ (เดินตามคนนั้นไปด้วย + เด้งเรียกความสนใจ)
+function drawDuelPrompt(ctx, world, cam) {
+  const target = getDuelPrompt();
+  if (!target) return;
+  const ent = target.ent;
+  const sxp = (ent.x - cam.x) * cam.zoom;
+  const bob = Math.sin(world.time * 4) * 3;
+  const syp = (ent.y - cam.y) * cam.zoom - (world.config.frameH + 32) * cam.zoom - bob;
+  const text = "⚔️ กด F เพื่อท้าดวล";
+  ctx.font = "700 12px 'Segoe UI', 'Leelawadee UI', sans-serif";
+  const w = ctx.measureText(text).width + 18;
+  const h = 23;
+  ctx.fillStyle = "rgba(231,185,79,0.95)";
+  roundRect(ctx, sxp - w / 2, syp - h / 2, w, h, 8);
+  ctx.fill();
+  ctx.strokeStyle = "#171b2c";
+  ctx.lineWidth = 1.5;
+  ctx.stroke();
+  ctx.fillStyle = "#171b2c";
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  ctx.fillText(text, sxp, syp + 1);
 }
 
 function drawPetTag(ctx, text, x, y) {
