@@ -12,6 +12,7 @@ import { spriteFrame } from "./entities.js";
 import { LOGIN_ITEMS, LOGIN_SHEET_COLS, loginItemName } from "./login_data.js";
 import { GACHA_SHEET_COLS, gachaItemName } from "./gacha_data.js";
 import { SEASON_SHEET_COLS, seasonItemName } from "./season_data.js";
+import { EVENT_ITEMS, EVENT_NAME, EVENT_END, EVENT_SHEET_COLS, isEventActive, eventItemName } from "./events_data.js";
 import { petImageEl, setPet } from "./pets.js";
 import { PET_FRAME, petIndexOf } from "./pets_data.js";
 
@@ -75,6 +76,9 @@ export function initDecor(world, ui) {
   const seasonImg = new Image();
   seasonImg.onload = () => { dec.seasonImg = seasonImg; };
   seasonImg.src = "assets/season_items.png";
+  const eventImg = new Image();
+  eventImg.onload = () => { dec.eventImg = eventImg; };
+  eventImg.src = "assets/event_items.png";
 
   // โหลดห้องตัวเองจาก Firebase (ถ้ามี) — dec.ready ให้โมดูลอื่นรอก่อนแตะ myHome
   const fb = world.net && world.net.fb;
@@ -154,6 +158,11 @@ export function spriteRef(dec, id) {
     if (n >= 0) return { img: dec.seasonImg, idx: n, cols: SEASON_SHEET_COLS };
     return null;
   }
+  if (id && id.startsWith("event")) {
+    const n = parseInt(id.slice(5), 10);
+    if (n >= 0) return { img: dec.eventImg, idx: n, cols: EVENT_SHEET_COLS };
+    return null;
+  }
   const idx = SPRITE[id];
   return idx == null ? null : { img: dec.img, idx, cols: SHEET_COLS };
 }
@@ -162,6 +171,7 @@ export function itemName(id) {
   if (id && id.startsWith("gacha")) return gachaItemName(id) + " 🎰";
   if (id && id.startsWith("login")) return loginItemName(id) + " ✨";
   if (id && id.startsWith("season")) return seasonItemName(id) + " 🏆";
+  if (id && id.startsWith("event")) return eventItemName(id) + " 🌧️";
   const idx = SPRITE[id];
   return idx == null ? id : ITEMS[idx].name;
 }
@@ -202,6 +212,12 @@ function renderShop(world) {
   const dec = world.decor;
   document.getElementById("shop-balance").textContent =
     `คงเหลือ ${balance(world)} แต้ม · สะสมทั้งหมด ${earned(world)} (leaderboard ไม่ลดตอนซื้อ)`;
+
+  const banner = document.getElementById("shop-event-banner");
+  const eventOn = isEventActive();
+  banner.classList.toggle("hidden", !eventOn);
+  if (eventOn) banner.textContent = `🌧️ ของตกแต่งอีเวนต์ "${EVENT_NAME}" มีขายถึง ${EVENT_END} เท่านั้น!`;
+
   const list = document.getElementById("shop-list");
   list.textContent = "";
   ITEMS.forEach((it, idx) => {
@@ -222,6 +238,27 @@ function renderShop(world) {
     card.append(nm, btn);
     list.appendChild(card);
   });
+
+  if (eventOn) {
+    EVENT_ITEMS.forEach(it => {
+      const card = document.createElement("div");
+      card.className = "shop-card event-card";
+      card.appendChild(iconFor(dec, it.id, 2));
+      const nm = document.createElement("div");
+      nm.className = "shop-name";
+      nm.textContent = it.name + " 🌧️";
+      const owned = dec.myHome.items.filter(x => x.id === it.id).length;
+      if (owned) nm.textContent += ` (มี ${owned})`;
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "shop-buy";
+      btn.textContent = `ซื้อ 🏆${it.price}`;
+      btn.disabled = balance(world) < it.price;
+      btn.addEventListener("click", () => buy(world, it));
+      card.append(nm, btn);
+      list.appendChild(card);
+    });
+  }
 }
 
 function buy(world, it) {

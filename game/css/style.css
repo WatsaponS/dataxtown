@@ -365,6 +365,12 @@ body.touch #history-btn { left: auto; right: 20px; bottom: 96px; }
   background: #e7b94f; color: #171b2c; border: none; border-radius: 6px; cursor: pointer;
 }
 .shop-buy:disabled { background: #394158; color: #8891a5; cursor: default; }
+#shop-event-banner {
+  font-size: 12px; font-weight: 700; color: #171b2c;
+  background: #65a9c2; border-radius: 8px; padding: 8px 12px; margin-bottom: 12px;
+}
+#shop-event-banner.hidden { display: none; }
+.event-card { border-color: #65a9c2; }
 
 #room-canvas {
   display: block; width: 384px; height: 288px; max-width: 100%;
