@@ -20,6 +20,7 @@ import { initDuel, updateDuelProximity, tryDuelNearby } from "./duel.js";
 import { initGacha, updateGachaProximity, toggleGacha, isNearGacha, loadGachaMachineImage } from "./gacha.js";
 import { updateFx } from "./fx.js";
 import { initEmotes, toggleEmotePanel, isEmotePanelOpen } from "./emotes.js";
+import { initAchievements, toggleAchievements } from "./achievements.js";
 import { makeCamera, updateCamera, draw } from "./render.js";
 import {
   setupUI, isChatOpen, toggleChat, submitChat,
@@ -243,6 +244,7 @@ function startGame() {
     initDecor(world, ui);  // ร้านค้า + ห้องส่วนตัว (ใช้แต้มจาก quests และ uid จาก net)
     initLoginRewards(world, ui); // daily login 30 วัน (popup อัตโนมัติเมื่อมีของให้รับ)
     initTutorial(world, ui);     // ภารกิจแนะนำเกม 8 อย่าง ภารกิจละ 30 แต้ม
+    initAchievements(world, ui); // ความสำเร็จ+ตำแหน่งแสดง — ต้องมาหลัง tutorial กันทับ hook onItemPlaced
     initPetMenu(world, ui);      // เมนู 🐾 เปลี่ยน/ตั้งชื่อสัตว์เลี้ยง + สัตว์ legendary จาก login
     initDuel(world, ui);         // ท้าเป่ายิ้งฉุบผู้เล่นออนไลน์ ชนะ 2 ใน 3 ได้ 20 แต้ม
     initGacha(world, ui);        // ตู้กาชาปอง — สุ่มไอเทม exclusive 100 แต้ม/ครั้ง
@@ -274,7 +276,7 @@ window.addEventListener("keydown", e => {
     toggleBoard(world, false); toggleHistory(world, false);
     toggleShop(world, false); toggleRoom(world, false); toggleLogin(world, false);
     toggleTutorial(world, false); togglePetMenu(world, false); toggleGacha(world, false);
-    toggleEmotePanel(false);
+    toggleEmotePanel(false); toggleAchievements(world, false);
     // Esc บนคำท้าที่เข้ามา = ปฏิเสธจริง (ไม่ใช่แค่ซ่อน) กันสถานะ duel ค้างในหน่วยความจำ
     if (!document.getElementById("duel-incoming-overlay").classList.contains("hidden")) {
       document.getElementById("duel-decline-btn").click();

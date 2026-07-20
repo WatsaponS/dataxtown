@@ -6,6 +6,7 @@ import { GACHA_COST, GACHA_X, GACHA_Y, RARITY, rollGacha } from "./gacha_data.js
 import { balance, saveHome, iconFor } from "./decor.js";
 import { addSystemLine } from "./ui.js";
 import { spawnBurst } from "./fx.js";
+import { bumpStat } from "./achievements.js";
 
 export { GACHA_X, GACHA_Y };
 const SPRITE_BOTTOM_Y = 648; // ขอบล่างของ sprite ให้แนบพื้น (27*24)
@@ -96,6 +97,9 @@ function pull(world, ui) {
   dec.myHome.items.push({ id: won.id, x: null, y: null });
   saveHome(world);
   if (world.onGachaPull) world.onGachaPull();
+  bumpStat(world, ui, "gachaTotalPulls", 1);
+  if (won.tier === "mythic") bumpStat(world, ui, "gachaMythicPulls", 1);
+  else if (won.tier === "legendary") bumpStat(world, ui, "gachaLegendaryPulls", 1);
 
   setTimeout(() => {
     pulling = false;

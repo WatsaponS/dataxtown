@@ -5,6 +5,7 @@ import { QUIZ } from "./quiz_data.js";
 import { tileBlocked } from "./world.js";
 import { addSystemLine } from "./ui.js";
 import { spawnBurst } from "./fx.js";
+import { bumpStat } from "./achievements.js";
 
 const SPOT_COUNT = 3;
 const INTERACT_RADIUS = 44;   // px — ระยะกดเริ่ม quiz
@@ -173,13 +174,15 @@ function finishQuiz(world, ui) {
   // ระเบิด confetti ตอนโมดัลปิดพอดี (ตอนทำ quiz อยู่บังฉากอยู่ เห็นตอนนี้ถึงจะสวย) — ยิ่งถูกเยอะยิ่งระเบิดใหญ่
   if (s.correct > 0 && world.player) {
     spawnBurst(world.player.x, world.player.y - 10, { count: 8 + s.correct * 6, life: 0.8 });
+    bumpStat(world, ui, "quizCorrect", s.correct);
   }
 }
 
 function savePoints(world) {
   const fb = world.net && world.net.fb;
   if (!fb || !world.net.uid) return;
-  fb.set(fb.ref(fb.db, `leaderboard/${world.net.uid}`), {
+  // update() ไม่ใช่ set() — กันทับฟิลด์อื่นที่โมดูลอื่นเขียนร่วม doc เดียวกัน (title จาก achievements.js ฯลฯ)
+  fb.update(fb.ref(fb.db, `leaderboard/${world.net.uid}`), {
     name: world.player.name,
     points: world.quests.points,
     ts: Date.now(),

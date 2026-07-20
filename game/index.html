@@ -28,6 +28,7 @@
       <button class="emote-opt" data-emote="thumbsup" type="button" title="เยี่ยม">👍</button>
       <button class="emote-opt" data-emote="think" type="button" title="คิด">🤔</button>
     </div>
+    <button id="achv-btn" type="button" title="ความสำเร็จ/ตำแหน่งแสดง">🏅</button>
     <div id="score-badge" title="เปิด leaderboard (L)">🏆 0</div>
     <div id="online-badge">👥 1</div>
     <div id="online-list"></div>
@@ -136,6 +137,15 @@
       <div id="gacha-result" class="hidden"></div>
       <button id="gacha-pull-btn" type="button">🎰 สุ่มเลย! (100 แต้ม)</button>
       <button id="gacha-close-btn" type="button">ปิด</button>
+    </div>
+  </div>
+
+  <div id="achv-overlay" class="hidden">
+    <div id="achv-card">
+      <h2>🏅 ความสำเร็จ</h2>
+      <div id="achv-current"></div>
+      <div id="achv-grid"></div>
+      <button id="achv-close" type="button">ปิด</button>
     </div>
   </div>
 

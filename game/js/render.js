@@ -8,6 +8,7 @@ import { getDuelPrompt } from "./duel.js";
 import { drawGachaMachine, GACHA_Y } from "./gacha.js";
 import { drawFx } from "./fx.js";
 import { emoteEmoji } from "./emotes_data.js";
+import { achievementById } from "./achievements_data.js";
 
 export function makeCamera(config) {
   return { x: 0, y: 0, zoom: config.defaultZoom };
@@ -64,7 +65,7 @@ export function draw(ctx, world, cam) {
   // ป้ายชื่อ + bubble วาดใน screen space (คมชัดทุกระดับซูม)
   for (const ent of sorted) {
     const sxp = (ent.x - cam.x) * cam.zoom, syp = (ent.y - cam.y) * cam.zoom;
-    drawNameTag(ctx, ent, sxp, syp - (config.frameH + 3) * cam.zoom, ent === p);
+    drawNameTag(ctx, ent, sxp, syp - (config.frameH + 3) * cam.zoom, ent === p, titleIconFor(world, ent));
     if (ent.bubble && world.time < ent.bubble.until && canHear(world, p, ent)) {
       drawBubble(ctx, ent.bubble.text, sxp, syp - (config.frameH + 12) * cam.zoom);
     }
@@ -139,16 +140,33 @@ function drawChar(ctx, world, ent) {
   ctx.drawImage(img, sx, sy, config.frameW, config.frameH, dx, dy, config.frameW, config.frameH);
 }
 
-function drawNameTag(ctx, ent, x, y, isPlayer) {
+// ตำแหน่ง (title) ที่เลือกไว้ — ของตัวเองอ่านตรงจาก decor state, ของคนอื่นอ่านจาก leaderboard
+// (mirror มาให้ตอนเลือก title ใน achievements.js กัน round-trip เพิ่ม)
+function titleIconFor(world, ent) {
+  if (ent === world.player) {
+    const sel = world.decor && world.decor.myHome && world.decor.myHome.achievements && world.decor.myHome.achievements.selected;
+    const ac = sel && achievementById(sel);
+    return ac ? ac.icon : null;
+  }
+  if (ent.id && ent.id.startsWith("remote_") && world.quests && world.quests.board) {
+    const row = world.quests.board[ent.id.slice(7)];
+    const ac = row && row.title && achievementById(row.title);
+    return ac ? ac.icon : null;
+  }
+  return null;
+}
+
+function drawNameTag(ctx, ent, x, y, isPlayer, titleIcon) {
+  const label = titleIcon ? `${titleIcon} ${ent.name}` : ent.name;
   ctx.font = "600 11px 'Segoe UI', 'Leelawadee UI', sans-serif";
-  const w = ctx.measureText(ent.name).width + 10;
+  const w = ctx.measureText(label).width + 10;
   ctx.fillStyle = "rgba(23,27,44,0.7)";
   roundRect(ctx, x - w / 2, y - 14, w, 14, 4);
   ctx.fill();
   ctx.fillStyle = isPlayer ? "#e7b94f" : "#fff6dc";
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
-  ctx.fillText(ent.name, x, y - 7);
+  ctx.fillText(label, x, y - 7);
 }
 
 function drawBubble(ctx, text, x, y) {
