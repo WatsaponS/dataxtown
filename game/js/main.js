@@ -17,6 +17,7 @@ import { setPet, updatePets, loadPetImage } from "./pets.js";
 import { PETS, PET_FRAME } from "./pets_data.js";
 import { initPetMenu, togglePetMenu } from "./pet_menu.js";
 import { initDuel, updateDuelProximity, tryDuelNearby } from "./duel.js";
+import { initGacha, updateGachaProximity, toggleGacha, isNearGacha, loadGachaMachineImage } from "./gacha.js";
 import { makeCamera, updateCamera, draw } from "./render.js";
 import {
   setupUI, isChatOpen, toggleChat, submitChat,
@@ -52,6 +53,7 @@ window.addEventListener("keydown", () => music.start(), { once: true });
 window.__music = music; // hooks สำหรับ automated test ผ่าน cdp_shot --eval
 window.__world = world;
 const petImg = loadPetImage(); // โหลดคู่ขนานไปเลย ไม่ต้องรอ
+loadGachaMachineImage();
 
 // ---------- หน้าจอเริ่มเกม: ชื่อ + เพศ + เลือกตัวละคร + สีผม/สีเสื้อ ----------
 const saved = JSON.parse(localStorage.getItem("dataxtown.avatar") || "null") || {};
@@ -241,6 +243,7 @@ function startGame() {
     initTutorial(world, ui);     // ภารกิจแนะนำเกม 8 อย่าง ภารกิจละ 30 แต้ม
     initPetMenu(world, ui);      // เมนู 🐾 เปลี่ยน/ตั้งชื่อสัตว์เลี้ยง + สัตว์ legendary จาก login
     initDuel(world, ui);         // ท้าเป่ายิ้งฉุบผู้เล่นออนไลน์ ชนะ 2 ใน 3 ได้ 20 แต้ม
+    initGacha(world, ui);        // ตู้กาชาปอง — สุ่มไอเทม exclusive 100 แต้ม/ครั้ง
   });
   requestAnimationFrame(loop);
 }
@@ -260,12 +263,13 @@ window.addEventListener("keydown", e => {
   if (e.code === "KeyB") { music.toggle(); updateMusicBtn(); }
   if (e.code === "KeyE" && !isQuizOpen(world)) tryStartQuiz(world, ui);
   if (e.code === "KeyF") tryDuelNearby(world, ui);
+  if (e.code === "KeyG" && isNearGacha()) toggleGacha(world, document.getElementById("gacha-overlay").classList.contains("hidden"));
   if (e.code === "KeyL") toggleBoard(world, document.getElementById("board-overlay").classList.contains("hidden"));
   if (e.code === "KeyH") toggleHistory(world, document.getElementById("history-overlay").classList.contains("hidden"));
   if (e.key === "Escape") {
     toggleBoard(world, false); toggleHistory(world, false);
     toggleShop(world, false); toggleRoom(world, false); toggleLogin(world, false);
-    toggleTutorial(world, false); togglePetMenu(world, false);
+    toggleTutorial(world, false); togglePetMenu(world, false); toggleGacha(world, false);
     // Esc บนคำท้าที่เข้ามา = ปฏิเสธจริง (ไม่ใช่แค่ซ่อน) กันสถานะ duel ค้างในหน่วยความจำ
     if (!document.getElementById("duel-incoming-overlay").classList.contains("hidden")) {
       document.getElementById("duel-decline-btn").click();
@@ -333,6 +337,7 @@ function loop(now) {
   updateQuests(world);
   updateTutorial(world);
   updateDuelProximity(world); // เดินเข้าใกล้ผู้เล่นอื่น = ขึ้นป้ายชวนดวลเหนือหัวเขา (กด F ท้า)
+  updateGachaProximity(world); // เดินเข้าใกล้ตู้กาชา = ขึ้นป้ายกด G
   music.setZone(zoneAt(world, world.player.x, world.player.y)); // เพลงเปลี่ยนตามโซน
 
   updateCamera(cam, world, canvas);

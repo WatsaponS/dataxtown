@@ -10,6 +10,7 @@ import { addSystemLine } from "./ui.js";
 import { makeCustomSheet } from "./avatar.js";
 import { spriteFrame } from "./entities.js";
 import { LOGIN_ITEMS, LOGIN_SHEET_COLS, loginItemName } from "./login_data.js";
+import { GACHA_SHEET_COLS, gachaItemName } from "./gacha_data.js";
 import { petImageEl, setPet } from "./pets.js";
 import { PET_FRAME, petIndexOf } from "./pets_data.js";
 
@@ -67,6 +68,9 @@ export function initDecor(world, ui) {
   const loginImg = new Image();
   loginImg.onload = () => { dec.loginImg = loginImg; };
   loginImg.src = "assets/items_login.png";
+  const gachaImg = new Image();
+  gachaImg.onload = () => { dec.gachaImg = gachaImg; };
+  gachaImg.src = "assets/gacha_items.png";
 
   // โหลดห้องตัวเองจาก Firebase (ถ้ามี) — dec.ready ให้โมดูลอื่นรอก่อนแตะ myHome
   const fb = world.net && world.net.fb;
@@ -125,8 +129,14 @@ export function initDecor(world, ui) {
 const earned = world => (world.quests ? world.quests.points : 0);
 export const balance = world => Math.max(0, earned(world) - (world.decor.myHome.spent || 0));
 
-// อ้างอิง sprite ของไอเทมทุกชนิด — ร้านค้า (items.png) และ login exclusive (items_login.png)
+// อ้างอิง sprite ของไอเทมทุกชนิด — ร้านค้า (items.png), login exclusive (items_login.png),
+// และของรางวัลกาชาปอง (gacha_items.png)
 export function spriteRef(dec, id) {
+  if (id && id.startsWith("gacha")) {
+    const n = parseInt(id.slice(5), 10);
+    if (n >= 0) return { img: dec.gachaImg, idx: n, cols: GACHA_SHEET_COLS };
+    return null;
+  }
   if (id && id.startsWith("login")) {
     const n = parseInt(id.slice(5), 10) - 1;
     if (n >= 0 && n < LOGIN_ITEMS.length) return { img: dec.loginImg, idx: n, cols: LOGIN_SHEET_COLS };
@@ -137,6 +147,7 @@ export function spriteRef(dec, id) {
 }
 
 export function itemName(id) {
+  if (id && id.startsWith("gacha")) return gachaItemName(id) + " 🎰";
   if (id && id.startsWith("login")) return loginItemName(id) + " ✨";
   const idx = SPRITE[id];
   return idx == null ? id : ITEMS[idx].name;

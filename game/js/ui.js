@@ -3,6 +3,7 @@
 import { ZONE_INFO } from "./data.js";
 import { zoneAt, tileBlocked } from "./world.js";
 import { speak, canHear } from "./entities.js";
+import { GACHA_X, GACHA_Y } from "./gacha_data.js";
 
 export function setupUI(world) {
   const ui = {
@@ -113,6 +114,9 @@ export function drawMinimap(ui, world) {
       c.fillRect(x - 2, y - 2, 4, 4);
     }
   }
+  c.fillStyle = "#57b06b"; // ตู้กาชา — ตำแหน่งคงที่
+  const gx = (GACHA_X / world.tile) * s, gy = (GACHA_Y / world.tile) * s;
+  c.fillRect(gx - 2, gy - 2, 4, 4);
 }
 
 export function refreshOnlineList(ui, world) {

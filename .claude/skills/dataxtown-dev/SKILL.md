@@ -99,6 +99,8 @@ python game/tools/cdp_shot.py --url "http://localhost:8700/index.html?autostart=
 | sprite สัตว์เลี้ยง (18 แถว × 2 เฟรม: 0-14 พื้นฐาน, 15-17 legendary — ลำดับต้องตรง pets_data.js) | `game/assets/build_pets.py` → `pets.png` |
 | เมนู 🐾 เปลี่ยน/ตั้งชื่อสัตว์เลี้ยงในเกม + lock legendary ที่ยังไม่ปลดล็อก | `game/js/pet_menu.js` |
 | ท้าเป่ายิ้งฉุบ (2/3=20 แต้ม, path `duels/<id>` top-level) — เดินใกล้+กด F หรือปุ่ม ⚔️ ใน online-list | `game/js/duel.js` |
+| ตู้กาชาปอง (100 แต้ม/ครั้ง, ตำแหน่งคงที่ tile [29,26], เดินใกล้+กด G) — แคตตาล็อก+weighted random | `game/js/gacha.js`, `game/js/gacha_data.js` |
+| sprite ตู้กาชา (static 1 ชิ้น) / ไอเทมรางวัล 50 ชิ้น (5x10, prefix id `gacha`) | `build_gacha_machine.py`→`gacha_machine.png`, `build_gacha_items.py`→`gacha_items.png` |
 | สัตว์เลี้ยงเดินเล่น+โผล่ทริกในห้องส่วนตัว (แยกจาก trail-follow นอกห้อง) | `updateRoomPet`/`drawRoomPet` ใน `game/js/decor.js` |
 | multiplayer server + protocol (JSON: join/move/chat) | `game/server.py` |
 | **ผังชั้น 7** (ห้อง, โต๊ะ, collision, spawn, โซน) | `pixel-art/scb-park-west-b-floor7/build.py` |

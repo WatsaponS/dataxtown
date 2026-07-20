@@ -27,12 +27,13 @@
     <div id="chat-bar" class="hidden">
       <input id="chat-input" type="text" maxlength="120" placeholder="พิมพ์ข้อความ… (Esc ยกเลิก)">
     </div>
-    <div id="controls-hint">WASD/ลูกศร เดิน · Shift วิ่ง · Enter แชต · +/- ซูม · M มินิแมป · B เพลง · H ประวัติแชต · F ท้าดวล</div>
+    <div id="controls-hint">WASD/ลูกศร เดิน · Shift วิ่ง · Enter แชต · +/- ซูม · M มินิแมป · B เพลง · H ประวัติแชต · F ท้าดวล · G กาชา</div>
     <div id="touch-ui">
       <div id="joystick"><div id="stick"></div></div>
       <button id="chat-btn" type="button">💬</button>
     </div>
     <div id="quest-hint" class="hidden">❓ กดที่นี่หรือกด E เพื่อเริ่ม Quiz Databricks</div>
+    <div id="gacha-hint" class="hidden">🎰 กดที่นี่หรือกด G เพื่อสุ่มกาชาปอง</div>
   </div>
 
   <div id="quiz-overlay" class="hidden">
@@ -113,6 +114,17 @@
       </div>
       <div id="duel-reveal"></div>
       <button id="duel-cancel-btn" type="button">ยกเลิก</button>
+    </div>
+  </div>
+
+  <div id="gacha-overlay" class="hidden">
+    <div id="gacha-card">
+      <h2>🎰 ตู้กาชาปอง DataX</h2>
+      <div id="gacha-balance"></div>
+      <div id="gacha-rates"></div>
+      <div id="gacha-result" class="hidden"></div>
+      <button id="gacha-pull-btn" type="button">🎰 สุ่มเลย! (100 แต้ม)</button>
+      <button id="gacha-close-btn" type="button">ปิด</button>
     </div>
   </div>
 

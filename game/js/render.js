@@ -5,6 +5,7 @@ import { drawQuestMarkers } from "./quests.js";
 import { drawPet } from "./pets.js";
 import { petDisplayName } from "./pets_data.js";
 import { getDuelPrompt } from "./duel.js";
+import { drawGachaMachine, GACHA_Y } from "./gacha.js";
 
 export function makeCamera(config) {
   return { x: 0, y: 0, zoom: config.defaultZoom };
@@ -50,6 +51,7 @@ export function draw(ctx, world, cam) {
     drawables.push({ y: ent.y, draw: () => drawChar(ctx, world, ent) });
     if (ent.petId && ent.pet) drawables.push({ y: ent.pet.y, draw: () => drawPet(ctx, ent) });
   }
+  drawables.push({ y: GACHA_Y + 12, draw: () => drawGachaMachine(ctx) }); // ตู้กาชา — ฐานอยู่ใต้จุดยืนเล็กน้อย
   drawables.sort((a, b) => a.y - b.y);
   for (const d of drawables) d.draw();
   ctx.restore();
