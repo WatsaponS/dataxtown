@@ -27,6 +27,13 @@
         ".write": true,
         ".validate": "newData.child('name').isString() && newData.child('name').val().length <= 24 && newData.child('points').isNumber() && newData.child('points').val() >= 0 && newData.child('points').val() <= 1000000"
       }
+    },
+    "homes": {
+      ".read": true,
+      "$uid": {
+        ".write": true,
+        ".validate": "newData.child('name').isString() && newData.child('name').val().length <= 24 && newData.child('spent').isNumber() && newData.child('spent').val() >= 0"
+      }
     }
   }
 }

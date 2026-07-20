@@ -129,6 +129,9 @@ export function refreshOnlineList(ui, world) {
     dot.style.background = ent === world.player ? "#e7b94f" : "#57b06b";
     row.appendChild(dot);
     row.appendChild(document.createTextNode(ent.name + (ent.role ? " · " + ent.role : "")));
+    // ผู้เล่นจริง (ตัวเอง/remote) คลิกเพื่อเปิดดูห้องส่วนตัวได้ — NPC ไม่มีห้อง
+    if (ent === world.player) row.dataset.uid = "me";
+    else if (ent.id && ent.id.startsWith("remote_")) row.dataset.uid = ent.id.slice(7);
     ui.onlineList.appendChild(row);
   }
 }

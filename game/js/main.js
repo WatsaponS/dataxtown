@@ -10,6 +10,7 @@ import { FIREBASE_CONFIG } from "./firebase-config.js";
 import { createMusic } from "./audio.js";
 import { initQuests, updateQuests, tryStartQuiz, isQuizOpen, toggleBoard } from "./quests.js";
 import { initHistory, toggleHistory } from "./history.js";
+import { initDecor, toggleShop, toggleRoom } from "./decor.js";
 import { makeCamera, updateCamera, draw } from "./render.js";
 import {
   setupUI, isChatOpen, toggleChat, submitChat,
@@ -180,6 +181,7 @@ function startGame() {
   netReady.then(() => {
     initQuests(world, ui); // quest ต้องรอ net เพื่อผูก leaderboard
     initHistory(world, ui);
+    initDecor(world, ui);  // ร้านค้า + ห้องส่วนตัว (ใช้แต้มจาก quests และ uid จาก net)
   });
   requestAnimationFrame(loop);
 }
@@ -200,7 +202,10 @@ window.addEventListener("keydown", e => {
   if (e.code === "KeyE" && !isQuizOpen(world)) tryStartQuiz(world, ui);
   if (e.code === "KeyL") toggleBoard(world, document.getElementById("board-overlay").classList.contains("hidden"));
   if (e.code === "KeyH") toggleHistory(world, document.getElementById("history-overlay").classList.contains("hidden"));
-  if (e.key === "Escape") { toggleBoard(world, false); toggleHistory(world, false); }
+  if (e.key === "Escape") {
+    toggleBoard(world, false); toggleHistory(world, false);
+    toggleShop(world, false); toggleRoom(world, false);
+  }
   input.add(e.code);
 });
 window.addEventListener("keyup", e => input.delete(e.code));

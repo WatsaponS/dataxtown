@@ -91,6 +91,9 @@ python game/tools/cdp_shot.py --url "http://localhost:8700/index.html?autostart=
 | เพลงประกอบ (Web Audio sequencer — BPM, progression, เมโลดี้, mix) | `game/js/audio.js` |
 | ระบบ quest ❓ + quiz modal + leaderboard | `game/js/quests.js` |
 | คลังข้อสอบ Databricks 100 ข้อ (เพิ่ม/แก้โจทย์ที่นี่) | `game/js/quiz_data.js` |
+| ห้องส่วนตัว + ร้านค้าไอเทม (แคตตาล็อก 20 ชิ้น, ยอดคงเหลือ = points − spent) | `game/js/decor.js` |
+| sprite ไอเทมตกแต่ง (ลำดับต้องตรงแคตตาล็อก) | `game/assets/build_items.py` → `items.png` |
+| ประวัติแชตรวม (โหลดจาก rooms/main/chat) | `game/js/history.js` |
 | multiplayer server + protocol (JSON: join/move/chat) | `game/server.py` |
 | **ผังชั้น 7** (ห้อง, โต๊ะ, collision, spawn, โซน) | `pixel-art/scb-park-west-b-floor7/build.py` |
 | หน้าตา avatar | `game/assets/build_avatars.py` |
