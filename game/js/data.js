@@ -27,14 +27,13 @@ export const SHIRT_COLORS = [
 
 // ป้ายชื่อโซน อิง id ใน scb_floor7_map_large3x.json
 export const ZONE_INFO = {
-  playback:             { name: "🎤 Play Back Stage", note: "โซนกิจกรรมรวม — ทุกคนบนเวทีได้ยินกันหมด" },
   cco_office:           { name: "🤝 ห้องพี่หว่า (CCO)", note: "ปรึกษาเรื่องลูกค้า/ดีลได้ที่นี่" },
   cro_office:           { name: "🛡️ ห้องคุณ Manis (CRO)", note: "ปรึกษาความเสี่ยงและ compliance" },
   cdo_office:           { name: "📊 ห้องพี่แตน (CDO)", note: "คุยเรื่องข้อมูลและ insight" },
   cfo_finance:          { name: "💰 ห้องคุณ TT (CFO)", note: "เรื่องงบและการเงิน เชิญทางนี้" },
   cto_technology:       { name: "💻 ห้องพี่อ้อ (CTO)", note: "คุยเทคนิค/architecture ได้เต็มที่" },
   pantry:               { name: "🍪 Pantry", note: "เติมพลังกาแฟและขนม" },
-  open_space_west:      { name: "🛋️ Open Space", note: "มุมนั่งเล่นปีกตะวันตก" },
+  open_space_west:      { name: "🎤 Open Space — เวที DataX", note: "โซนกิจกรรมรวม/ทาวน์ฮอลล์ — ทุกคนบนเวทีได้ยินกันหมด" },
   meeting_0:            { name: "🔒 Meeting Room 0", note: "เสียงไม่รั่วออกนอกห้อง" },
   meeting_1:            { name: "🔒 Meeting Room 1", note: "เสียงไม่รั่วออกนอกห้อง" },
   meeting_2:            { name: "🔒 Meeting Room 2", note: "เสียงไม่รั่วออกนอกห้อง" },

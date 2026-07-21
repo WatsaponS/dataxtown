@@ -11,6 +11,7 @@ import sys
 SKILL = r"C:\Users\Admin\.codex\skills\pixel-art-studio\scripts"
 sys.path.insert(0, SKILL)
 from pixelstudio import Sprite
+from PIL import ImageDraw, ImageFont
 
 OUT = Path(__file__).resolve().parent
 SPACE_SCALE = int(os.environ.get("DATAXTOWN_SPACE_SCALE", "1"))
@@ -361,22 +362,51 @@ def podium(tx, ty):
     s.rect(x+Z(2), y+Z(2), x+w-Z(2), y+h-Z(6), P["desk"])
     s.rect(x+Z(4), y+Z(5), x+w-Z(4), y+Z(9), P["accent"])
 
+def bleacher_tier(x0t, x1t, ty):
+    """One bleacher row: shadow, riser, tread, cushion, cushion highlight, seat-divider ticks."""
+    x0, x1, y = int(x0t*TILE), int(x1t*TILE), int(ty*TILE)
+    s.rect(x0+Z(3), y+Z(20), x1+Z(3), y+Z(24), P["shadow"])
+    s.rect(x0, y+Z(4), x1, y+Z(20), P["wood_dark"])
+    s.rect(x0+Z(2), y+Z(7), x1-Z(2), y+Z(17), P["desk"])
+    s.rect(x0+Z(3), y, x1-Z(3), y+Z(9), P["fabric"])
+    s.rect(x0+Z(5), y+Z(1), x1-Z(5), y+Z(4), P["fabric_hi"])
+    for cx in range(x0+Z(16), x1-Z(4), Z(18)):
+        s.line(cx, y+Z(1), cx, y+Z(8), P["desk_hi"])
+
 def playback_bleachers():
     """Three amphitheater tiers facing the stage screen, split by a center aisle
     (x15-17) so spawn 'north_lounge' [16,9] and the CEO home tile [15,8] stay clear,
-    and the room keeps a straight walk-through from the corridor to the stage.
-    Reuses stepped_seating()'s riser/tread/cushion visual grammar."""
-    tiers = [(7.65, 0), (8.35, 0), (9.05, 0)]
-    for ty, _ in tiers:
+    and the room keeps a straight walk-through from the corridor to the stage."""
+    for ty in (7.65, 8.35, 9.05):
         for x0t, x1t in ((11.0, 15.0), (17.0, 21.0)):
-            x0, x1, y = int(x0t*TILE), int(x1t*TILE), int(ty*TILE)
-            s.rect(x0+Z(3), y+Z(20), x1+Z(3), y+Z(24), P["shadow"])
-            s.rect(x0, y+Z(4), x1, y+Z(20), P["wood_dark"])
-            s.rect(x0+Z(2), y+Z(7), x1-Z(2), y+Z(17), P["desk"])
-            s.rect(x0+Z(3), y, x1-Z(3), y+Z(9), P["fabric"])
-            s.rect(x0+Z(5), y+Z(1), x1-Z(5), y+Z(4), P["fabric_hi"])
-            for cx in range(x0+Z(16), x1-Z(4), Z(18)):
-                s.line(cx, y+Z(1), cx, y+Z(8), P["desk_hi"])
+            bleacher_tier(x0t, x1t, ty)
+
+def west_open_bleachers():
+    """Two wide bleacher tiers for the relocated bottom-left open space — one solid
+    block (no aisle needed here, unlike the stage) facing the datax_sign above it."""
+    for ty in (27.15, 27.9):
+        bleacher_tier(2.35, 8.9, ty)
+
+def datax_sign(tx, ty, width_tiles, compact=False):
+    """DATAX wordmark sign — same screen-shell grammar as stage_screen(), with real
+    rendered text (PIL) instead of the mountain-silhouette graphic."""
+    x, y = int(tx*TILE), int(ty*TILE); w = int(width_tiles*TILE)
+    hh = Z(16) if compact else Z(26)
+    s.rect(x+Z(3), y+Z(3), x+w+Z(3), y+hh+Z(3), P["shadow"])
+    s.rect(x, y, x+w, y+hh, P["outline"])
+    s.rect(x+Z(3), y+Z(3), x+w-Z(3), y+hh-Z(3), P["glass"])
+    img = s._img()
+    draw = ImageDraw.Draw(img)
+    try:
+        font = ImageFont.truetype("arialbd.ttf", Z(11) if compact else Z(16))
+    except Exception:
+        font = ImageFont.load_default()
+    text = "DATAX"
+    bbox = draw.textbbox((0, 0), text, font=font)
+    tw, th = bbox[2]-bbox[0], bbox[3]-bbox[1]
+    tx_px = x + (w - tw)//2 - bbox[0]
+    ty_px = y + (hh - th)//2 - bbox[1]
+    draw.text((tx_px, ty_px), text, font=font, fill=P["booth"])
 
 def stepped_seating():
     """Three staggered lounge tiers with a clear north entry and east aisle."""
@@ -482,15 +512,15 @@ if SPACE_SCALE == 3:
     # Clear doorway at the wide lower edge of the wedge.
     s.rect(int(8.5*TILE),int(5.76*TILE),int(9.18*TILE),6*TILE,P["floor"])
     s.line(int(8.48*TILE),int(5.72*TILE),int(8.48*TILE),6*TILE,P["outline"])
-R(10,6,21,10,P["meeting"],P["wall"])
-s.polygon([(12*TILE,9*TILE),(15*TILE,6*TILE),(18*TILE,6*TILE),(21*TILE,9*TILE)],P["accent"])
+R(10,6,21,9,P["floor"],P["wall"])
 if SPACE_SCALE == 3:
-    stage_screen(13.25,6.35,5.5)
-    podium(15.45,7.2)
-    # Tiered bleacher seating (amphitheater) replaces the loose audience armchairs —
-    # turns Playback into a proper town-hall/demo-day stage.
-    playback_bleachers()
-    cabinet(19.55,6.55,.65,.75)
+    floor_grid(10,6,21,9)
+    # Two extra workstation banks — the presentation stage moved to the relocated
+    # open space in the bottom-left; this floor becomes more desk capacity instead.
+    monitor_bank(11.2,6.9,seats=5,width_tiles=4.3)
+    monitor_bank(16.3,6.9,seats=5,width_tiles=4.3)
+    bank_specs.append(("north",11.2,6.9,4.3))
+    bank_specs.append(("north",16.3,6.9,4.3))
 else:
     table(14,7,17,7)
 
@@ -518,6 +548,8 @@ if SPACE_SCALE == 3:
         y=int((10.6-k*.45)*TILE); tip=int((10.25-k*.45)*TILE)
         s.line(int(15.35*TILE),y,16*TILE,tip,P["white"])
         s.line(int(16.65*TILE),y,16*TILE,tip,P["white"])
+    # DATAX wordmark sign above the north lift entrance.
+    datax_sign(13.25,9.1,5.5,compact=True)
 else:
     R(10,10,21,19,P["core"],P["wall"])
     R(12,13,14,17,P["core_hi"],P["outline"]); R(17,13,19,17,P["core_hi"],P["outline"])
@@ -548,6 +580,8 @@ if SPACE_SCALE == 3:
         sy=int((18.0+k*.42)*TILE)
         s.line(int(15.35*TILE),sy,int(16*TILE),sy+Z(14),P["white"])
         s.line(int(16.65*TILE),sy,int(16*TILE),sy+Z(14),P["white"])
+    # DATAX wordmark sign below the south lift exit, above the entrance chevrons.
+    datax_sign(13.25,19.75,5.5,compact=True)
 # Entrance chevrons.
 for k in range(3):
     y=(21+k)*TILE
@@ -560,17 +594,20 @@ if SPACE_SCALE == 3:
     server_rack(2.18,21.45,1.35)
     whiteboard(2.95,21.45,1.25); tv_console(2.15,23.45,1.65)
     # Stepped/sloped Open Space follows the lower-left facade rather than reading
-    # as another closed rectangular room.
+    # as another closed rectangular room. Widened 1 tile east (was x2-8) into the
+    # meeting suite's old space now that meeting_1..0 shifted right — this is now
+    # the relocated presentation/town-hall spot (was the north Playback Stage).
     open_outer=[(2*TILE,25*TILE),(5*TILE,25*TILE),(int(5.55*TILE),int(25.35*TILE)),
-                (8*TILE-1,int(25.35*TILE)),(8*TILE-1,29*TILE-1),(2*TILE,29*TILE-1)]
+                (9*TILE-1,int(25.35*TILE)),(9*TILE-1,29*TILE-1),(2*TILE,29*TILE-1)]
     s.polygon(open_outer,P["wall"])
     open_inner=[(2*TILE+Z(3),25*TILE+Z(3)),(5*TILE-Z(2),25*TILE+Z(3)),
-                (int(5.55*TILE),int(25.35*TILE)+Z(3)),(8*TILE-Z(4),int(25.35*TILE)+Z(3)),
-                (8*TILE-Z(4),29*TILE-Z(4)),(2*TILE+Z(3),29*TILE-Z(4))]
+                (int(5.55*TILE),int(25.35*TILE)+Z(3)),(9*TILE-Z(4),int(25.35*TILE)+Z(3)),
+                (9*TILE-Z(4),29*TILE-Z(4)),(2*TILE+Z(3),29*TILE-Z(4))]
     s.polygon(open_inner,P["floor"])
-    # Three true seating tiers replace all former sofa/table/lounge props.
-    # The geometry stops before x6.8, preserving the full east aisle x6.8..7.8.
-    stepped_seating()
+    # DATAX sign + two bleacher tiers replace the old stepped lounge — this is now
+    # the primary town-hall/demo-day gathering spot.
+    datax_sign(3.6,25.55,4.5)
+    west_open_bleachers()
     # North doorway aligns with the white circulation gap between the reduced room and breakout.
     s.rect(int(5.05*TILE),25*TILE,int(5.95*TILE),25*TILE+Z(4),P["floor"])
     s.rect(int(5.0*TILE),25*TILE,int(5.05*TILE),25*TILE+Z(8),P["outline"])
@@ -601,31 +638,32 @@ if SPACE_SCALE == 3:
 if SPACE_SCALE != 3:
     R(22,20,24,24,P["carpet"],P["wall"]); R(25,21,30,24,P["room"],P["wall"])
 
-# Bottom meeting suite and phone booths.
-R(8,25,11,28,P["meeting"],P["wall"]); R(12,25,16,28,P["meeting"],P["wall"])
-R(17,25,20,28,P["meeting"],P["wall"]); R(21,25,23,28,P["meeting"],P["wall"])
-R(24,25,25,26,P["booth"],P["wall"]); R(24,27,25,28,P["booth"],P["wall"])
-R(26,25,27,28,P["meeting"],P["wall"]); R(28,25,28,28,P["meeting"],P["wall"])
+# Bottom meeting suite and phone booths. Shifted +1 tile east (was x8-28) to give
+# the relocated open space one more tile of width on its east edge.
+R(9,25,12,28,P["meeting"],P["wall"]); R(13,25,17,28,P["meeting"],P["wall"])
+R(18,25,21,28,P["meeting"],P["wall"]); R(22,25,24,28,P["meeting"],P["wall"])
+R(25,25,26,26,P["booth"],P["wall"]); R(25,27,26,28,P["booth"],P["wall"])
+R(27,25,28,28,P["meeting"],P["wall"]); R(29,25,29,28,P["meeting"],P["wall"])
 if SPACE_SCALE == 3:
-    window_panel(8.35,25.35,2.3); bookshelf(21.3,27.8,1.25)
-    wall_picture(8.55,25.35,.95,.5); wall_picture(12.4,25.35,1.15,.5)
-    wall_picture(17.3,25.35,1.3,.5); wall_picture(21.3,25.35,.95,.5)
+    window_panel(9.35,25.35,2.3); bookshelf(22.3,27.8,1.25)
+    wall_picture(9.55,25.35,.95,.5); wall_picture(13.4,25.35,1.15,.5)
+    wall_picture(18.3,25.35,1.3,.5); wall_picture(22.3,25.35,.95,.5)
     # Two former dead-end rooms east of the phone booths get real purposes + wall decor.
-    cabinet(26.3,25.5,.75,1.4); bookshelf(27.0,25.5,.85)
-    meeting_table(26.3,27.15,27.7,27.7,2)
-    server_rack(28.12,25.55,1.6)
+    cabinet(27.3,25.5,.75,1.4); bookshelf(28.0,25.5,.85)
+    meeting_table(27.3,27.15,28.7,27.7,2)
+    server_rack(29.12,25.55,1.6)
 if SPACE_SCALE == 3:
-    meeting_table(8.45,26.25,11.45,27.1,4)
-    meeting_table(12.55,26.2,16.4,27.25,8)
-    meeting_table(17.35,26.2,20.55,27.25,6)
-    meeting_table(21.2,26.25,23.45,27.05,4)
+    meeting_table(9.45,26.25,12.45,27.1,4)
+    meeting_table(13.55,26.2,17.4,27.25,8)
+    meeting_table(18.35,26.2,21.55,27.25,6)
+    meeting_table(22.2,26.25,24.45,27.05,4)
 else:
     table(13,26,14,27); table(17,26,19,27)
 
 # Door openings: pale threshold plus a dark jamb on one side.
 doors = [(10,4,"v"),(10,8,"h"),
          (24,22,"v"),(27,21,"h"),
-         (10,25,"h"),(14,25,"h"),(18,25,"h"),(22,25,"h"),(24,25,"h"),(28,25,"h")]
+         (11,25,"h"),(15,25,"h"),(19,25,"h"),(23,25,"h"),(25,25,"h"),(29,25,"h")]
 if SPACE_SCALE == 3:
     doors = [v for v in doors if v not in [(24,22,"v"),(27,21,"h")]]
     doors += [(22,13,"v")]
@@ -664,7 +702,7 @@ if SPACE_SCALE == 3:
 
 # One-pixel drop shadows on room walls establish a consistent top-left light.
 shadow_rooms=[(9,2,12,5),(13,2,16,5),(17,2,21,5),
-              (8,25,11,28),(12,25,15,28),(16,25,20,28),(21,25,23,28)]
+              (9,25,12,28),(13,25,16,28),(17,25,21,28),(22,25,24,28)]
 if SPACE_SCALE == 3:
     shadow_rooms += [(1,21,4,24),(22,11,27,15),(20,18,21,19)]
 else:
@@ -797,20 +835,19 @@ data = {
     {"id":"cco_office","type":"executive_consultation","rect":[10,2,3,4],"anchor":[11,5]},
     {"id":"cro_office","type":"risk_executive","rect":[13,2,4,4],"anchor":[15,5]},
     {"id":"cdo_office","type":"data_executive","rect":[17,2,5,4],"anchor":[19,5]},
-    {"id":"playback","type":"presentation","rect":[10,6,12,5]},
     {"id":"phone_booth_northwest","type":"private_audio","rect":[8,2,2,4]},
     {"id":"cfo_finance","type":"executive_finance","rect":[22,11,6,5],"anchor":[22,13]},
     {"id":"cto_technology","type":"technology","rect":[1,21,4,4],"anchor":[4,22]},
     {"id":"pantry","type":"refreshment","rect":[7,20,3,5],"anchor":[8,24]},
-    {"id":"open_space_west","type":"social","rect":[2,25,6,4],"anchor":[5,26]},
-    {"id":"meeting_1","type":"meeting","rect":[8,25,4,4],"anchor":[10,25]},
-    {"id":"meeting_2","type":"meeting","rect":[12,25,5,4],"anchor":[14,25]},
-    {"id":"meeting_3","type":"meeting","rect":[17,25,4,4],"anchor":[18,25]},
-    {"id":"meeting_0","type":"meeting","rect":[21,25,3,4],"anchor":[22,25]},
-    {"id":"huddle_room","type":"meeting","rect":[26,25,2,4],"anchor":[26,25]},
-    {"id":"supply_closet","type":"utility","rect":[28,25,1,4],"anchor":[28,25]},
+    {"id":"open_space_west","type":"presentation","rect":[2,25,7,4],"anchor":[5,26]},
+    {"id":"meeting_1","type":"meeting","rect":[9,25,4,4],"anchor":[11,25]},
+    {"id":"meeting_2","type":"meeting","rect":[13,25,5,4],"anchor":[15,25]},
+    {"id":"meeting_3","type":"meeting","rect":[18,25,4,4],"anchor":[19,25]},
+    {"id":"meeting_0","type":"meeting","rect":[22,25,3,4],"anchor":[23,25]},
+    {"id":"huddle_room","type":"meeting","rect":[27,25,2,4],"anchor":[27,25]},
+    {"id":"supply_closet","type":"utility","rect":[29,25,1,4],"anchor":[29,25]},
     {"id":"lift_lobby","type":"transit","rect":[12,15,8,4],"anchors":{"left":[12,15],"right":[19,15],"south":[16,18]}},
-    {"id":"phone_booths","type":"private_audio","rect":[24,25,2,4]}],
+    {"id":"phone_booths","type":"private_audio","rect":[25,25,2,4]}],
   "workstations":([
     {"id":f"monitor_{bank*4+seat+1:02d}","tile":[round(x0+(seat+.5)*width_tiles/4,2),y],
      "bank":bank+1,"seat":seat+1,"side":side}

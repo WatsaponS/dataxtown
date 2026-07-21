@@ -1172,16 +1172,6 @@
       ]
     },
     {
-      "id": "playback",
-      "type": "presentation",
-      "rect": [
-        10,
-        6,
-        12,
-        5
-      ]
-    },
-    {
       "id": "phone_booth_northwest",
       "type": "private_audio",
       "rect": [
@@ -1235,11 +1225,11 @@
     },
     {
       "id": "open_space_west",
-      "type": "social",
+      "type": "presentation",
       "rect": [
         2,
         25,
-        6,
+        7,
         4
       ],
       "anchor": [
@@ -1251,13 +1241,13 @@
       "id": "meeting_1",
       "type": "meeting",
       "rect": [
-        8,
+        9,
         25,
         4,
         4
       ],
       "anchor": [
-        10,
+        11,
         25
       ]
     },
@@ -1265,13 +1255,13 @@
       "id": "meeting_2",
       "type": "meeting",
       "rect": [
-        12,
+        13,
         25,
         5,
         4
       ],
       "anchor": [
-        14,
+        15,
         25
       ]
     },
@@ -1279,13 +1269,13 @@
       "id": "meeting_3",
       "type": "meeting",
       "rect": [
-        17,
+        18,
         25,
         4,
         4
       ],
       "anchor": [
-        18,
+        19,
         25
       ]
     },
@@ -1293,13 +1283,13 @@
       "id": "meeting_0",
       "type": "meeting",
       "rect": [
-        21,
+        22,
         25,
         3,
         4
       ],
       "anchor": [
-        22,
+        23,
         25
       ]
     },
@@ -1307,13 +1297,13 @@
       "id": "huddle_room",
       "type": "meeting",
       "rect": [
-        26,
+        27,
         25,
         2,
         4
       ],
       "anchor": [
-        26,
+        27,
         25
       ]
     },
@@ -1321,13 +1311,13 @@
       "id": "supply_closet",
       "type": "utility",
       "rect": [
-        28,
+        29,
         25,
         1,
         4
       ],
       "anchor": [
-        28,
+        29,
         25
       ]
     },
@@ -1359,7 +1349,7 @@
       "id": "phone_booths",
       "type": "private_audio",
       "rect": [
-        24,
+        25,
         25,
         2,
         4
@@ -1806,6 +1796,86 @@
       "bank": 11,
       "seat": 4,
       "side": "east"
+    },
+    {
+      "id": "monitor_45",
+      "tile": [
+        11.74,
+        6.9
+      ],
+      "bank": 12,
+      "seat": 1,
+      "side": "north"
+    },
+    {
+      "id": "monitor_46",
+      "tile": [
+        12.81,
+        6.9
+      ],
+      "bank": 12,
+      "seat": 2,
+      "side": "north"
+    },
+    {
+      "id": "monitor_47",
+      "tile": [
+        13.89,
+        6.9
+      ],
+      "bank": 12,
+      "seat": 3,
+      "side": "north"
+    },
+    {
+      "id": "monitor_48",
+      "tile": [
+        14.96,
+        6.9
+      ],
+      "bank": 12,
+      "seat": 4,
+      "side": "north"
+    },
+    {
+      "id": "monitor_49",
+      "tile": [
+        16.84,
+        6.9
+      ],
+      "bank": 13,
+      "seat": 1,
+      "side": "north"
+    },
+    {
+      "id": "monitor_50",
+      "tile": [
+        17.91,
+        6.9
+      ],
+      "bank": 13,
+      "seat": 2,
+      "side": "north"
+    },
+    {
+      "id": "monitor_51",
+      "tile": [
+        18.99,
+        6.9
+      ],
+      "bank": 13,
+      "seat": 3,
+      "side": "north"
+    },
+    {
+      "id": "monitor_52",
+      "tile": [
+        20.06,
+        6.9
+      ],
+      "bank": 13,
+      "seat": 4,
+      "side": "north"
     }
   ],
   "notes": [
