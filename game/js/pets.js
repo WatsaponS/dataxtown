@@ -93,7 +93,11 @@ export function drawPet(ctx, ent) {
   const col = ent.pet.moving ? (Math.floor(ent.pet.animTime * 7) % 4) : 0;
   const size = PET_FRAME, dsize = size * PET_DRAW_SCALE;
   const dx = Math.round(ent.pet.x - dsize / 2), dy = Math.round(ent.pet.y - dsize + 6);
+  // เงาอิงสัดส่วนตัวสัตว์จริง (แบบเดียวกับเงาผู้เล่นใน render.js ที่ใช้ frameW*0.62) — ก่อนหน้านี้
+  // เป็นความกว้างคงที่ dsize-8 ที่ตั้งไว้ตอนสไปรท์ยังเล็ก (16px) พอสไปรท์ใหญ่ขึ้นเป็น 32px
+  // ความกว้างเดิมเลยกลายเป็นแท่งเทาใหญ่เกินตัวสัตว์จนดูเหมือนเส้นขอบแปลก ๆ ใต้เท้า
+  const shadowW = Math.round(dsize * 0.5), shadowH = Math.max(2, Math.round(dsize * 0.06));
   ctx.fillStyle = "rgba(0,0,0,0.22)";
-  ctx.fillRect(dx + 4, Math.round(ent.pet.y) - 2, dsize - 8, 4);
+  ctx.fillRect(Math.round(ent.pet.x - shadowW / 2), Math.round(ent.pet.y) - 2, shadowW, shadowH);
   ctx.drawImage(img, col * size, row * size, size, size, dx, dy, dsize, dsize);
 }

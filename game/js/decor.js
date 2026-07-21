@@ -484,8 +484,9 @@ function drawRoomPet(world, c) {
   const col = b.moving ? Math.floor(b.animTime * 7) % 4 : 0;
   const size = PET_FRAME;
   const dx = Math.round(b.x - size / 2) * S, dy = Math.round(b.y - size + 3) * S;
+  const shadowW = Math.round(size * 0.5), shadowH = Math.max(2, Math.round(size * 0.06));
   c.fillStyle = "rgba(0,0,0,0.22)";
-  c.fillRect(Math.round(b.x - 6) * S, Math.round(b.y - 1) * S, 12 * S, 2 * S);
+  c.fillRect(Math.round(b.x - shadowW / 2) * S, Math.round(b.y - 1) * S, shadowW * S, shadowH * S);
   c.drawImage(img, col * size, row * size, size, size, dx, dy, size * S, size * S);
   const now = performance.now() / 1000;
   if (now < b.trickUntil) {

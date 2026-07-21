@@ -22,20 +22,23 @@ PETS = ["rat", "ox", "tiger", "rabbit", "dragon", "snake", "horse",
 
 
 def resize_rgba_premultiplied(im, new_w, new_h):
-    """LANCZOS บน RGBA ตรง ๆ ทำให้ขอบมี noise เพราะพิกเซลโปร่งใส (RGB มักเป็น (0,0,0)) ไปปน
-    สีตอน resize — premultiply ด้วยอัลฟาก่อน resize แล้วหารกลับ ถึงจะได้ขอบสะอาด"""
+    """ต้นฉบับ 13 สัตว์นี้เป็น mask ขอบคมล้วน (alpha มีแค่ 0 หรือ 255 ไม่มีไล่เฉด) — LANCZOS มี
+    negative lobe ที่ทำให้ alpha เกิด ringing (โผล่ค่า alpha ต่ำ ๆ นอกขอบตัวจริง) พอผ่าน
+    premultiply/หารกลับ กลายเป็นพิกเซลเทา ๆ เป็นเส้นขอบเรือนราง ๆ รอบตัวสัตว์ที่ไม่ควรมี —
+    ใช้ BOX แทน (ไม่มี negative lobe เลยไม่ ring) + ตัด cutoff ให้สูงขึ้นและปัดเป็นทึบสนิท
+    (ไม่ใช่ alpha ไล่เฉด) ได้ขอบคมสมกับสไตล์พิกเซลอาร์ตที่เหลือของเกม"""
     r, g, b, a = im.split()
     rgb = Image.merge("RGB", (r, g, b))
     black = Image.new("RGB", im.size, (0, 0, 0))
     premult = Image.composite(rgb, black, a)
-    premult_resized = premult.resize((new_w, new_h), Image.LANCZOS)
-    a_resized = a.resize((new_w, new_h), Image.LANCZOS)
+    premult_resized = premult.resize((new_w, new_h), Image.BOX)
+    a_resized = a.resize((new_w, new_h), Image.BOX)
     pr, pg, pb = premult_resized.split()
     a_arr = a_resized.load()
     pr_l, pg_l, pb_l = pr.load(), pg.load(), pb.load()
     out = Image.new("RGBA", (new_w, new_h))
     out_px = out.load()
-    ALPHA_CUTOFF = 40
+    ALPHA_CUTOFF = 128
     for y in range(new_h):
         for x in range(new_w):
             av = a_arr[x, y]
@@ -44,7 +47,7 @@ def resize_rgba_premultiplied(im, new_w, new_h):
             else:
                 k = 255 / av
                 out_px[x, y] = (min(255, round(pr_l[x, y] * k)), min(255, round(pg_l[x, y] * k)),
-                                 min(255, round(pb_l[x, y] * k)), av)
+                                 min(255, round(pb_l[x, y] * k)), 255)
     return out
 
 
