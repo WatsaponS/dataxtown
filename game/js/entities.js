@@ -67,13 +67,15 @@ export function updateNPC(world, npc, dt) {
   if (npc.state === "idle") {
     npc.moving = false;
     if (npc.stateTimer <= 0) {
-      // เลือกทิศใหม่ แต่ไม่ออกนอกรัศมี roam จาก home
+      // เลือกทิศใหม่ แต่ไม่ออกนอกรัศมี roam จาก home (หรือไม่ออกนอกกรอบห้อง roomBox ถ้ามี)
       const angles = [0, Math.PI / 2, Math.PI, -Math.PI / 2];
       const a = angles[Math.floor(Math.random() * 4)];
       npc.vx = Math.cos(a); npc.vy = Math.sin(a);
       const t = world.tile;
       const aheadX = npc.x + npc.vx * t * 2, aheadY = npc.y + npc.vy * t * 2;
-      const far = Math.hypot(aheadX - npc.home[0], aheadY - npc.home[1]) > npc.roam * t;
+      const far = npc.roomBox
+        ? (aheadX < npc.roomBox[0] || aheadX > npc.roomBox[2] || aheadY < npc.roomBox[1] || aheadY > npc.roomBox[3])
+        : Math.hypot(aheadX - npc.home[0], aheadY - npc.home[1]) > npc.roam * t;
       if (far) { // หันกลับเข้าหา home แทน
         const back = Math.atan2(npc.home[1] - npc.y, npc.home[0] - npc.x);
         npc.vx = Math.abs(Math.cos(back)) > Math.abs(Math.sin(back)) ? Math.sign(Math.cos(back)) : 0;
@@ -87,6 +89,11 @@ export function updateNPC(world, npc, dt) {
     npc.animTime += dt;
     const speed = world.config.walkSpeed * 0.5;
     const ok = moveEntity(world, npc, npc.vx * speed * dt, npc.vy * speed * dt);
+    // กันหลุดกรอบห้องเด็ดขาด (เผื่อกรณีเดินตามทิศเดิมต่อจนพ้นกรอบก่อนถึงจังหวะเลือกทิศใหม่)
+    if (npc.roomBox) {
+      npc.x = Math.min(Math.max(npc.x, npc.roomBox[0]), npc.roomBox[2]);
+      npc.y = Math.min(Math.max(npc.y, npc.roomBox[1]), npc.roomBox[3]);
+    }
     npc.dir = Math.abs(npc.vx) >= Math.abs(npc.vy) ? (npc.vx < 0 ? "left" : "right") : (npc.vy < 0 ? "up" : "down");
     if (!ok || npc.stateTimer <= 0) {
       npc.state = "idle";

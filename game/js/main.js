@@ -232,6 +232,7 @@ function startGame() {
     ent.home = [ent.x, ent.y];
     ent.roam = n.roam;
     ent.lines = n.lines;
+    if (n.roomBox) ent.roomBox = n.roomBox.map(v => v * world.tile);
     if (n.hair || n.shirt) ent.sheet = makeCustomSheet(world, n.variant, { hair: n.hair, shirt: n.shirt });
     world.entities.push(ent);
   }
