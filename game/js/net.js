@@ -36,10 +36,10 @@ export function connectNet(world, ui) {
     // ส่งตำแหน่งเมื่อมีการเปลี่ยนแปลง (จังหวะ 10 ครั้ง/วินาที)
     let last = "";
     net.timer = setInterval(() => {
-      const snap = `${Math.round(p.x)},${Math.round(p.y)},${p.dir},${p.moving}`;
+      const snap = `${Math.round(p.x)},${Math.round(p.y)},${p.dir},${p.moving},${p.running}`;
       if (snap !== last) {
         last = snap;
-        send({ t: "move", x: p.x, y: p.y, dir: p.dir, moving: p.moving });
+        send({ t: "move", x: p.x, y: p.y, dir: p.dir, moving: p.moving, running: !!p.running });
       }
     }, 100);
 
@@ -81,7 +81,7 @@ export function connectNet(world, ui) {
         const ent = findRemote(world, data.id);
         if (ent) {
           ent.tx = data.x; ent.ty = data.y;
-          ent.dir = data.dir; ent.moving = data.moving;
+          ent.dir = data.dir; ent.moving = data.moving; ent.running = !!data.running;
         }
         break;
       }

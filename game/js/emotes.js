@@ -2,6 +2,7 @@
 // field "emote" บน rooms/main/players/<uid> (field เดียวกับที่ pet/petName ใช้อยู่แล้ว)
 
 import { EMOTES, EMOTE_DURATION_MS } from "./emotes_data.js";
+import { spawnBurst } from "./fx.js";
 
 export function initEmotes(world, ui) {
   const btn = document.getElementById("emote-btn");
@@ -31,6 +32,9 @@ export function triggerEmote(world, type) {
   if (!world.player || !EMOTES.some(e => e.id === type)) return;
   world.player.emoteType = type;
   world.player.emoteUntil = Date.now() + EMOTE_DURATION_MS;
+  if (type === "jump") {
+    spawnBurst(world.player.x, world.player.y - 16, { count: 16, life: 0.7, colors: ["#e7b94f", "#fff6dc", "#4f8fdd"] });
+  }
   const net = world.net;
   if (net && net.fb && net.uid) {
     net.fb.update(net.fb.ref(net.fb.db, `rooms/main/players/${net.uid}`), {

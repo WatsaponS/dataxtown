@@ -50,6 +50,7 @@ export function updatePlayer(world, controls, dt) {
 
   const mag = Math.hypot(dx, dy);
   p.moving = mag > 0.15;
+  p.running = p.moving && run;
   if (p.moving) {
     if (mag > 1) { dx /= mag; dy /= mag; }
     const speed = cfg.walkSpeed * (run ? cfg.runMultiplier : 1);
@@ -119,8 +120,18 @@ export function canHear(world, a, b) {
   return Math.hypot(a.x - b.x, a.y - b.y) <= world.config.proximityRadius;
 }
 
+// เฟรมต่อทิศ: 0 ยืนเฉย, 1-2 เดิน (สลับขา), 3-4 วิ่ง (สลับขาไวขึ้น+ก้าวยาวขึ้น), 5 กระโดด (ท่าเดียว ใช้ตอน emote "jump")
+export const FRAMES_PER_DIR = 6;
+
 export function spriteFrame(ent) {
   const di = DIRS.indexOf(ent.dir);
-  const f = ent.moving ? 1 + (Math.floor(ent.animTime * 7) % 2) : 0;
-  return di * 3 + f;
+  let f = 0;
+  if (ent.emoteType === "jump" && Date.now() < (ent.emoteUntil || 0)) {
+    f = 5;
+  } else if (ent.moving) {
+    const cycleSpeed = ent.running ? 10 : 7;
+    const cycle = Math.floor(ent.animTime * cycleSpeed) % 2;
+    f = ent.running ? 3 + cycle : 1 + cycle;
+  }
+  return di * FRAMES_PER_DIR + f;
 }

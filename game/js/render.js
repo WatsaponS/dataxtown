@@ -135,7 +135,10 @@ function drawChar(ctx, world, ent) {
   // ent.sheet = spritesheet เฉพาะตัว (custom สี, 1 แถว) — ไม่มีก็ใช้ sheet รวมตาม variant
   const img = ent.sheet || world.sheetImg;
   const sx = col * config.frameW, sy = ent.sheet ? 0 : ent.variant * config.frameH;
-  const dx = Math.round(ent.x - config.frameW / 2), dy = Math.round(ent.y - config.frameH + 1);
+  // ตอน emote "jump" active — เด้งตัวขึ้นเป็นจังหวะ (เงายังอยู่พื้นเดิม ให้ดูเหมือนลอยขึ้นจริง)
+  const jumping = ent.emoteType === "jump" && Date.now() < (ent.emoteUntil || 0);
+  const hop = jumping ? Math.abs(Math.sin(world.time * 9)) * 6 : 0;
+  const dx = Math.round(ent.x - config.frameW / 2), dy = Math.round(ent.y - config.frameH + 1 - hop);
   ctx.fillStyle = "rgba(0,0,0,0.25)";
   ctx.fillRect(dx + 3, Math.round(ent.y) - 2, 10, 3);
   ctx.drawImage(img, sx, sy, config.frameW, config.frameH, dx, dy, config.frameW, config.frameH);

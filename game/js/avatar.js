@@ -74,7 +74,8 @@ function ramp3(baseHex, dark, light) {
 export function makeCustomSheet(world, variant, opts = {}) {
   const { frameW, frameH } = world.config;
   const meta = world.avatarMeta.variants[variant];
-  const w = frameW * 12, h = frameH;
+  const totalCols = world.avatarMeta.dirs.length * world.avatarMeta.frames;
+  const w = frameW * totalCols, h = frameH;
   const canvas = document.createElement("canvas");
   canvas.width = w; canvas.height = h;
   const ctx = canvas.getContext("2d");

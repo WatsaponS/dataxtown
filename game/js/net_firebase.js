@@ -66,7 +66,7 @@ export async function connectFirebase(world, ui) {
       const ent = findRemote(world, snap.key);
       if (ent) {
         const v = snap.val();
-        ent.tx = v.x; ent.ty = v.y; ent.dir = v.dir || "down"; ent.moving = !!v.moving;
+        ent.tx = v.x; ent.ty = v.y; ent.dir = v.dir || "down"; ent.moving = !!v.moving; ent.running = !!v.running;
         // เปลี่ยนแค่ชื่อสัตว์เลี้ยง (ชนิดเดิม) ไม่ต้องรีเซ็ต trail ที่กำลังเดินตามอยู่
         if (v.pet !== ent.petId) setPet(ent, v.pet, v.petName);
         else if (ent.petId) ent.petName = v.petName || null;
@@ -86,10 +86,10 @@ export async function connectFirebase(world, ui) {
     // ---------- ส่งตำแหน่งเมื่อเปลี่ยน (10 ครั้ง/วินาที) ----------
     let last = "";
     net.timer = setInterval(() => {
-      const snap = `${Math.round(p.x)},${Math.round(p.y)},${p.dir},${p.moving}`;
+      const snap = `${Math.round(p.x)},${Math.round(p.y)},${p.dir},${p.moving},${p.running}`;
       if (snap !== last) {
         last = snap;
-        update(meRef, { x: p.x, y: p.y, dir: p.dir, moving: p.moving }).catch(() => {});
+        update(meRef, { x: p.x, y: p.y, dir: p.dir, moving: p.moving, running: !!p.running }).catch(() => {});
       }
     }, 100);
 

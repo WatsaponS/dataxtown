@@ -7,7 +7,15 @@
     "right",
     "up"
   ],
-  "frames": 3,
+  "frames": 6,
+  "animNames": [
+    "idle",
+    "walk1",
+    "walk2",
+    "run1",
+    "run2",
+    "jump"
+  ],
   "colorsPerGender": 8,
   "variants": [
     {

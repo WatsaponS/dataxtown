@@ -323,6 +323,8 @@ if (isTouch) {
   document.body.classList.add("touch");
   const joyEl = document.getElementById("joystick");
   const stickEl = document.getElementById("stick");
+  const joyHintEl = document.getElementById("joy-hint");
+  setTimeout(() => joyHintEl.classList.add("hidden"), 8000); // เผื่อไม่ได้แตะจอย ก็ไม่ค้างบังจอตลอด
   let joyPointer = null;
 
   const updateStick = e => {
@@ -334,16 +336,19 @@ if (isTouch) {
     if (mag > 1) { jx /= mag; jy /= mag; }
     joy.x = jx; joy.y = jy; joy.active = true;
     stickEl.style.transform = `translate(calc(-50% + ${jx * r * 0.55}px), calc(-50% + ${jy * r * 0.55}px))`;
+    stickEl.classList.toggle("running", Math.hypot(jx, jy) > 0.9); // ดันสุดขอบ = วิ่ง (ตรงกับ threshold ใน entities.js)
   };
   const resetStick = () => {
     joyPointer = null;
     joy.x = 0; joy.y = 0; joy.active = false;
     stickEl.style.transform = "translate(-50%, -50%)";
+    stickEl.classList.remove("running");
   };
   joyEl.addEventListener("pointerdown", e => {
     joyPointer = e.pointerId;
     joyEl.setPointerCapture(e.pointerId);
     updateStick(e);
+    joyHintEl.classList.add("hidden"); // ใช้จอยครั้งแรกแล้ว ไม่ต้องเตือนซ้ำ
     e.preventDefault();
   });
   joyEl.addEventListener("pointermove", e => {

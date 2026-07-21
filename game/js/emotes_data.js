@@ -7,6 +7,7 @@ export const EMOTES = [
   { id: "heart", emoji: "❤️" },
   { id: "thumbsup", emoji: "👍" },
   { id: "think", emoji: "🤔" },
+  { id: "jump", emoji: "🙌" }, // ท่าเฉลิมฉลอง — spriteFrame() ใน entities.js สลับไปใช้เฟรมกระโดดตอนนี้ active
 ];
 
 export const EMOTE_DURATION_MS = 2500;

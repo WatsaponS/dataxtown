@@ -146,13 +146,14 @@ class GameHandler(SimpleHTTPRequestHandler):
                         "hair": data.get("hair"), "shirt": data.get("shirt"),
                         "pet": data.get("pet"), "petName": data.get("petName"),
                         "x": float(data.get("x", 0)), "y": float(data.get("y", 0)),
-                        "dir": data.get("dir", "down"), "moving": False,
+                        "dir": data.get("dir", "down"), "moving": False, "running": False,
                     }
                     client = HUB.join(self.connection, info)
                 elif client and t == "move":
                     client.info.update(x=float(data["x"]), y=float(data["y"]),
-                                       dir=data.get("dir", "down"), moving=bool(data.get("moving")))
-                    HUB.broadcast({"t": "move", "id": client.id, **{k: client.info[k] for k in ("x", "y", "dir", "moving")}},
+                                       dir=data.get("dir", "down"), moving=bool(data.get("moving")),
+                                       running=bool(data.get("running")))
+                    HUB.broadcast({"t": "move", "id": client.id, **{k: client.info[k] for k in ("x", "y", "dir", "moving", "running")}},
                                   exclude=client.id)
                 elif client and t == "pet":
                     pet_id = data.get("petId")

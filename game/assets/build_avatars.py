@@ -1,8 +1,10 @@
 """Deterministic avatar spritesheet for DataX Town.
 
-Sheet layout: 16 rows x 12 columns (4 directions x 3 frames).
+Sheet layout: 16 rows x 24 columns (4 directions x 6 animation frames).
 Rows 0-7 = ชาย (8 สี), rows 8-15 = หญิง (8 สีเดียวกัน — ผมยาว + กระโปรง)
-Direction order: down, left, right, up. Frame 0 = idle, 1-2 = walk.
+Direction order: down, left, right, up. Frame order per direction:
+  0 idle, 1-2 walk (alternating stride), 3-4 run (wider stride + motion lines),
+  5 jump (arms-up pose, used for the "jump" celebration emote).
 Final frame size 16x24 (unchanged — game code depends on this). Drawn at
 4x (64x96/frame) using the same pixelstudio ramp()/gradient_dither shading
 already used for the map, then BOX-downsampled back down — same technique
@@ -22,7 +24,8 @@ FW, FH = 16, 24              # final, on-disk frame size — game's config.frame
 OVERSAMPLE = 4                # authoring resolution multiplier, BOX-downsampled at the end
 TW, TH = FW * OVERSAMPLE, FH * OVERSAMPLE
 DIRS = ["down", "left", "right", "up"]
-FRAMES = 3
+ANIMS = ["idle", "walk1", "walk2", "run1", "run2", "jump"]
+FRAMES = len(ANIMS)
 
 
 def Z(v):
@@ -46,11 +49,13 @@ OUTLINE = "#1b1626"
 SHOE = "#12101a"
 CHEEK = "#c97a68"
 BROW = "#2a2130"
+INNER = "#6e2f3d"        # เสื้อชั้นในใต้เสื้อคลุมเปิดหน้า (โทนคงที่ ไม่ผูกกับสีที่ปรับแต่งได้)
+MOTION_LINE = "#e8e4da"  # เส้นความไวสำหรับท่าวิ่ง
 
 # ---- ผลิตพาเลตเฉด (lo/mid/hi) ให้ทุกสีก่อนสร้าง Sprite เพื่อไม่ให้โดน snap ทับกัน ----
 tone_cache = {}  # base_hex -> (lo, mid, hi)
 skin_shade_cache = {}  # skin -> shadow tone (subtle, not a full hue-shift ramp)
-palette = {PANTS, PANTS_HI, OUTLINE, SHOE, CHEEK, BROW}
+palette = {PANTS, PANTS_HI, OUTLINE, SHOE, CHEEK, BROW, INNER, MOTION_LINE}
 for shirt, hair, skin in VARIANTS:
     if shirt not in tone_cache:
         tone_cache[shirt] = tuple(ramp(shirt, steps=3, dark=0.35, light=0.35))
@@ -64,10 +69,10 @@ for shirt, hair, skin in VARIANTS:
     palette.add(skin_shade_cache[skin])
 
 total_rows = len(VARIANTS) * 2
-s = Sprite(FW * 4 * FRAMES * OVERSAMPLE, FH * total_rows * OVERSAMPLE, palette=list(palette))
+s = Sprite(FW * len(DIRS) * FRAMES * OVERSAMPLE, FH * total_rows * OVERSAMPLE, palette=list(palette))
 
 
-def draw_frame(ox, oy, dir_, frame, shirt_tones, hair_tones, skin, skin_sh, female):
+def draw_frame(ox, oy, dir_, anim, shirt_tones, hair_tones, skin, skin_sh, female):
     shirt_lo, shirt, shirt_hi = shirt_tones
     hair_lo, hair, hair_hi = hair_tones
 
@@ -77,39 +82,58 @@ def draw_frame(ox, oy, dir_, frame, shirt_tones, hair_tones, skin, skin_sh, fema
     def PXY(x, y, color):
         RC(x, y, x, y, color)
 
-    # Legs: idle = both down; walk frames alternate. Dark shoe tips ground the sprite.
+    # Legs: idle = together; walk alternates a short stride; run alternates a wider,
+    # higher-kicking stride; jump tucks both legs up (never touch the ground line).
     ly = 19
-    if frame == 0:
-        legs = [(5, 0), (9, 0)]
-    elif frame == 1:
-        legs = [(5, -1), (9, 1)]
-    else:
-        legs = [(5, 1), (9, -1)]
-    for lx, dy in legs:
+    LEG_POSE = {
+        "idle": [(5, 0), (9, 0)],
+        "walk1": [(5, -1), (9, 1)], "walk2": [(5, 1), (9, -1)],
+        "run1": [(4, -2), (10, 2)], "run2": [(4, 2), (10, -2)],
+        "jump": [(5, -2), (9, -2)],
+    }
+    for lx, dy in LEG_POSE[anim]:
         y1 = min(22, ly + 3 + dy)
         RC(lx, ly + dy, lx + 1, y1, PANTS_HI if dy < 0 else PANTS)
         RC(lx, min(23, ly + 3 + dy), lx + 1, min(23, ly + 3 + dy), SHOE)
 
-    # Body — 3 flat shaded bands (not gradient_dither) so each band survives the BOX
-    # downsample as one exact color. A dithered gradient blends into many in-between
-    # colors once downsampled, which breaks the exact-match recolor swap in avatar.js.
-    RC(4, 12, 11, 13, shirt_hi)
-    RC(4, 14, 11, 16, shirt)
-    RC(4, 17, 11, 18, shirt_lo)
+    # Body — เสื้อคลุมเปิดหน้า: แถบสีปรับแต่งได้ (lo/mid/hi, ทึบไม่ dither) อยู่ด้านข้าง
+    # ซ้าย-ขวา ส่วนแถบกลางอกเป็นเสื้อชั้นในโทนคงที่ (INNER) โผล่ออกมาให้เห็น — ทุกแถบยังคง
+    # เป็นสีทึบล้วนตามเดิม (ไม่ใช้ gradient_dither) เพื่อให้ระบบ swap สีใน avatar.js จับสีตรงเป๊ะ
+    RC(4, 12, 6, 13, shirt_hi); RC(9, 12, 11, 13, shirt_hi)
+    RC(4, 14, 6, 16, shirt); RC(9, 14, 11, 16, shirt)
+    RC(4, 17, 6, 18, shirt_lo); RC(9, 17, 11, 18, shirt_lo)
+    RC(7, 12, 8, 18, INNER)
 
-    # Arms (swing on walk).
-    swing = 0 if frame == 0 else (1 if frame == 1 else -1)
-    if dir_ in ("down", "up"):
-        RC(3, 13 + swing, 3, 17 + swing, shirt_lo)
-        RC(12, 13 - swing, 12, 17 - swing, shirt_lo)
-        PXY(3, 18 + swing, skin)
-        PXY(12, 18 - swing, skin)
-    elif dir_ == "left":
-        RC(4, 13 + swing, 4, 17 + swing, shirt_lo)
-        PXY(4, 18 + swing, skin)
+    # Arms — เดิน/วิ่งแกว่งตามจังหวะก้าว (วิ่งแกว่งแรงกว่า) ส่วนกระโดดชูแขนขึ้นแทนการแกว่ง
+    if anim == "jump":
+        if dir_ in ("down", "up"):
+            RC(2, 7, 2, 13, shirt_lo); RC(13, 7, 13, 13, shirt_lo)
+            PXY(2, 6, skin); PXY(13, 6, skin)
+        elif dir_ == "left":
+            RC(3, 6, 3, 13, shirt_lo); PXY(3, 5, skin)
+        else:
+            RC(12, 6, 12, 13, shirt_lo); PXY(12, 5, skin)
     else:
-        RC(11, 13 + swing, 11, 17 + swing, shirt_lo)
-        PXY(11, 18 + swing, skin)
+        swing = {"idle": 0, "walk1": 1, "walk2": -1, "run1": 2, "run2": -2}[anim]
+        if dir_ in ("down", "up"):
+            RC(3, 13 + swing, 3, 17 + swing, shirt_lo)
+            RC(12, 13 - swing, 12, 17 - swing, shirt_lo)
+            PXY(3, 18 + swing, skin)
+            PXY(12, 18 - swing, skin)
+        elif dir_ == "left":
+            RC(4, 13 + swing, 4, 17 + swing, shirt_lo)
+            PXY(4, 18 + swing, skin)
+        else:
+            RC(11, 13 + swing, 11, 17 + swing, shirt_lo)
+            PXY(11, 18 + swing, skin)
+
+    # เส้นความไว (motion lines) ตอนวิ่ง — เฉพาะหันซ้าย/ขวา (อ่านง่ายสุด) ชิดขอบฝั่งตรงข้าม
+    # ทิศที่วิ่งไป ให้ไม่ล้ำไปทับเฟรมข้าง ๆ ในสไปรท์ชีท (แต่ละเฟรมกว้างแค่ 16px ไม่มีช่องว่างคั่น)
+    if anim in ("run1", "run2") and dir_ in ("left", "right"):
+        mx = 14 if dir_ == "left" else 0
+        offset = 1 if anim == "run1" else 0
+        PXY(mx, 13 + offset, MOTION_LINE)
+        PXY(mx, 16 - offset, MOTION_LINE)
 
     # Head.
     RC(4, 3, 11, 11, skin)
@@ -118,15 +142,16 @@ def draw_frame(ox, oy, dir_, frame, shirt_tones, hair_tones, skin, skin_sh, fema
     PXY(4, 3, hair if dir_ != "up" else skin)
     PXY(11, 3, hair if dir_ != "up" else skin)
 
-    # Hair by direction, with a highlight streak for a bit of shine.
+    # Hair by direction, with spiky tufts (instead of one flat block) + a highlight streak.
     if dir_ == "up":
         RC(4, 2, 11, 9, hair)
-        RC(5, 2, 6, 2, hair_hi)
     else:
         RC(4, 2, 11, 5, hair)
         PXY(4, 6, hair)
         PXY(11, 6, hair)
         RC(5, 2, 7, 2, hair_hi)
+    # ปลายผมแหลมเป็นกระจุก (zigzag) ทับขอบบนของก้อนผม ให้ดูมีทรงมากกว่าบล็อกเดียวเรียบ ๆ
+    RC(4, 1, 5, 1, hair); RC(7, 0, 8, 1, hair); RC(10, 1, 11, 1, hair)
 
     # Face.
     if dir_ == "down":
@@ -168,8 +193,8 @@ def main():
             hair_tones = tone_cache[hair]
             skin_sh = skin_shade_cache[skin]
             for di, dir_ in enumerate(DIRS):
-                for f in range(FRAMES):
-                    draw_frame((di * FRAMES + f) * FW, row * FH, dir_, f,
+                for fi, anim in enumerate(ANIMS):
+                    draw_frame((di * FRAMES + fi) * FW, row * FH, dir_, anim,
                                shirt_tones, hair_tones, skin, skin_sh, female)
             meta_variants.append({
                 "shirt": shirt, "shirtLo": shirt_tones[0], "shirtHi": shirt_tones[2],
@@ -185,12 +210,12 @@ def main():
     im.resize((im.width // OVERSAMPLE, im.height // OVERSAMPLE), Image.BOX).save(OUT / "avatars.png")
 
     meta = {
-        "frameW": FW, "frameH": FH, "dirs": DIRS, "frames": FRAMES,
+        "frameW": FW, "frameH": FH, "dirs": DIRS, "frames": FRAMES, "animNames": ANIMS,
         "colorsPerGender": len(VARIANTS),
         "variants": meta_variants,
     }
     (OUT / "avatars.json").write_text(json.dumps(meta, indent=2), encoding="utf-8")
-    print(f"wrote avatars.png {FW*4*FRAMES}x{FH*total_rows} ({total_rows} rows) + avatars.json")
+    print(f"wrote avatars.png {FW*len(DIRS)*FRAMES}x{FH*total_rows} ({total_rows} rows) + avatars.json")
 
 
 if __name__ == "__main__":
