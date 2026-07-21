@@ -373,7 +373,7 @@ body.touch #history-btn { left: auto; right: 20px; bottom: 96px; }
 .event-card { border-color: #65a9c2; }
 
 #room-canvas {
-  display: block; width: 384px; height: 288px; max-width: 100%;
+  display: block; width: 384px; height: 384px; max-width: 100%;
   image-rendering: pixelated; border: 2px solid #394158; border-radius: 8px;
   margin: 0 auto; cursor: pointer;
 }

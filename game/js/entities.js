@@ -18,7 +18,7 @@ export function makeEntity({ id, name, role = "", variant = 0, x, y, kind = "npc
 
 // ขยับ entity แยกแกน X/Y เพื่อให้ slide ตามกำแพงได้ — คืนค่าว่าขยับได้จริงไหม
 export function moveEntity(world, ent, dx, dy) {
-  const HW = 5, FOOT = 5; // hitbox ครึ่งกว้าง 5px, สูงช่วงเท้า 5px
+  const HW = 10, FOOT = 10; // hitbox ครึ่งกว้าง/สูงช่วงเท้า (2x จาก 5 — ตาม tile 24->48px)
   let movedX = false, movedY = false;
   if (dx !== 0) {
     const nx = ent.x + dx;

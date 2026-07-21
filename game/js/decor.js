@@ -9,6 +9,7 @@
 import { addSystemLine } from "./ui.js";
 import { makeCustomSheet } from "./avatar.js";
 import { spriteFrame } from "./entities.js";
+import { CONFIG } from "./data.js";
 import { LOGIN_ITEMS, LOGIN_SHEET_COLS, loginItemName } from "./login_data.js";
 import { GACHA_SHEET_COLS, gachaItemName } from "./gacha_data.js";
 import { SEASON_SHEET_COLS, seasonItemName } from "./season_data.js";
@@ -43,8 +44,17 @@ export const ITEMS = [
 ];
 const SPRITE = Object.fromEntries(ITEMS.map((it, i) => [it.id, i]));
 const CELL = 24, SHEET_COLS = 5;
-const ROOM_COLS = 8, ROOM_ROWS = 6;
-const S = 2; // canvas ห้องวาดที่ 2x (384×288) ให้ป้ายชื่อ/ตัวอักษรคมชัด
+// ROOM_ROWS ขยายจาก 6 เป็น 8 (พื้น 4 แถว -> 6 แถว) รองรับสไปรท์ตัวละครใหม่ที่สูงขึ้น (50px จาก 24px
+// เดิม) ไม่งั้นหัวโผล่ทะลุผนังด้านบน — ตำแหน่งไอเทมเดิมที่เคยวางไว้ยังใช้ grid เดิมได้ปกติ (เพิ่มพื้นที่
+// ด้านล่างเข้ามาเฉย ๆ ไม่กระทบตำแหน่งเดิม)
+const ROOM_COLS = 8, ROOM_ROWS = 8;
+const S = 2; // canvas ห้องวาดที่ 2x ให้ป้ายชื่อ/ตัวอักษรคมชัด
+
+// ขอบเขตเดินของบอทเจ้าของห้อง — เผื่อที่ด้านบนให้พอกับความสูงสไปรท์ใหม่ (frameH) ไม่ให้หัวชนผนัง
+const ROOM_FLOOR_TOP = CELL * 2, ROOM_FLOOR_BOTTOM = ROOM_ROWS * CELL;
+const ROOM_BOT_Y_MIN = ROOM_FLOOR_TOP + CONFIG.frameH - 1 + 4;
+const ROOM_BOT_Y_MAX = ROOM_FLOOR_BOTTOM - 6;
+const ROOM_PET_Y_MIN = ROOM_FLOOR_TOP + 14, ROOM_PET_Y_MAX = ROOM_FLOOR_BOTTOM - 8;
 const DEFAULT_GREETING = name => `สวัสดี! ยินดีต้อนรับสู่ห้องของ ${name} 👋`;
 
 export function initDecor(world, ui) {
@@ -336,7 +346,7 @@ function startRoomAnim(world) {
   dec.anim = {
     sheet, ownerName,
     greeting: () => (v.mine ? dec.myHome.greeting : home && home.greeting) || DEFAULT_GREETING(ownerName),
-    bot: { x: 96, y: 104, tx: 96, ty: 104, dir: "down", moving: false, animTime: 0, timer: 1.2 },
+    bot: { x: 96, y: 140, tx: 96, ty: 140, dir: "down", moving: false, animTime: 0, timer: 1.2 },
     pet: petId ? {
       petId, petName,
       x: 150, y: 110, tx: 150, ty: 110, dir: "down", moving: false, animTime: 0, timer: 1.5,
@@ -380,7 +390,7 @@ function updateRoomPet(a, dt) {
     b.timer -= dt;
     if (b.timer <= 0) {
       b.tx = 16 + Math.random() * (192 - 32);
-      b.ty = CELL * 2 + 14 + Math.random() * (144 - CELL * 2 - 22);
+      b.ty = ROOM_PET_Y_MIN + Math.random() * (ROOM_PET_Y_MAX - ROOM_PET_Y_MIN);
       b.moving = true;
     }
   }
@@ -418,9 +428,9 @@ function updateBot(a, dt) {
   } else {
     b.timer -= dt;
     if (b.timer <= 0) {
-      // เป้าหมายใหม่ในพื้นห้อง (base scale 192×144, เว้นผนัง/ขอบ)
+      // เป้าหมายใหม่ในพื้นห้อง — เว้นผนัง/ขอบ และเว้นด้านบนพอกับความสูงสไปรท์ (ดู ROOM_BOT_Y_MIN)
       b.tx = 16 + Math.random() * (192 - 32);
-      b.ty = CELL * 2 + 14 + Math.random() * (144 - CELL * 2 - 22);
+      b.ty = ROOM_BOT_Y_MIN + Math.random() * (ROOM_BOT_Y_MAX - ROOM_BOT_Y_MIN);
       b.moving = true;
     }
   }
@@ -500,16 +510,18 @@ function drawBot(world, c) {
   const a = world.decor.anim;
   if (!a || !a.sheet) return;
   const b = a.bot;
+  const { frameW, frameH } = CONFIG;
   const col = spriteFrame(b); // ใช้ logic เฟรมเดียวกับตัวละครในเกม
-  const dx = Math.round(b.x - 8) * S, dy = Math.round(b.y - 23) * S;
+  const dx = Math.round(b.x - frameW / 2) * S, dy = Math.round(b.y - frameH + 1) * S;
+  const shadowW = Math.round(frameW * 0.62), shadowH = Math.max(3, Math.round(frameH * 0.06));
   c.fillStyle = "rgba(0,0,0,0.25)";
-  c.fillRect(Math.round(b.x - 5) * S, Math.round(b.y - 2) * S, 10 * S, 3 * S);
-  c.drawImage(a.sheet, col * 16, 0, 16, 24, dx, dy, 16 * S, 24 * S);
+  c.fillRect(Math.round(b.x - shadowW / 2) * S, Math.round(b.y - 2) * S, shadowW * S, shadowH * S);
+  c.drawImage(a.sheet, col * frameW, 0, frameW, frameH, dx, dy, frameW * S, frameH * S);
   // ป้ายชื่อ
   c.font = `700 ${5.5 * S}px 'Segoe UI', 'Leelawadee UI', sans-serif`;
   c.textAlign = "center";
   c.textBaseline = "middle";
-  const nx = b.x * S, ny = (b.y - 27) * S;
+  const nx = b.x * S, ny = (b.y - frameH + 1 - 4) * S;
   const nw = c.measureText(a.ownerName).width + 8 * S / 2;
   c.fillStyle = "rgba(23,27,44,0.75)";
   c.fillRect(nx - nw / 2, ny - 4 * S, nw, 8 * S);
@@ -535,7 +547,7 @@ function drawBot(world, c) {
     const bh = shown.length * 8 * S + 6 * S;
     let bx = b.x * S - bw / 2;
     bx = Math.max(2 * S, Math.min(bx, ROOM_COLS * CELL * S - bw - 2 * S));
-    let by = (b.y - 33) * S - bh;
+    let by = (b.y - frameH + 1 - 10) * S - bh;
     if (by < 2 * S) by = (b.y + 4) * S; // ถ้าชนขอบบน ย้ายลงใต้ตัว
     c.fillStyle = "rgba(255,246,220,0.95)";
     c.fillRect(bx, by, bw, bh);

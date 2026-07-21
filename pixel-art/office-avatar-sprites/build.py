@@ -127,6 +127,11 @@ def material_mask(im, kind):
             for nx,ny in ((x+1,y),(x-1,y),(x,y+1),(x,y-1),(x+1,y+1),(x-1,y+1),(x+1,y-1),(x-1,y-1)):
                 if 0<=nx<im.width and 0<=ny<im.height and cp[nx,ny] and (nx,ny) not in seen:
                     seen.add((nx,ny)); q.append((nx,ny)); dst[nx,ny]=255
+        # Reject disconnected cyan shoe accents. Garment components originate
+        # in the upper body; long garments remain connected to that region.
+        for pts in components(out):
+            if min(y % FRAME for _,y in pts) > 80:
+                for x,y in pts: dst[x,y]=0
     return out
 
 def recolor(im, mask, target):
@@ -154,6 +159,9 @@ SOURCES = {
     "male_cfo": "male_cfo_dalle_source.png",
     "male_cro": "male_cro_dalle_source.png",
     "male_ceo_v2": "male_ceo_v2_dalle_source.png",
+    "male_cco_v2": "male_cco_v2_dalle_source.png",
+    "female_cdo_v2": "female_cdo_v2_dalle_source.png",
+    "female_cto_v2": "female_cto_v2_dalle_source.png",
 }
 
 DEMO_COLORS = {
@@ -166,6 +174,9 @@ DEMO_COLORS = {
     "male_cfo": ("#765039", "#4c78a8"),
     "male_cro": ("#75503b", "#4b79aa"),
     "male_ceo_v2": ("#70442d", "#4a78a8"),
+    "male_cco_v2": ("#74462f", "#477dab"),
+    "female_cdo_v2": ("#75442e", "#477baa"),
+    "female_cto_v2": ("#6842a6", "#c6534f"),
 }
 
 FINAL_COLORS = {
@@ -176,6 +187,9 @@ FINAL_COLORS = {
     "male_cfo": ("#797a7e", "#f4f1e8"),
     "male_cro": ("#46484d", "#f4f1e8"),
     "male_ceo_v2": ("#17171c", "#233862"),
+    "male_cco_v2": ("#17171c", "#1d1f24"),
+    "female_cdo_v2": ("#17171c", "#1d1f24"),
+    "female_cto_v2": ("#17171c", "#f4f1e8"),
 }
 
 def build(gender):
@@ -184,6 +198,15 @@ def build(gender):
     poses=extract_poses(chroma_alpha(src))
     clean=Image.new('RGBA',(FRAME*COLS,FRAME*ROWS),(0,0,0,0))
     for i,pose in enumerate(poses): clean.alpha_composite(pose,((i%4)*FRAME,(i//4)*FRAME))
+    # Re-lock every cell to the shared foot pivot after chroma cleanup. Generative
+    # edge colors can occasionally make one pose's last opaque row disappear.
+    aligned=Image.new('RGBA',clean.size,(0,0,0,0))
+    for i in range(COLS*ROWS):
+        x=(i%COLS)*FRAME; y=(i//COLS)*FRAME
+        cell=clean.crop((x,y,x+FRAME,y+FRAME)); bbox=cell.getchannel('A').getbbox()
+        dy=(118-bbox[3]) if bbox else 0
+        aligned.alpha_composite(cell,(x,y+dy))
+    clean=aligned
     hair=material_mask(clean,"hair"); clothes=material_mask(clean,"clothing")
     hair.save(ROOT/f"{gender}_hair_mask.png")
     clothes.save(ROOT/f"{gender}_clothing_mask.png")

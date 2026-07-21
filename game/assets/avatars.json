@@ -38,6 +38,10 @@
     {
       "gender": "f",
       "role": "cdo"
+    },
+    {
+      "gender": "m",
+      "role": "cro"
     }
   ]
 }

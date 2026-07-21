@@ -10,10 +10,13 @@ import { bumpStat } from "./achievements.js";
 import { bumpMission } from "./missions.js";
 
 export { GACHA_X, GACHA_Y };
-// ระยะจาก GACHA_Y (จุดอ้างอิงเข้าเล่น) ลงไปถึงขอบล่างของ sprite ที่แนบพื้น — export ให้ render.js
-// ใช้ค่าเดียวกันตอน depth-sort กัน magic number สองจุดหลุดไม่ตรงกันแบบที่เคยเกิด (ตู้ไม่ขยับตาม GACHA_Y)
-export const SPRITE_Y_OFFSET = 12;
-const INTERACT_RADIUS = 46;
+// สไปรท์ตู้กาชา (assets/gacha_machine.png) ไม่ได้ขยายไฟล์จริง — วาดขยาย MACHINE_SCALE เท่าตอน
+// render แทน ให้สัดส่วนตรงกับแผนที่/ตัวละครที่ใหญ่ขึ้น 2x (tile 24->48px) โดยไม่ต้องสร้างภาพใหม่
+const MACHINE_SCALE = 2;
+// ระยะจาก GACHA_Y (จุดอ้างอิงเข้าเล่น) ลงไปถึงขอบล่างของ sprite ที่แนบพื้น (คิดที่สเกลจริงหลังขยายแล้ว)
+// — export ให้ render.js ใช้ค่าเดียวกันตอน depth-sort กัน magic number สองจุดหลุดไม่ตรงกัน
+export const SPRITE_Y_OFFSET = 24;
+const INTERACT_RADIUS = 92; // 2x จาก 46 — ตาม tile 24->48px
 
 let pendingCelebration = false; // สุ่มได้ mythic/legendary รอบล่าสุด — ระเบิด confetti ตอนปิดโมดัล (ตอนเปิดอยู่บังฉากอยู่)
 let machineImg = null;
@@ -138,10 +141,11 @@ function showResult(world, ui, won) {
 export function drawGachaMachine(ctx) {
   const img = machineImg;
   if (!img || !img.complete) return;
+  const w = img.width * MACHINE_SCALE, h = img.height * MACHINE_SCALE;
   const spriteBottomY = GACHA_Y + SPRITE_Y_OFFSET;
-  const dx = Math.round(GACHA_X - img.width / 2);
-  const dy = Math.round(spriteBottomY - img.height);
+  const dx = Math.round(GACHA_X - w / 2);
+  const dy = Math.round(spriteBottomY - h);
   ctx.fillStyle = "rgba(0,0,0,0.25)";
-  ctx.fillRect(dx + 3, spriteBottomY - 2, img.width - 6, 3);
-  ctx.drawImage(img, dx, dy);
+  ctx.fillRect(dx + 6, spriteBottomY - 4, w - 12, 6);
+  ctx.drawImage(img, dx, dy, w, h);
 }

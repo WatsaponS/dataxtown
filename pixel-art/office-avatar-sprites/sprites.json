@@ -66,6 +66,24 @@
       "hairMask": "male_ceo_v2_hair_mask.png",
       "clothingMask": "male_ceo_v2_clothing_mask.png",
       "demo": "male_ceo_v2_recolor_demo.png"
+    },
+    "male_cco_v2": {
+      "sheet": "male_cco_v2_spritesheet.png",
+      "hairMask": "male_cco_v2_hair_mask.png",
+      "clothingMask": "male_cco_v2_clothing_mask.png",
+      "demo": "male_cco_v2_recolor_demo.png"
+    },
+    "female_cdo_v2": {
+      "sheet": "female_cdo_v2_spritesheet.png",
+      "hairMask": "female_cdo_v2_hair_mask.png",
+      "clothingMask": "female_cdo_v2_clothing_mask.png",
+      "demo": "female_cdo_v2_recolor_demo.png"
+    },
+    "female_cto_v2": {
+      "sheet": "female_cto_v2_spritesheet.png",
+      "hairMask": "female_cto_v2_hair_mask.png",
+      "clothingMask": "female_cto_v2_clothing_mask.png",
+      "demo": "female_cto_v2_recolor_demo.png"
     }
   },
   "recolor": {

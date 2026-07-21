@@ -4,9 +4,9 @@ export const CONFIG = {
   mapJson: "assets/scb_floor7_map_large3x.json",   // แผนที่ใหญ่ 96×96 tiles
   avatarSheet: "assets/avatars.png",
   avatarMeta: "assets/avatars.json",
-  walkSpeed: 90,          // px/วินาที
+  walkSpeed: 180,         // px/วินาที (2x จาก 90 — ตาม tile 24->48px กันเดินดูช้าลงครึ่งนึงเทียบกับแผนที่)
   runMultiplier: 1.6,
-  proximityRadius: 88,    // ~3.7 tiles (tile 24px) — ระยะ "ได้ยินกัน" ครอบกลุ่มโซฟา/คลัสเตอร์คุยงาน
+  proximityRadius: 176,   // ~3.7 tiles (tile 48px, 2x จาก 88/24px) — ระยะ "ได้ยินกัน" ครอบกลุ่มโซฟา/คลัสเตอร์คุยงาน
   bubbleSeconds: 6,
   defaultZoom: 2,
   frameW: 32, frameH: 50,   // ~2x ตัวเดิม (16x24) — สไปรท์ใหม่จาก office-avatar-sprites
@@ -50,9 +50,8 @@ export const PRIVATE_ZONE_TYPES = new Set([
 ]);
 
 // ทีมผู้บริหาร DataX (NPC) — home คือ tile ประจำ (grid 32, tile 48px) แต่ละคนประจำห้อง/โซนของตัวเอง
-// variant: 0 ชาย/1 หญิง ทั่วไป (ปรับสีผม/เสื้อได้), 2-6 ดีไซน์เฉพาะของผู้บริหารแต่ละคน
+// variant: 0 ชาย/1 หญิง ทั่วไป (ปรับสีผม/เสื้อได้), 2-7 ดีไซน์เฉพาะของผู้บริหารแต่ละคน
 // (เตรียมจาก DALL-E มาให้ตรงตัวอยู่แล้ว ดู build_avatars.py — ไม่ต้อง recolor จึงไม่ใส่ hair/shirt)
-// คุณ Manis ยังไม่มีดีไซน์เฉพาะ เลยใช้ variant ทั่วไป + hex สีแยกให้ต่างจากคนอื่น
 // บทพูดสุ่มจาก lines เมื่อผู้เล่นเข้าใกล้
 export const NPCS = [
   { name: "พี่หนุ่ม", role: "CEO", variant: 2, home: [15, 8], roam: 2,
@@ -78,7 +77,7 @@ export const NPCS = [
       "ดีลไหนติดขัด มาปรึกษาพี่หว่าได้เสมอครับ",
       "เป้า Q นี้ไม่ไกลเกินเอื้อม ช่วยกันอีกนิดครับทุกคน 🔥",
     ] },
-  { name: "คุณ Manis", role: "CRO", variant: 0, hair: "#8a2f2f", shirt: "#65a9c2", home: [15, 3], roam: 1,
+  { name: "คุณ Manis", role: "CRO", variant: 7, home: [15, 3], roam: 1,
     lines: [
       "ความเสี่ยงไม่ใช่สิ่งที่ต้องกลัว แต่ต้องรู้จักมันให้ดีพอครับ",
       "ก่อน launch อะไรใหม่ แวะมาคุยเรื่อง risk กับคุณ Manis ได้เสมอครับ",

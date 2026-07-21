@@ -1,6 +1,6 @@
 {
   "format": "DataXTown social-map v1",
-  "tileSize": 24,
+  "tileSize": 48,
   "width": 32,
   "height": 32,
   "art": "scb_floor7_map_large3x.png",

@@ -77,9 +77,9 @@ export const GACHA_ITEMS = [
 export const GACHA_SHEET_COLS = 5;
 export const GACHA_COST = 100;
 
-// tile ~[26.4,23.7] บนแผนที่ COMPACT (tile 24px) — กลางโถงเปิดระหว่างเวิร์คสเตชันตะวันออกกับ
-// ห้องประชุม (ขยับเข้ามาจากขอบกำแพงเฉียงทางขวาให้อยู่กลางโถงมากขึ้น)
-export const GACHA_X = 634, GACHA_Y = 569;
+// tile ~[26.4,23.7] บนแผนที่ COMPACT (tile 48px, 2x จากเดิม 24px) — กลางโถงเปิดระหว่างเวิร์คสเตชัน
+// ตะวันออกกับห้องประชุม (ขยับเข้ามาจากขอบกำแพงเฉียงทางขวาให้อยู่กลางโถงมากขึ้น)
+export const GACHA_X = 1267, GACHA_Y = 1138;
 
 // จำนวนชิ้นต่อ tier (คำนวณจาก GACHA_ITEMS จริง กันเลขไม่ตรงกันถ้าแก้แคตตาล็อกทีหลัง)
 function tierCounts() {

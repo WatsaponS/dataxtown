@@ -4,11 +4,11 @@
 
 import { PET_FRAME, petIndexOf } from "./pets_data.js";
 
-const LAG_DIST = 30;        // px — ระยะห่างจากเจ้าของตามเส้นทาง
-const SAMPLE_MIN_DIST = 5;  // px — บันทึกจุดใหม่เมื่อเจ้าของขยับเกินนี้
+const LAG_DIST = 60;        // px — ระยะห่างจากเจ้าของตามเส้นทาง (2x จาก 30 — ตาม tile 24->48px)
+const SAMPLE_MIN_DIST = 10; // px — บันทึกจุดใหม่เมื่อเจ้าของขยับเกินนี้ (2x จาก 5)
 const TRAIL_MAX = 80;       // จุดสูงสุดที่เก็บ (เกินพอสำหรับ LAG_DIST เสมอ)
 const CATCH_UP = 6;         // ยิ่งมากยิ่งตามเจ้าของติดขึ้น (หน่วย 1/วินาที)
-const TELEPORT_DIST = 200;  // ไกลผิดปกติ (เพิ่งเลือกสัตว์/สลับแผนที่) ให้กระโดดไปเลย
+const TELEPORT_DIST = 400;  // ไกลผิดปกติ (เพิ่งเลือกสัตว์/สลับแผนที่) ให้กระโดดไปเลย (2x จาก 200)
 
 let petImg = null;
 export function loadPetImage() {
@@ -83,6 +83,10 @@ export function updatePets(world, dt) {
 
 const DIR_FLIP = { left: false, right: true, up: false, down: false }; // sprite หันซ้ายเป็นค่าเริ่มต้น
 
+// สไปรท์สัตว์เลี้ยงไม่ได้ขยายไฟล์จริง — วาดขยาย 2x ตอน render ในโลกเกมเท่านั้น (ตัวเลือกใน
+// character-creation ยังใช้ขนาดเดิม) ให้สัดส่วนตรงกับแผนที่/ตัวละครที่ใหญ่ขึ้น (tile 24->48px)
+const PET_DRAW_SCALE = 2;
+
 export function drawPet(ctx, ent) {
   const img = petImg;
   if (!img || !img.complete || !ent.pet) return;
@@ -90,17 +94,17 @@ export function drawPet(ctx, ent) {
   if (idx < 0) return;
   const col = ent.pet.moving ? (Math.floor(ent.pet.animTime * 6) % 2) : 0;
   const flip = DIR_FLIP[ent.pet.dir];
-  const size = PET_FRAME;
-  const dx = Math.round(ent.pet.x - size / 2), dy = Math.round(ent.pet.y - size + 3);
+  const size = PET_FRAME, dsize = size * PET_DRAW_SCALE;
+  const dx = Math.round(ent.pet.x - dsize / 2), dy = Math.round(ent.pet.y - dsize + 6);
   ctx.fillStyle = "rgba(0,0,0,0.22)";
-  ctx.fillRect(dx + 2, Math.round(ent.pet.y) - 1, size - 4, 2);
+  ctx.fillRect(dx + 4, Math.round(ent.pet.y) - 2, dsize - 8, 4);
   if (flip) {
     ctx.save();
-    ctx.translate(dx + size, dy);
+    ctx.translate(dx + dsize, dy);
     ctx.scale(-1, 1);
-    ctx.drawImage(img, col * size, idx * size, size, size, 0, 0, size, size);
+    ctx.drawImage(img, col * size, idx * size, size, size, 0, 0, dsize, dsize);
     ctx.restore();
   } else {
-    ctx.drawImage(img, col * size, idx * size, size, size, dx, dy, size, size);
+    ctx.drawImage(img, col * size, idx * size, size, size, dx, dy, dsize, dsize);
   }
 }

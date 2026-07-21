@@ -11,7 +11,7 @@ import { SEASON_REWARD_ITEMS } from "./season_data.js";
 import { TEAMS, teamById } from "./teams_data.js";
 
 const SPOT_COUNT = 3;
-const INTERACT_RADIUS = 44;   // px — ระยะกดเริ่ม quiz
+const INTERACT_RADIUS = 88;   // px — ระยะกดเริ่ม quiz (2x จาก 44 — ตาม tile 24->48px)
 const POINTS_PER_CORRECT = 10;
 const QUESTIONS_PER_QUEST = 3;
 

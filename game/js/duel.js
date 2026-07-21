@@ -16,7 +16,7 @@ import { bumpStat } from "./achievements.js";
 import { bumpMission } from "./missions.js";
 
 const WIN_POINTS = 20;
-const DUEL_RANGE = 60; // px — ต้องเดินเข้าไปใกล้จริง ๆ ถึงจะขึ้นป้ายชวนดวล
+const DUEL_RANGE = 120; // px — ต้องเดินเข้าไปใกล้จริง ๆ ถึงจะขึ้นป้ายชวนดวล (2x จาก 60 — ตาม tile 24->48px)
 const BEATS = { rock: "scissors", scissors: "paper", paper: "rock" };
 const CHOICE_EMOJI = { rock: "✊", paper: "✋", scissors: "✂️" };
 

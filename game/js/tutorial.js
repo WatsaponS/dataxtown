@@ -7,7 +7,7 @@ import { saveHome } from "./decor.js";
 import { canHear } from "./entities.js";
 
 export const MISSION_REWARD = 30;
-const WALK_TARGET = 360; // px ≈ 15 tiles
+const WALK_TARGET = 720; // px ≈ 15 tiles (2x จาก 360 — ตาม tile 24->48px)
 
 export const MISSIONS = [
   { id: "walk",  icon: "🚶", title: "เดินสำรวจออฟฟิศ",       desc: "เดินด้วย WASD/ลูกศร (มือถือใช้ joystick) สักระยะ" },
