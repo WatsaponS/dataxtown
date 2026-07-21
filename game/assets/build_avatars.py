@@ -71,24 +71,24 @@ def measure_uniform_scale():
 
 
 def resize_rgba_premultiplied(im, new_w, new_h):
-    """LANCZOS บน RGBA ตรง ๆ (ไม่ premultiply) ทำให้ขอบภาพเกิดจุดสี noise/ringing เพราะพิกเซล
-    โปร่งใส (RGB มักเป็น (0,0,0)) ไปปนกับสีขอบตอน resize — คูณ RGB ด้วยอัลฟาก่อน (premultiply)
-    resize แล้วหารกลับ ถึงจะได้ขอบสะอาดแบบที่โปรแกรมวาดภาพทั่วไปทำ"""
+    """ต้นฉบับ office-avatar-sprites เป็น mask ขอบคมล้วน (alpha มีแค่ 0 หรือ 255 ไม่มีไล่เฉด
+    — เช็คแล้วด้วย histogram) LANCZOS มี negative lobe ที่ทำให้ alpha เกิด ringing (โผล่ค่า
+    alpha ต่ำ ๆ นอกขอบตัวจริง) พอผ่าน premultiply/หารกลับ กลายเป็นพิกเซลเทา ๆ ฝ้ารอบตัวละคร
+    ทั้งตัว ทำให้เกมดูไม่คมทั้งที่ imageSmoothingEnabled ปิดอยู่แล้ว (ปัญหาเดียวกับที่เจอใน
+    build_pets.py) — ใช้ BOX แทน (ไม่มี negative lobe เลยไม่ ring) + ตัด cutoff ให้สูงขึ้นและ
+    ปัดเป็นทึบสนิท ได้ขอบคมสมกับสไตล์พิกเซลอาร์ตที่เหลือของเกม"""
     r, g, b, a = im.split()
     rgb = Image.merge("RGB", (r, g, b))
     black = Image.new("RGB", im.size, (0, 0, 0))
     premult = Image.composite(rgb, black, a)
-    premult_resized = premult.resize((new_w, new_h), Image.LANCZOS)
-    a_resized = a.resize((new_w, new_h), Image.LANCZOS)
+    premult_resized = premult.resize((new_w, new_h), Image.BOX)
+    a_resized = a.resize((new_w, new_h), Image.BOX)
     pr, pg, pb = premult_resized.split()
     a_arr = a_resized.load()
     pr_l, pg_l, pb_l = pr.load(), pg.load(), pb.load()
     out = Image.new("RGBA", (new_w, new_h))
     out_px = out.load()
-    # ที่ alpha ต่ำมาก การหารกลับ (k = 255/av) ขยาย noise เล็ก ๆ ให้กลายเป็นสีจัดจ้านผิดเพี้ยน
-    # (เช่น av=1 -> k=255 เท่า) ตัดพิกเซล alpha ต่ำกว่า threshold ทิ้งเป็นโปร่งใสสนิทไปเลยดีกว่า
-    # เก็บไว้แบบโปร่งใสจาง ๆ ที่ไม่มีใครมองเห็นต่างกันอยู่แล้ว แต่ป้องกัน noise ได้เด็ดขาด
-    ALPHA_CUTOFF = 40
+    ALPHA_CUTOFF = 128
     for y in range(new_h):
         for x in range(new_w):
             av = a_arr[x, y]
@@ -97,7 +97,7 @@ def resize_rgba_premultiplied(im, new_w, new_h):
             else:
                 k = 255 / av
                 out_px[x, y] = (min(255, round(pr_l[x, y] * k)), min(255, round(pg_l[x, y] * k)),
-                                 min(255, round(pb_l[x, y] * k)), av)
+                                 min(255, round(pb_l[x, y] * k)), 255)
     return out
 
 
@@ -109,7 +109,9 @@ def place(cropped, scale, mode, offset=(0, 0)):
     if mode == "RGBA":
         resized = resize_rgba_premultiplied(cropped, new_w, new_h)
     else:
-        resized = cropped.resize((new_w, new_h), Image.LANCZOS)
+        # BOX เหมือน RGBA ด้านบน (ไม่ใช่ว่าเคยพังตรงนี้ — rebinarize_mask ล้าง ringing ออกอยู่แล้ว)
+        # แต่ให้ขอบมาสก์คมตรงกับขอบสีเป๊ะ ๆ กันเป็นเส้นแซะบาง ๆ ที่ recolor ไม่ทับ/ทับเกินตอนขอบ
+        resized = cropped.resize((new_w, new_h), Image.BOX)
     canvas = Image.new(mode, (FW, FH), (0, 0, 0, 0) if mode == "RGBA" else 0)
     dx, dy = (FW - new_w) // 2 + offset[0], FH - new_h + offset[1]
     if mode == "RGBA":
