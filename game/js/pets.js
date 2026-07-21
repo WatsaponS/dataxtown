@@ -2,7 +2,7 @@
 // สัตว์เดินตามจุดบนเส้นทางที่ห่างจากเจ้าของปัจจุบันไปทางท้ายเส้นตามระยะที่กำหนด (lag)
 // ข้อดี: เดินตามได้โดยไม่มีทางชนกำแพง เพราะเจ้าของเดินผ่านช่องเดินได้จริงมาแล้วเสมอ
 
-import { PET_FRAME, petIndexOf } from "./pets_data.js";
+import { PET_FRAME, petFrameRow } from "./pets_data.js";
 
 const LAG_DIST = 60;        // px — ระยะห่างจากเจ้าของตามเส้นทาง (2x จาก 30 — ตาม tile 24->48px)
 const SAMPLE_MIN_DIST = 10; // px — บันทึกจุดใหม่เมื่อเจ้าของขยับเกินนี้ (2x จาก 5)
@@ -81,8 +81,6 @@ export function updatePets(world, dt) {
   }
 }
 
-const DIR_FLIP = { left: false, right: true, up: false, down: false }; // sprite หันซ้ายเป็นค่าเริ่มต้น
-
 // สไปรท์สัตว์เลี้ยงไม่ได้ขยายไฟล์จริง — วาดขยาย 2x ตอน render ในโลกเกมเท่านั้น (ตัวเลือกใน
 // character-creation ยังใช้ขนาดเดิม) ให้สัดส่วนตรงกับแผนที่/ตัวละครที่ใหญ่ขึ้น (tile 24->48px)
 const PET_DRAW_SCALE = 2;
@@ -90,21 +88,12 @@ const PET_DRAW_SCALE = 2;
 export function drawPet(ctx, ent) {
   const img = petImg;
   if (!img || !img.complete || !ent.pet) return;
-  const idx = petIndexOf(ent.petId);
-  if (idx < 0) return;
-  const col = ent.pet.moving ? (Math.floor(ent.pet.animTime * 6) % 2) : 0;
-  const flip = DIR_FLIP[ent.pet.dir];
+  const row = petFrameRow(ent.petId, ent.pet.dir);
+  if (row < 0) return;
+  const col = ent.pet.moving ? (Math.floor(ent.pet.animTime * 7) % 4) : 0;
   const size = PET_FRAME, dsize = size * PET_DRAW_SCALE;
   const dx = Math.round(ent.pet.x - dsize / 2), dy = Math.round(ent.pet.y - dsize + 6);
   ctx.fillStyle = "rgba(0,0,0,0.22)";
   ctx.fillRect(dx + 4, Math.round(ent.pet.y) - 2, dsize - 8, 4);
-  if (flip) {
-    ctx.save();
-    ctx.translate(dx + dsize, dy);
-    ctx.scale(-1, 1);
-    ctx.drawImage(img, col * size, idx * size, size, size, 0, 0, dsize, dsize);
-    ctx.restore();
-  } else {
-    ctx.drawImage(img, col * size, idx * size, size, size, dx, dy, dsize, dsize);
-  }
+  ctx.drawImage(img, col * size, row * size, size, size, dx, dy, dsize, dsize);
 }

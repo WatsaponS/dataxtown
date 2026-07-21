@@ -1,0 +1,22 @@
+{
+  "input": "C:\\Users\\Admin\\Desktop\\Project\\DataXTown\\pixel-art\\zodiac-pets-economy\\transparent\\goat.png",
+  "name": "goat",
+  "out_dir": "C:\\Users\\Admin\\Desktop\\Project\\DataXTown\\pixel-art\\zodiac-pets-economy\\transparent\\goat_pipe",
+  "true_size": [
+    314,
+    314
+  ],
+  "detected_scale": 4,
+  "import_method": "block",
+  "strip_checker": false,
+  "palette": null,
+  "max_colors": 12,
+  "before": {
+    "colors": 6653,
+    "semi_alpha_px": 0
+  },
+  "after": {
+    "colors": 12,
+    "semi_alpha_px": 0
+  }
+}

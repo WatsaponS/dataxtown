@@ -1,0 +1,22 @@
+{
+  "input": "C:\\Users\\Admin\\Desktop\\Project\\DataXTown\\pixel-art\\zodiac-pets-economy\\transparent\\ox.png",
+  "name": "ox",
+  "out_dir": "C:\\Users\\Admin\\Desktop\\Project\\DataXTown\\pixel-art\\zodiac-pets-economy\\transparent\\ox_pipe",
+  "true_size": [
+    251,
+    251
+  ],
+  "detected_scale": 5,
+  "import_method": "block",
+  "strip_checker": false,
+  "palette": null,
+  "max_colors": 12,
+  "before": {
+    "colors": 3450,
+    "semi_alpha_px": 0
+  },
+  "after": {
+    "colors": 11,
+    "semi_alpha_px": 0
+  }
+}

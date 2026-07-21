@@ -2,7 +2,7 @@
 // - แต้มซื้อของ = แต้มสะสมจาก quest (leaderboard) ลบด้วยยอดที่ใช้ไป (spent)
 //   ซื้อของหักเฉพาะ "ยอดคงเหลือ" — คะแนนบน leaderboard ไม่ลดลง
 // - ห้องเก็บใน Firebase ที่ homes/<uid> = { name, spent, items:[{id, x, y}], greeting,
-//   pet, petName, unlockedPets:[legendary pet id] } (x,y = null คือยังไม่วาง)
+//   pet, petName } (x,y = null คือยังไม่วาง)
 // - เปิดดูห้องคนอื่นได้จากการคลิกชื่อใน online list (read-only), ห้องตัวเองจัดวางของได้
 // - สัตว์เลี้ยงของเจ้าของห้องเดินเล่น+โผล่ทริกในห้องด้วย (ดู updateRoomPet/drawRoomPet)
 
@@ -15,7 +15,7 @@ import { GACHA_SHEET_COLS, gachaItemName } from "./gacha_data.js";
 import { SEASON_SHEET_COLS, seasonItemName } from "./season_data.js";
 import { EVENT_ITEMS, EVENT_NAME, EVENT_END, EVENT_SHEET_COLS, isEventActive, eventItemName } from "./events_data.js";
 import { petImageEl, setPet } from "./pets.js";
-import { PET_FRAME, petIndexOf } from "./pets_data.js";
+import { PET_FRAME, petFrameRow } from "./pets_data.js";
 
 const ROOM_TRICKS = ["💤", "🎾", "🦴", "💫", "✨", "😽"];
 
@@ -478,24 +478,15 @@ function drawRoomPet(world, c) {
   if (!a || !a.pet) return;
   const img = petImageEl();
   if (!img || !img.complete) return;
-  const idx = petIndexOf(a.pet.petId);
-  if (idx < 0) return;
   const b = a.pet;
-  const col = b.moving ? Math.floor(b.animTime * 6) % 2 : 0;
-  const flip = b.dir === "right";
+  const row = petFrameRow(b.petId, b.dir);
+  if (row < 0) return;
+  const col = b.moving ? Math.floor(b.animTime * 7) % 4 : 0;
   const size = PET_FRAME;
   const dx = Math.round(b.x - size / 2) * S, dy = Math.round(b.y - size + 3) * S;
   c.fillStyle = "rgba(0,0,0,0.22)";
   c.fillRect(Math.round(b.x - 6) * S, Math.round(b.y - 1) * S, 12 * S, 2 * S);
-  if (flip) {
-    c.save();
-    c.translate(dx + size * S, dy);
-    c.scale(-1, 1);
-    c.drawImage(img, col * size, idx * size, size, size, 0, 0, size * S, size * S);
-    c.restore();
-  } else {
-    c.drawImage(img, col * size, idx * size, size, size, dx, dy, size * S, size * S);
-  }
+  c.drawImage(img, col * size, row * size, size, size, dx, dy, size * S, size * S);
   const now = performance.now() / 1000;
   if (now < b.trickUntil) {
     const bob = Math.sin((b.trickUntil - now) * 10) * 2 * S;

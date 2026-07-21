@@ -1,0 +1,22 @@
+{
+  "input": "C:\\Users\\Admin\\Desktop\\Project\\DataXTown\\pixel-art\\zodiac-pets-economy\\transparent\\rat.png",
+  "name": "rat",
+  "out_dir": "C:\\Users\\Admin\\Desktop\\Project\\DataXTown\\pixel-art\\zodiac-pets-economy\\transparent\\rat_pipe",
+  "true_size": [
+    179,
+    179
+  ],
+  "detected_scale": 7,
+  "import_method": "block",
+  "strip_checker": false,
+  "palette": null,
+  "max_colors": 12,
+  "before": {
+    "colors": 2675,
+    "semi_alpha_px": 0
+  },
+  "after": {
+    "colors": 11,
+    "semi_alpha_px": 0
+  }
+}

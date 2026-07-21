@@ -1,0 +1,303 @@
+{
+  "frameWidth": 96,
+  "frameHeight": 96,
+  "columns": 4,
+  "rows": 4,
+  "directions": [
+    "down",
+    "left",
+    "right",
+    "up"
+  ],
+  "frameDurationMs": 140,
+  "pets": {
+    "rat": {
+      "id": "rat",
+      "frameWidth": 96,
+      "frameHeight": 96,
+      "columns": 4,
+      "rows": 4,
+      "directions": [
+        "down",
+        "left",
+        "right",
+        "up"
+      ],
+      "phases": [
+        "left-contact",
+        "passing",
+        "right-contact",
+        "recovery"
+      ],
+      "frameDurationMs": 140,
+      "stickerSheet": "rat_walk_sticker.png",
+      "coreSheet": "rat_walk_core.png"
+    },
+    "ox": {
+      "id": "ox",
+      "frameWidth": 96,
+      "frameHeight": 96,
+      "columns": 4,
+      "rows": 4,
+      "directions": [
+        "down",
+        "left",
+        "right",
+        "up"
+      ],
+      "phases": [
+        "left-contact",
+        "passing",
+        "right-contact",
+        "recovery"
+      ],
+      "frameDurationMs": 140,
+      "stickerSheet": "ox_walk_sticker.png",
+      "coreSheet": "ox_walk_core.png"
+    },
+    "tiger": {
+      "id": "tiger",
+      "frameWidth": 96,
+      "frameHeight": 96,
+      "columns": 4,
+      "rows": 4,
+      "directions": [
+        "down",
+        "left",
+        "right",
+        "up"
+      ],
+      "phases": [
+        "left-contact",
+        "passing",
+        "right-contact",
+        "recovery"
+      ],
+      "frameDurationMs": 140,
+      "stickerSheet": "tiger_walk_sticker.png",
+      "coreSheet": "tiger_walk_core.png"
+    },
+    "rabbit": {
+      "id": "rabbit",
+      "frameWidth": 96,
+      "frameHeight": 96,
+      "columns": 4,
+      "rows": 4,
+      "directions": [
+        "down",
+        "left",
+        "right",
+        "up"
+      ],
+      "phases": [
+        "left-contact",
+        "passing",
+        "right-contact",
+        "recovery"
+      ],
+      "frameDurationMs": 140,
+      "stickerSheet": "rabbit_walk_sticker.png",
+      "coreSheet": "rabbit_walk_core.png"
+    },
+    "dragon": {
+      "id": "dragon",
+      "frameWidth": 96,
+      "frameHeight": 96,
+      "columns": 4,
+      "rows": 4,
+      "directions": [
+        "down",
+        "left",
+        "right",
+        "up"
+      ],
+      "phases": [
+        "left-contact",
+        "passing",
+        "right-contact",
+        "recovery"
+      ],
+      "frameDurationMs": 140,
+      "stickerSheet": "dragon_walk_sticker.png",
+      "coreSheet": "dragon_walk_core.png"
+    },
+    "snake": {
+      "id": "snake",
+      "frameWidth": 96,
+      "frameHeight": 96,
+      "columns": 4,
+      "rows": 4,
+      "directions": [
+        "down",
+        "left",
+        "right",
+        "up"
+      ],
+      "phases": [
+        "left-contact",
+        "passing",
+        "right-contact",
+        "recovery"
+      ],
+      "frameDurationMs": 140,
+      "stickerSheet": "snake_walk_sticker.png",
+      "coreSheet": "snake_walk_core.png"
+    },
+    "horse": {
+      "id": "horse",
+      "frameWidth": 96,
+      "frameHeight": 96,
+      "columns": 4,
+      "rows": 4,
+      "directions": [
+        "down",
+        "left",
+        "right",
+        "up"
+      ],
+      "phases": [
+        "left-contact",
+        "passing",
+        "right-contact",
+        "recovery"
+      ],
+      "frameDurationMs": 140,
+      "stickerSheet": "horse_walk_sticker.png",
+      "coreSheet": "horse_walk_core.png"
+    },
+    "goat": {
+      "id": "goat",
+      "frameWidth": 96,
+      "frameHeight": 96,
+      "columns": 4,
+      "rows": 4,
+      "directions": [
+        "down",
+        "left",
+        "right",
+        "up"
+      ],
+      "phases": [
+        "left-contact",
+        "passing",
+        "right-contact",
+        "recovery"
+      ],
+      "frameDurationMs": 140,
+      "stickerSheet": "goat_walk_sticker.png",
+      "coreSheet": "goat_walk_core.png"
+    },
+    "monkey": {
+      "id": "monkey",
+      "frameWidth": 96,
+      "frameHeight": 96,
+      "columns": 4,
+      "rows": 4,
+      "directions": [
+        "down",
+        "left",
+        "right",
+        "up"
+      ],
+      "phases": [
+        "left-contact",
+        "passing",
+        "right-contact",
+        "recovery"
+      ],
+      "frameDurationMs": 140,
+      "stickerSheet": "monkey_walk_sticker.png",
+      "coreSheet": "monkey_walk_core.png"
+    },
+    "rooster": {
+      "id": "rooster",
+      "frameWidth": 96,
+      "frameHeight": 96,
+      "columns": 4,
+      "rows": 4,
+      "directions": [
+        "down",
+        "left",
+        "right",
+        "up"
+      ],
+      "phases": [
+        "left-contact",
+        "passing",
+        "right-contact",
+        "recovery"
+      ],
+      "frameDurationMs": 140,
+      "stickerSheet": "rooster_walk_sticker.png",
+      "coreSheet": "rooster_walk_core.png"
+    },
+    "dog": {
+      "id": "dog",
+      "frameWidth": 96,
+      "frameHeight": 96,
+      "columns": 4,
+      "rows": 4,
+      "directions": [
+        "down",
+        "left",
+        "right",
+        "up"
+      ],
+      "phases": [
+        "left-contact",
+        "passing",
+        "right-contact",
+        "recovery"
+      ],
+      "frameDurationMs": 140,
+      "stickerSheet": "dog_walk_sticker.png",
+      "coreSheet": "dog_walk_core.png"
+    },
+    "pig": {
+      "id": "pig",
+      "frameWidth": 96,
+      "frameHeight": 96,
+      "columns": 4,
+      "rows": 4,
+      "directions": [
+        "down",
+        "left",
+        "right",
+        "up"
+      ],
+      "phases": [
+        "left-contact",
+        "passing",
+        "right-contact",
+        "recovery"
+      ],
+      "frameDurationMs": 140,
+      "stickerSheet": "pig_walk_sticker.png",
+      "coreSheet": "pig_walk_core.png"
+    },
+    "cat": {
+      "id": "cat",
+      "frameWidth": 96,
+      "frameHeight": 96,
+      "columns": 4,
+      "rows": 4,
+      "directions": [
+        "down",
+        "left",
+        "right",
+        "up"
+      ],
+      "phases": [
+        "left-contact",
+        "passing",
+        "right-contact",
+        "recovery"
+      ],
+      "frameDurationMs": 140,
+      "stickerSheet": "cat_walk_sticker.png",
+      "coreSheet": "cat_walk_core.png",
+      "breed": "British Shorthair",
+      "coat": "golden shaded"
+    }
+  }
+}

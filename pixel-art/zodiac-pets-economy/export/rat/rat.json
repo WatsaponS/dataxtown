@@ -1,0 +1,22 @@
+{
+  "id": "rat",
+  "frameWidth": 96,
+  "frameHeight": 96,
+  "columns": 4,
+  "rows": 4,
+  "directions": [
+    "down",
+    "left",
+    "right",
+    "up"
+  ],
+  "phases": [
+    "left-contact",
+    "passing",
+    "right-contact",
+    "recovery"
+  ],
+  "frameDurationMs": 140,
+  "stickerSheet": "rat_walk_sticker.png",
+  "coreSheet": "rat_walk_core.png"
+}

@@ -3,7 +3,6 @@
 // สถานะเก็บใน homes/<uid>.login = { days: จำนวนวันที่รับแล้ว, lastClaim: "YYYY-MM-DD" }
 
 import { LOGIN_ITEMS } from "./login_data.js";
-import { LEGENDARY_PETS } from "./pets_data.js";
 import { addSystemLine } from "./ui.js";
 import { saveHome, iconFor } from "./decor.js";
 
@@ -93,18 +92,8 @@ function claim(world, ui) {
   l.lastClaim = todayStr();
   dec.myHome.items.push({ id: item.id, x: null, y: null });
 
-  // วันไมล์สโตน (10/20/30) ปลดล็อกสัตว์เลี้ยง legendary เพิ่มจากไอเทมปกติ
-  const legendary = LEGENDARY_PETS.find(p => p.unlockDay === l.days);
-  if (legendary) {
-    dec.myHome.unlockedPets = dec.myHome.unlockedPets || [];
-    if (!dec.myHome.unlockedPets.includes(legendary.id)) dec.myHome.unlockedPets.push(legendary.id);
-  }
-
   saveHome(world);
   addSystemLine(ui, `🎁 รับ "${item.name}" (login วัน ${l.days}/30) — ไปจัดวางในห้อง 🏠 ได้เลย!`);
-  if (legendary) {
-    addSystemLine(ui, `🎉 ปลดล็อกสัตว์เลี้ยงพิเศษ: ${legendary.name} ${legendary.emoji} — ไปเปลี่ยนได้ที่เมนู 🐾!`);
-  }
   render(world);
   if (world.onLoginClaim) world.onLoginClaim();
 }

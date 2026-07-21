@@ -14,7 +14,7 @@ import { initDecor, toggleShop, toggleRoom } from "./decor.js";
 import { initLoginRewards, toggleLogin } from "./login_rewards.js";
 import { initTutorial, updateTutorial, toggleTutorial } from "./tutorial.js";
 import { setPet, updatePets, loadPetImage } from "./pets.js";
-import { PETS, PET_FRAME } from "./pets_data.js";
+import { PETS, PET_FRAME, petIconRow } from "./pets_data.js";
 import { initPetMenu, togglePetMenu } from "./pet_menu.js";
 import { initDuel, updateDuelProximity, tryDuelNearby } from "./duel.js";
 import { initGacha, updateGachaProximity, toggleGacha, isNearGacha, loadGachaMachineImage } from "./gacha.js";
@@ -140,7 +140,7 @@ petNameInput.addEventListener("input", () => { chosenPetName = petNameInput.valu
 function drawPetIcon(canvas, petIndex) {
   const cc = canvas.getContext("2d");
   cc.imageSmoothingEnabled = false;
-  const draw = () => cc.drawImage(petImg, 0, petIndex * PET_FRAME, PET_FRAME, PET_FRAME, 0, 0, PET_FRAME, PET_FRAME);
+  const draw = () => cc.drawImage(petImg, 0, petIconRow(PETS[petIndex].id) * PET_FRAME, PET_FRAME, PET_FRAME, 0, 0, PET_FRAME, PET_FRAME);
   if (petImg.complete) draw();
   else petImg.addEventListener("load", draw, { once: true });
 }

@@ -1,0 +1,22 @@
+{
+  "id": "snake",
+  "frameWidth": 96,
+  "frameHeight": 96,
+  "columns": 4,
+  "rows": 4,
+  "directions": [
+    "down",
+    "left",
+    "right",
+    "up"
+  ],
+  "phases": [
+    "left-contact",
+    "passing",
+    "right-contact",
+    "recovery"
+  ],
+  "frameDurationMs": 140,
+  "stickerSheet": "snake_walk_sticker.png",
+  "coreSheet": "snake_walk_core.png"
+}

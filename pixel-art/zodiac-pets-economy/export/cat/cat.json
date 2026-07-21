@@ -1,0 +1,24 @@
+{
+  "id": "cat",
+  "frameWidth": 96,
+  "frameHeight": 96,
+  "columns": 4,
+  "rows": 4,
+  "directions": [
+    "down",
+    "left",
+    "right",
+    "up"
+  ],
+  "phases": [
+    "left-contact",
+    "passing",
+    "right-contact",
+    "recovery"
+  ],
+  "frameDurationMs": 140,
+  "stickerSheet": "cat_walk_sticker.png",
+  "coreSheet": "cat_walk_core.png",
+  "breed": "British Shorthair",
+  "coat": "golden shaded"
+}

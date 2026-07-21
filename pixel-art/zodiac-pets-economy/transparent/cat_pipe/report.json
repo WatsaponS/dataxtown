@@ -1,0 +1,22 @@
+{
+  "input": "C:\\Users\\Admin\\Desktop\\Project\\DataXTown\\pixel-art\\zodiac-pets-economy\\transparent\\cat.png",
+  "name": "cat",
+  "out_dir": "C:\\Users\\Admin\\Desktop\\Project\\DataXTown\\pixel-art\\zodiac-pets-economy\\transparent\\cat_pipe",
+  "true_size": [
+    251,
+    251
+  ],
+  "detected_scale": 5,
+  "import_method": "block",
+  "strip_checker": false,
+  "palette": null,
+  "max_colors": 12,
+  "before": {
+    "colors": 4675,
+    "semi_alpha_px": 0
+  },
+  "after": {
+    "colors": 10,
+    "semi_alpha_px": 0
+  }
+}
