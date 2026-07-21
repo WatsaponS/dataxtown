@@ -12,113 +12,161 @@
   "variants": [
     {
       "shirt": "#4f8fdd",
-      "shirtShadow": "#33639f",
+      "shirtLo": "#1c3590",
+      "shirtHi": "#97cfe9",
       "hair": "#2b2233",
+      "hairLo": "#191524",
+      "hairHi": "#89758f",
       "skin": "#f2c79b",
       "gender": "m"
     },
     {
       "shirt": "#e2698a",
-      "shirtShadow": "#a8455f",
+      "shirtLo": "#933162",
+      "shirtHi": "#eca7a9",
       "hair": "#5a3825",
+      "hairLo": "#3f1611",
+      "hairHi": "#a48f6f",
       "skin": "#e8b48a",
       "gender": "m"
     },
     {
       "shirt": "#57b06b",
-      "shirtShadow": "#3a7d4a",
+      "shirtLo": "#2a724b",
+      "shirtHi": "#93cc93",
       "hair": "#1f1a16",
+      "hairLo": "#160f0e",
+      "hairHi": "#847d6f",
       "skin": "#c98d63",
       "gender": "m"
     },
     {
       "shirt": "#e7b94f",
-      "shirtShadow": "#b08631",
+      "shirtLo": "#96541b",
+      "shirtHi": "#efe999",
       "hair": "#703c22",
+      "hairLo": "#4e110a",
+      "hairHi": "#b0936d",
       "skin": "#f2c79b",
       "gender": "m"
     },
     {
       "shirt": "#9867a8",
-      "shirtShadow": "#6d4579",
+      "shirtLo": "#54386d",
+      "shirtHi": "#c69cc6",
       "hair": "#e5d9c0",
+      "hairLo": "#a08e80",
+      "hairHi": "#f1efdb",
       "skin": "#e8b48a",
       "gender": "m"
     },
     {
       "shirt": "#65a9c2",
-      "shirtShadow": "#42768c",
+      "shirtLo": "#33587e",
+      "shirtHi": "#9fd5d7",
       "hair": "#8a2f2f",
+      "hairLo": "#611124",
+      "hairHi": "#bf8a7a",
       "skin": "#f5d4ae",
       "gender": "m"
     },
     {
       "shirt": "#d97e3f",
-      "shirtShadow": "#9c5527",
+      "shirtLo": "#8d2610",
+      "shirtHi": "#e6c68c",
       "hair": "#3a3f6b",
+      "hairLo": "#20204b",
+      "hairHi": "#8291ae",
       "skin": "#c98d63",
       "gender": "m"
     },
     {
       "shirt": "#7f8c9f",
-      "shirtShadow": "#565f6f",
+      "shirtLo": "#4d5267",
+      "shirtHi": "#abb9c1",
       "hair": "#243b2a",
+      "hairLo": "#15291f",
+      "hairHi": "#749375",
       "skin": "#f2c79b",
       "gender": "m"
     },
     {
       "shirt": "#4f8fdd",
-      "shirtShadow": "#33639f",
+      "shirtLo": "#1c3590",
+      "shirtHi": "#97cfe9",
       "hair": "#2b2233",
+      "hairLo": "#191524",
+      "hairHi": "#89758f",
       "skin": "#f2c79b",
       "gender": "f"
     },
     {
       "shirt": "#e2698a",
-      "shirtShadow": "#a8455f",
+      "shirtLo": "#933162",
+      "shirtHi": "#eca7a9",
       "hair": "#5a3825",
+      "hairLo": "#3f1611",
+      "hairHi": "#a48f6f",
       "skin": "#e8b48a",
       "gender": "f"
     },
     {
       "shirt": "#57b06b",
-      "shirtShadow": "#3a7d4a",
+      "shirtLo": "#2a724b",
+      "shirtHi": "#93cc93",
       "hair": "#1f1a16",
+      "hairLo": "#160f0e",
+      "hairHi": "#847d6f",
       "skin": "#c98d63",
       "gender": "f"
     },
     {
       "shirt": "#e7b94f",
-      "shirtShadow": "#b08631",
+      "shirtLo": "#96541b",
+      "shirtHi": "#efe999",
       "hair": "#703c22",
+      "hairLo": "#4e110a",
+      "hairHi": "#b0936d",
       "skin": "#f2c79b",
       "gender": "f"
     },
     {
       "shirt": "#9867a8",
-      "shirtShadow": "#6d4579",
+      "shirtLo": "#54386d",
+      "shirtHi": "#c69cc6",
       "hair": "#e5d9c0",
+      "hairLo": "#a08e80",
+      "hairHi": "#f1efdb",
       "skin": "#e8b48a",
       "gender": "f"
     },
     {
       "shirt": "#65a9c2",
-      "shirtShadow": "#42768c",
+      "shirtLo": "#33587e",
+      "shirtHi": "#9fd5d7",
       "hair": "#8a2f2f",
+      "hairLo": "#611124",
+      "hairHi": "#bf8a7a",
       "skin": "#f5d4ae",
       "gender": "f"
     },
     {
       "shirt": "#d97e3f",
-      "shirtShadow": "#9c5527",
+      "shirtLo": "#8d2610",
+      "shirtHi": "#e6c68c",
       "hair": "#3a3f6b",
+      "hairLo": "#20204b",
+      "hairHi": "#8291ae",
       "skin": "#c98d63",
       "gender": "f"
     },
     {
       "shirt": "#7f8c9f",
-      "shirtShadow": "#565f6f",
+      "shirtLo": "#4d5267",
+      "shirtHi": "#abb9c1",
       "hair": "#243b2a",
+      "hairLo": "#15291f",
+      "hairHi": "#749375",
       "skin": "#f2c79b",
       "gender": "f"
     }
