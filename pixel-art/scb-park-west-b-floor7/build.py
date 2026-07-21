@@ -47,8 +47,6 @@ P = {
     "rug_gold": "#e6c56a", "book_red": "#b84d5a", "floor_line": "#ddd3c1",
     "fabric": "#d97a55", "fabric_hi": "#f0a06b", "metal": "#9aa6ad",
     "screen_hi": "#b9ecdf", "paper": "#f7e7ba",
-    # สีสันจี๊ดจ้าเฉพาะตู้กาชาปอง (ตรงกับสี rarity ใน gacha_data.js) ให้ตู้เด่นแยกจากเฟอร์นิเจอร์ทั่วไป
-    "gacha_pink": "#e14fd0", "gacha_blue": "#4f8fdd", "gacha_green": "#57b06b",
 }
 
 # เติมเฉดมืด/สว่างให้วัสดุหลักที่ใช้พื้นที่ใหญ่ (พื้น/ผนัง/เฟอร์นิเจอร์) สำหรับแรเงาแบบไล่โทน
@@ -370,23 +368,6 @@ def refrigerator(tx,ty):
     s.rect(x+w-Z(8),y+Z(8),x+w-Z(5),y+Z(17),P["core"])
     s.rect(x+w-Z(8),y+Z(28),x+w-Z(5),y+Z(40),P["core"])
 
-def gacha_machine(tx,ty):
-    """ตู้กาชาปอง — โดมกระจกใส่แคปซูลสีสัน แยกหน้าตาชัดเจนจาก server_rack ของห้องเก็บของ."""
-    x,y=int(tx*TILE),int(ty*TILE); w,h=Z(20),Z(34)
-    s.rect(x+Z(3),y+Z(4),x+w+Z(3),y+h+Z(4),P["shadow"])
-    # ฐานตู้โลหะ + ช่องรับของ + ปุ่มหมุนสีทอง
-    s.rect(x,y+Z(19),x+w,y+h,P["outline"])
-    s.rect(x+Z(2),y+Z(21),x+w-Z(2),y+h-Z(3),P["core"])
-    s.rect(x+Z(2),y+h-Z(9),x+w-Z(2),y+h-Z(6),P["outline"])
-    s.rect(x+Z(7),y+h-Z(4),x+w-Z(7),y+h-Z(2),P["accent"])
-    # โดมกระจกโค้งด้านบน ใส่แคปซูลสีสันแบบสุ่มตำแหน่งคงที่
-    s.rect(x+Z(1),y,x+w-Z(1),y+Z(20),P["outline"])
-    s.rect(x+Z(3),y+Z(2),x+w-Z(3),y+Z(18),P["glass"])
-    dots = [(5,4,"gacha_pink"),(10,3,"accent"),(14,5,"gacha_blue"),(6,9,"gacha_green"),
-            (12,10,"white"),(9,13,"gacha_pink"),(15,12,"accent"),(4,14,"gacha_blue")]
-    for dx,dy,key in dots:
-        s.rect(x+Z(dx),y+Z(dy),x+Z(dx+2),y+Z(dy+2),P[key])
-
 def water_dispenser(tx,ty):
     x,y=int(tx*TILE),int(ty*TILE)
     s.rect(x+Z(4),y+Z(20),x+Z(24),y+Z(50),P["metal"])
@@ -688,10 +669,8 @@ R(7,20,9,24,P["meeting"],P["wall"])
 if SPACE_SCALE == 3:
     refrigerator(7.25,20.45); water_dispenser(8.22,20.55)
     cabinet(7.25,22.25,1.85,.75); glass_table(7.55,23.45,9.15,24.05)
-    # ตู้กาชาปอง — ย้ายออกมาจากมุมห้องเก็บของ (เดิมซ้อนกับ server_rack) มาไว้ในโถงเปิด
-    # ระหว่างโซนเวิร์คสเตชันฝั่งตะวันออกกับห้องประชุมแถวล่าง ให้เห็นเด่นชัดและเดินถึงง่ายกว่า
-    # (ขยับเข้ามากลางโถงมากขึ้น — เดิมชิดกำแพงเฉียงทางขวาไปหน่อย)
-    gacha_machine(26.0,22.3)
+    # หมายเหตุ: ตู้กาชาปองไม่ได้วาดลงแผนที่ตรงนี้ — มันเป็น sprite แยก (assets/gacha_machine.png)
+    # ที่ render.js/gacha.js วาดสดตามตำแหน่ง GACHA_X/GACHA_Y เอง (ดู gacha_data.js)
 if SPACE_SCALE != 3:
     R(22,20,24,24,P["carpet"],P["wall"]); R(25,21,30,24,P["room"],P["wall"])
 

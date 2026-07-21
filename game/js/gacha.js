@@ -10,7 +10,9 @@ import { bumpStat } from "./achievements.js";
 import { bumpMission } from "./missions.js";
 
 export { GACHA_X, GACHA_Y };
-const SPRITE_BOTTOM_Y = 648; // ขอบล่างของ sprite ให้แนบพื้น (27*24)
+// ระยะจาก GACHA_Y (จุดอ้างอิงเข้าเล่น) ลงไปถึงขอบล่างของ sprite ที่แนบพื้น — export ให้ render.js
+// ใช้ค่าเดียวกันตอน depth-sort กัน magic number สองจุดหลุดไม่ตรงกันแบบที่เคยเกิด (ตู้ไม่ขยับตาม GACHA_Y)
+export const SPRITE_Y_OFFSET = 12;
 const INTERACT_RADIUS = 46;
 
 let pendingCelebration = false; // สุ่มได้ mythic/legendary รอบล่าสุด — ระเบิด confetti ตอนปิดโมดัล (ตอนเปิดอยู่บังฉากอยู่)
@@ -136,9 +138,10 @@ function showResult(world, ui, won) {
 export function drawGachaMachine(ctx) {
   const img = machineImg;
   if (!img || !img.complete) return;
+  const spriteBottomY = GACHA_Y + SPRITE_Y_OFFSET;
   const dx = Math.round(GACHA_X - img.width / 2);
-  const dy = Math.round(SPRITE_BOTTOM_Y - img.height);
+  const dy = Math.round(spriteBottomY - img.height);
   ctx.fillStyle = "rgba(0,0,0,0.25)";
-  ctx.fillRect(dx + 3, SPRITE_BOTTOM_Y - 2, img.width - 6, 3);
+  ctx.fillRect(dx + 3, spriteBottomY - 2, img.width - 6, 3);
   ctx.drawImage(img, dx, dy);
 }
