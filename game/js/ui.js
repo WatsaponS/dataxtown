@@ -144,11 +144,13 @@ export function refreshOnlineList(ui, world) {
     row.className = "online-row";
     const label = document.createElement("span");
     label.className = "online-row-label";
+    const asleep = ent.online === false;
     const dot = document.createElement("span");
     dot.className = "dot";
-    dot.style.background = ent === world.player ? "#e7b94f" : "#57b06b";
+    dot.style.background = asleep ? "#6b7280" : (ent === world.player ? "#e7b94f" : "#57b06b");
     label.appendChild(dot);
-    label.appendChild(document.createTextNode(ent.name + (ent.role ? " · " + ent.role : "")));
+    label.appendChild(document.createTextNode(
+      (asleep ? "💤 " : "") + ent.name + (ent.role ? " · " + ent.role : "")));
     row.appendChild(label);
     // ผู้เล่นจริง (ตัวเอง/remote) คลิกเพื่อเปิดดูห้องส่วนตัวได้ — NPC ไม่มีห้อง
     if (ent === world.player) {
@@ -157,16 +159,19 @@ export function refreshOnlineList(ui, world) {
       const uid = ent.id.slice(7);
       row.dataset.uid = uid;
       // ปุ่มท้าเป่ายิ้งฉุบ — dispatch เป็น custom event กัน ui.js ต้อง import duel.js ตรง ๆ
-      const duelBtn = document.createElement("button");
-      duelBtn.type = "button";
-      duelBtn.className = "duel-btn";
-      duelBtn.title = `ท้า ${ent.name} เป่ายิ้งฉุบ`;
-      duelBtn.textContent = "⚔️";
-      duelBtn.addEventListener("click", e => {
-        e.stopPropagation(); // กันไม่ให้ทริกเกอร์คลิกเปิดห้องของแถวเดียวกัน
-        window.dispatchEvent(new CustomEvent("duel-challenge", { detail: { uid, name: ent.name } }));
-      });
-      row.appendChild(duelBtn);
+      // (ซ่อนถ้ากำลังหลับอยู่ — ไม่มีใครกดตอบรับให้ได้จริง)
+      if (!asleep) {
+        const duelBtn = document.createElement("button");
+        duelBtn.type = "button";
+        duelBtn.className = "duel-btn";
+        duelBtn.title = `ท้า ${ent.name} เป่ายิ้งฉุบ`;
+        duelBtn.textContent = "⚔️";
+        duelBtn.addEventListener("click", e => {
+          e.stopPropagation(); // กันไม่ให้ทริกเกอร์คลิกเปิดห้องของแถวเดียวกัน
+          window.dispatchEvent(new CustomEvent("duel-challenge", { detail: { uid, name: ent.name } }));
+        });
+        row.appendChild(duelBtn);
+      }
     }
     ui.onlineList.appendChild(row);
   }

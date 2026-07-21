@@ -80,7 +80,7 @@ export function updateDuelProximity(world) {
   }
   let best = null, bestDist = DUEL_RANGE;
   for (const ent of world.entities) {
-    if (ent.kind !== "remote") continue;
+    if (ent.kind !== "remote" || ent.online === false) continue; // หลับอยู่ ไม่มีใครกดตอบรับได้จริง
     const d = Math.hypot(ent.x - world.player.x, ent.y - world.player.y);
     if (d <= bestDist) { bestDist = d; best = ent; }
   }

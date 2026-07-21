@@ -77,6 +77,9 @@ export function draw(ctx, world, cam) {
     if (ent.emoteType && Date.now() < (ent.emoteUntil || 0)) {
       drawEmote(ctx, world, ent.emoteType, sxp, syp - (config.frameH + 20) * cam.zoom);
     }
+    if (ent.online === false) {
+      drawSleepIndicator(ctx, world, sxp, syp - (config.frameH + 20) * cam.zoom);
+    }
   }
 
   drawDuelPrompt(ctx, world, cam);
@@ -117,6 +120,16 @@ function drawEmote(ctx, world, type, x, y) {
   ctx.fillText(emoji, x, y - bob);
 }
 
+// สถานะหลับ (หลุด/ปิดแท็บไปแล้ว แต่ตัวละครค้างอยู่ที่เดิม) — ลอยเบา ๆ ตลอดเวลา ต่างจาก
+// drawEmote ที่หายไปเองตาม emoteUntil
+function drawSleepIndicator(ctx, world, x, y) {
+  const bob = Math.sin(world.time * 1.5) * 3;
+  ctx.font = "16px 'Segoe UI Emoji', 'Segoe UI', sans-serif";
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  ctx.fillText("💤", x, y - bob);
+}
+
 function drawPetTag(ctx, text, x, y) {
   ctx.font = "600 9px 'Segoe UI', 'Leelawadee UI', sans-serif";
   const w = ctx.measureText(text).width + 8;
@@ -144,7 +157,10 @@ function drawChar(ctx, world, ent) {
   const shadowW = Math.round(config.frameW * 0.62), shadowH = Math.max(3, Math.round(config.frameH * 0.06));
   ctx.fillStyle = "rgba(0,0,0,0.25)";
   ctx.fillRect(Math.round(ent.x - shadowW / 2), Math.round(ent.y) - 2, shadowW, shadowH);
+  const asleep = ent.online === false;
+  if (asleep) ctx.globalAlpha = 0.6; // คนที่หลุด/ปิดแท็บไปแล้ว — จางลงให้ดูออกว่าไม่ได้อยู่จริง
   ctx.drawImage(img, sx, sy, config.frameW, config.frameH, dx, dy, config.frameW, config.frameH);
+  if (asleep) ctx.globalAlpha = 1;
 }
 
 // ตำแหน่ง (title) + ทีม ที่เลือกไว้ — ของตัวเองอ่านตรงจาก decor/player state, ของคนอื่นอ่านจาก leaderboard
