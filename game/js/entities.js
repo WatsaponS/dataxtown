@@ -67,19 +67,32 @@ export function updateNPC(world, npc, dt) {
   if (npc.state === "idle") {
     npc.moving = false;
     if (npc.stateTimer <= 0) {
-      // เลือกทิศใหม่ แต่ไม่ออกนอกรัศมี roam จาก home (หรือไม่ออกนอกกรอบห้อง roomBox ถ้ามี)
-      const angles = [0, Math.PI / 2, Math.PI, -Math.PI / 2];
-      const a = angles[Math.floor(Math.random() * 4)];
-      npc.vx = Math.cos(a); npc.vy = Math.sin(a);
       const t = world.tile;
-      const aheadX = npc.x + npc.vx * t * 2, aheadY = npc.y + npc.vy * t * 2;
-      const far = npc.roomBox
-        ? (aheadX < npc.roomBox[0] || aheadX > npc.roomBox[2] || aheadY < npc.roomBox[1] || aheadY > npc.roomBox[3])
-        : Math.hypot(aheadX - npc.home[0], aheadY - npc.home[1]) > npc.roam * t;
-      if (far) { // หันกลับเข้าหา home แทน
-        const back = Math.atan2(npc.home[1] - npc.y, npc.home[0] - npc.x);
-        npc.vx = Math.abs(Math.cos(back)) > Math.abs(Math.sin(back)) ? Math.sign(Math.cos(back)) : 0;
-        npc.vy = npc.vx === 0 ? Math.sign(Math.sin(back)) : 0;
+      if (npc.roomBox) {
+        // เลือกจาก 4 ทิศหลัก โดยกรองเฉพาะทิศที่เดินแล้วยังอยู่ในกรอบห้อง (lookahead สั้น ๆ
+        // แค่ 0.75 tile — ห้องเล็กสุดสูงแค่ ~2.8 tile ถ้า lookahead ยาวเท่าเดิม (2 tile) ทิศขึ้น/ลง
+        // จะเกินกรอบแทบทุกครั้งจนถูกตีกลับเป็นแนวนอนตลอด ทำให้แทบไม่เห็นเดินขึ้นลงเลย)
+        // สุ่มเท่า ๆ กันในบรรดาทิศที่ "ไปได้จริง" แทนการตีกลับด้วย atan2 ที่มีอคติไปทางแกนที่เบี่ยงอยู่แล้ว
+        const LOOKAHEAD = t * 0.75;
+        const dirs = [[1, 0], [-1, 0], [0, 1], [0, -1]];
+        const valid = dirs.filter(([vx, vy]) => {
+          const ax = npc.x + vx * LOOKAHEAD, ay = npc.y + vy * LOOKAHEAD;
+          return ax >= npc.roomBox[0] && ax <= npc.roomBox[2] && ay >= npc.roomBox[1] && ay <= npc.roomBox[3];
+        });
+        const pool = valid.length ? valid : dirs;
+        const [vx, vy] = pool[Math.floor(Math.random() * pool.length)];
+        npc.vx = vx; npc.vy = vy;
+      } else {
+        // ไม่มีกรอบห้อง (fallback เดิม): เดินสุ่มรอบ home ในรัศมี roam
+        const angles = [0, Math.PI / 2, Math.PI, -Math.PI / 2];
+        const a = angles[Math.floor(Math.random() * 4)];
+        npc.vx = Math.cos(a); npc.vy = Math.sin(a);
+        const aheadX = npc.x + npc.vx * t * 2, aheadY = npc.y + npc.vy * t * 2;
+        if (Math.hypot(aheadX - npc.home[0], aheadY - npc.home[1]) > npc.roam * t) {
+          const back = Math.atan2(npc.home[1] - npc.y, npc.home[0] - npc.x);
+          npc.vx = Math.abs(Math.cos(back)) > Math.abs(Math.sin(back)) ? Math.sign(Math.cos(back)) : 0;
+          npc.vy = npc.vx === 0 ? Math.sign(Math.sin(back)) : 0;
+        }
       }
       npc.state = "walk";
       npc.stateTimer = 0.6 + Math.random() * 1.4;
