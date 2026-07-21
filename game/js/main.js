@@ -60,42 +60,21 @@ window.__world = world;
 const petImg = loadPetImage(); // โหลดคู่ขนานไปเลย ไม่ต้องรอ
 loadGachaMachineImage();
 
-// ---------- หน้าจอเริ่มเกม: ชื่อ + เพศ + เลือกตัวละคร + สีผม/สีเสื้อ ----------
+// ---------- หน้าจอเริ่มเกม: ชื่อ + เพศ + สีผม/สีเสื้อ ----------
+// สไปรท์ต้นฉบับมีแค่ชาย/หญิงอย่างละ 1 แบบ (variant 0/1) ต่างคนต่างสีผ่าน mask recolor
+// ล้วน ๆ — ไม่มี "เลือกตัวละคร" (variant สี) แบบเดิมอีกต่อไป เพราะเปลี่ยนสีได้อิสระกว่าเดิมแล้ว
 const saved = JSON.parse(localStorage.getItem("dataxtown.avatar") || "null") || {};
-const CPG = CONFIG.colorsPerGender;
-const savedVariant = saved.variant ?? Math.floor(Math.random() * CONFIG.avatarVariants);
-let chosenGender = Math.floor(savedVariant / CPG); // 0 ชาย, 1 หญิง
-let chosenColor = savedVariant % CPG;
-let chosenHair = saved.hair ?? null;    // null = สีเดิมของ variant
+// clamp กัน localStorage เก่าที่เคยเก็บ variant แบบ 0-15 (ระบบสีแบบเดิม) ให้ไม่หลุดขอบ 0/1
+let chosenGender = Math.min(1, Math.max(0, saved.variant ?? Math.round(Math.random())));
+let chosenHair = saved.hair ?? null;    // null = สีเดิมของสไปรท์ต้นฉบับ
 let chosenShirt = saved.shirt ?? null;
 let chosenPet = saved.pet ?? null;      // null = ไม่มีสัตว์เลี้ยง
 let chosenPetName = saved.petName ?? "";
 let chosenDept = saved.dept ?? TEAMS[Math.floor(Math.random() * TEAMS.length)].id; // สุ่มทีมให้ครั้งแรก เปลี่ยนได้เสมอ
 if (saved.name) document.getElementById("name-input").value = saved.name;
 
-const variantIndex = () => chosenGender * CPG + chosenColor;
-const picker = document.getElementById("avatar-picker");
+const variantIndex = () => chosenGender;
 const genderPicker = document.getElementById("gender-picker");
-
-function rebuildPicker() {
-  picker.textContent = "";
-  for (let v = 0; v < CPG; v++) {
-    const row = chosenGender * CPG + v;
-    const c = document.createElement("canvas");
-    c.width = CONFIG.frameW; c.height = CONFIG.frameH;
-    const cc = c.getContext("2d");
-    cc.imageSmoothingEnabled = false;
-    cc.drawImage(world.sheetImg, 0, row * CONFIG.frameH, CONFIG.frameW, CONFIG.frameH, 0, 0, CONFIG.frameW, CONFIG.frameH);
-    if (v === chosenColor) c.classList.add("selected");
-    c.addEventListener("click", () => {
-      picker.querySelectorAll("canvas").forEach(el => el.classList.remove("selected"));
-      c.classList.add("selected");
-      chosenColor = v;
-      updatePreview();
-    });
-    picker.appendChild(c);
-  }
-}
 
 function refreshGenderButtons() {
   genderPicker.querySelectorAll("button").forEach(b =>
@@ -104,11 +83,9 @@ function refreshGenderButtons() {
 genderPicker.querySelectorAll("button").forEach(b => b.addEventListener("click", () => {
   chosenGender = Number(b.dataset.gender);
   refreshGenderButtons();
-  rebuildPicker();
   updatePreview();
 }));
 refreshGenderButtons();
-rebuildPicker();
 
 // แถบสี: ช่องแรก (✕) = กลับไปใช้สีเดิมของตัวละคร
 function buildSwatchRow(elId, colors, getValue, setValue) {
@@ -255,6 +232,7 @@ function startGame() {
     ent.home = [ent.x, ent.y];
     ent.roam = n.roam;
     ent.lines = n.lines;
+    if (n.hair || n.shirt) ent.sheet = makeCustomSheet(world, n.variant, { hair: n.hair, shirt: n.shirt });
     world.entities.push(ent);
   }
 

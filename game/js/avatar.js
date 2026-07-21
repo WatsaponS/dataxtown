@@ -1,79 +1,46 @@
-// Palette-swap ตัวละคร: สร้าง spritesheet เฉพาะตัว (1 แถว 12 เฟรม) จาก variant ต้นแบบ
-// โดยแทนสีผม/สีเสื้อด้วยสีที่ผู้เล่นเลือก — เสื้อ/ผมตอนนี้มีเฉด 3 โทน (lo/mid/hi) จาก
-// ramp() ไม่ใช่สีแบนราบเดียวเหมือนเดิม จึงต้อง swap ทั้ง 3 โทนให้ตรงกับที่วาดไว้ใน avatars.png
-// (ramp() นี้พอร์ตมาจาก pixel-art/.../pixelstudio.py แบบตรงตัวสูตร เพื่อให้สีที่คำนวณสดใน
-// เบราว์เซอร์ตรงกับสีที่ build_avatars.py คำนวณไว้ตอน build)
+// Recolor ตัวละคร — สไปรท์ต้นฉบับ (office-avatar-sprites, ผ่าน build_avatars.py) มาพร้อม
+// hair mask / clothing mask แยกต่างหาก (พิกเซลขาว = จุดที่ recolor ได้) แทนระบบ swap สีตรง ๆ
+// แบบเดิม — เปลี่ยนสีได้ทุกเฉดที่ผู้เล่นเลือก ไม่จำกัดแค่ variant สีที่เตรียมไว้ล่วงหน้า
+// อัลกอริทึมตรงกับ pixel-art/office-avatar-sprites/build.py's recolor(): คงความสว่างเดิมของ
+// แต่ละพิกเซลไว้ (normalize เทียบ min/max ในโซนนั้น) แล้วคูณด้วยสีเป้าหมาย ใบหน้า/กางเกง/รองเท้า
+// ไม่ถูกแตะเลยเพราะอยู่นอกมาสก์
 
 export function hexToRgb(hex) {
   const h = hex.replace("#", "");
   return [parseInt(h.slice(0, 2), 16), parseInt(h.slice(2, 4), 16), parseInt(h.slice(4, 6), 16)];
 }
 
-function rgbToHex([r, g, b]) {
-  return "#" + [r, g, b].map(v => Math.max(0, Math.min(255, Math.round(v))).toString(16).padStart(2, "0")).join("");
+function maskRowData(maskImg, variant, w, h, frameH) {
+  const c = document.createElement("canvas");
+  c.width = w; c.height = h;
+  const cx = c.getContext("2d");
+  cx.drawImage(maskImg, 0, variant * frameH, w, h, 0, 0, w, h);
+  return cx.getImageData(0, 0, w, h).data;
 }
 
-function rgbToHsv(r, g, b) {
-  r /= 255; g /= 255; b /= 255;
-  const max = Math.max(r, g, b), min = Math.min(r, g, b), d = max - min;
-  let h = 0;
-  if (d !== 0) {
-    if (max === r) h = ((g - b) / d) % 6;
-    else if (max === g) h = (b - r) / d + 2;
-    else h = (r - g) / d + 4;
-    h *= 60;
-    if (h < 0) h += 360;
+function applyMaskRecolor(d, maskData, targetHex) {
+  const [tr, tg, tb] = hexToRgb(targetHex);
+  let lo = 255, hi = 0;
+  for (let i = 0; i < maskData.length; i += 4) {
+    if (maskData[i] < 128) continue;
+    const v = Math.max(d[i], d[i + 1], d[i + 2]);
+    if (v < lo) lo = v;
+    if (v > hi) hi = v;
   }
-  return [h, max === 0 ? 0 : d / max, max];
-}
-
-function hsvToRgb(h, s, v) {
-  const c = v * s, x = c * (1 - Math.abs(((h / 60) % 2) - 1)), m = v - c;
-  let r, g, b;
-  if (h < 60) [r, g, b] = [c, x, 0];
-  else if (h < 120) [r, g, b] = [x, c, 0];
-  else if (h < 180) [r, g, b] = [0, c, x];
-  else if (h < 240) [r, g, b] = [0, x, c];
-  else if (h < 300) [r, g, b] = [x, 0, c];
-  else [r, g, b] = [c, 0, x];
-  return [(r + m) * 255, (g + m) * 255, (b + m) * 255];
-}
-
-function toward(h, target, amount) {
-  const diff = ((target - h + 180) % 360 + 360) % 360 - 180;
-  const step = Math.max(-amount, Math.min(amount, diff));
-  return ((h + step) % 360 + 360) % 360;
-}
-
-// เฉดไล่โทน 3 สเต็ป (มืด->กลาง->สว่าง) หมุน hue จริง (เงาเอียงน้ำเงิน ไฮไลต์เอียงเหลือง)
-// ต้องตรงสูตรกับ ramp() ฝั่ง Python เป๊ะ ๆ เพื่อให้ exact-match swap เจอสีถูกพิกเซล
-function ramp3(baseHex, dark, light) {
-  const [r, g, b] = hexToRgb(baseHex);
-  const [hdeg, s, v] = rgbToHsv(r, g, b);
-  const vDark = Math.max(0.06, v * (1 - dark));
-  const vLight = Math.min(1, v + (1 - v) * light);
-  const out = [];
-  for (let i = 0; i < 3; i++) {
-    const t = i / 2;
-    const vv = vDark + (vLight - vDark) * t;
-    let hh, ss;
-    if (t < 0.5) {
-      hh = toward(hdeg, 240, (0.5 - t) * 2 * 14.0);
-      ss = Math.min(1, s * (1 + 0.25 * (0.5 - t) * 2));
-    } else {
-      hh = toward(hdeg, 60, (t - 0.5) * 2 * 14.0);
-      ss = s * (1 - 0.45 * (t - 0.5) * 2);
-    }
-    out.push(hsvToRgb(hh, Math.max(0, ss), Math.max(0, Math.min(1, vv))));
+  const span = Math.max(1, hi - lo);
+  for (let i = 0; i < maskData.length; i += 4) {
+    if (maskData[i] < 128) continue;
+    const v = Math.max(d[i], d[i + 1], d[i + 2]);
+    const k = 0.55 + 0.45 * ((v - lo) / span);
+    d[i] = Math.round(tr * k);
+    d[i + 1] = Math.round(tg * k);
+    d[i + 2] = Math.round(tb * k);
   }
-  out[1] = [r, g, b];
-  return out; // [lo, mid, hi] as [r,g,b]
 }
 
-// opts = { hair: "#rrggbb" | null, shirt: "#rrggbb" | null } — null = ใช้สีเดิมของ variant
+// opts = { hair: "#rrggbb" | null, shirt: "#rrggbb" | null } — null = ใช้สีเดิมของสไปรท์ต้นฉบับ
 export function makeCustomSheet(world, variant, opts = {}) {
   const { frameW, frameH } = world.config;
-  const meta = world.avatarMeta.variants[variant];
   const totalCols = world.avatarMeta.dirs.length * world.avatarMeta.frames;
   const w = frameW * totalCols, h = frameH;
   const canvas = document.createElement("canvas");
@@ -83,31 +50,10 @@ export function makeCustomSheet(world, variant, opts = {}) {
   ctx.drawImage(world.sheetImg, 0, variant * frameH, w, h, 0, 0, w, h);
   if (!opts.hair && !opts.shirt) return canvas;
 
-  const swaps = [];
-  if (opts.shirt) {
-    const [lo, mid, hi] = ramp3(opts.shirt, 0.35, 0.35);
-    swaps.push([hexToRgb(meta.shirtLo), lo]);
-    swaps.push([hexToRgb(meta.shirt), mid]);
-    swaps.push([hexToRgb(meta.shirtHi), hi]);
-  }
-  if (opts.hair) {
-    const [lo, mid, hi] = ramp3(opts.hair, 0.30, 0.45);
-    swaps.push([hexToRgb(meta.hairLo), lo]);
-    swaps.push([hexToRgb(meta.hair), mid]);
-    swaps.push([hexToRgb(meta.hairHi), hi]);
-  }
-
   const img = ctx.getImageData(0, 0, w, h);
   const d = img.data;
-  for (let i = 0; i < d.length; i += 4) {
-    if (d[i + 3] === 0) continue;
-    for (const [from, to] of swaps) {
-      if (d[i] === from[0] && d[i + 1] === from[1] && d[i + 2] === from[2]) {
-        d[i] = to[0]; d[i + 1] = to[1]; d[i + 2] = to[2];
-        break;
-      }
-    }
-  }
+  if (opts.hair) applyMaskRecolor(d, maskRowData(world.hairMaskImg, variant, w, h, frameH), opts.hair);
+  if (opts.shirt) applyMaskRecolor(d, maskRowData(world.clothingMaskImg, variant, w, h, frameH), opts.shirt);
   ctx.putImageData(img, 0, 0);
   return canvas;
 }

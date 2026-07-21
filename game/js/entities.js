@@ -120,18 +120,19 @@ export function canHear(world, a, b) {
   return Math.hypot(a.x - b.x, a.y - b.y) <= world.config.proximityRadius;
 }
 
-// เฟรมต่อทิศ: 0 ยืนเฉย, 1-2 เดิน (สลับขา), 3-4 วิ่ง (สลับขาไวขึ้น+ก้าวยาวขึ้น), 5 กระโดด (ท่าเดียว ใช้ตอน emote "jump")
-export const FRAMES_PER_DIR = 6;
+// เฟรมต่อทิศ: สไปรท์ใหม่ (office-avatar-sprites) มี 4 เฟรมเดิน/ทิศ ไม่มีท่าวิ่ง/กระโดดแยก —
+// ยืนเฉย = เฟรม 0 นิ่ง, เดิน/วิ่ง = ไล่ครบ 4 เฟรมเดิม (วิ่งแค่ไล่เร็วกว่า), กระโดด = เฟรม 0
+// + เด้งตัวแนวตั้งใน render.js (ดู ent.emoteType==="jump")
+export const FRAMES_PER_DIR = 4;
 
 export function spriteFrame(ent) {
   const di = DIRS.indexOf(ent.dir);
   let f = 0;
   if (ent.emoteType === "jump" && Date.now() < (ent.emoteUntil || 0)) {
-    f = 5;
+    f = 0;
   } else if (ent.moving) {
-    const cycleSpeed = ent.running ? 10 : 7;
-    const cycle = Math.floor(ent.animTime * cycleSpeed) % 2;
-    f = ent.running ? 3 + cycle : 1 + cycle;
+    const cycleSpeed = ent.running ? 12 : 8;
+    f = Math.floor(ent.animTime * cycleSpeed) % FRAMES_PER_DIR;
   }
   return di * FRAMES_PER_DIR + f;
 }

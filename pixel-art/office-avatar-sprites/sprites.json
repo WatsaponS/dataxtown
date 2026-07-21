@@ -1,0 +1,75 @@
+{
+  "frameWidth": 128,
+  "frameHeight": 128,
+  "columns": 4,
+  "rows": 4,
+  "directions": [
+    "front",
+    "right",
+    "left",
+    "back"
+  ],
+  "framesPerDirection": 4,
+  "frameDurationMs": 140,
+  "order": "row-major",
+  "assets": {
+    "male": {
+      "sheet": "male_spritesheet.png",
+      "hairMask": "male_hair_mask.png",
+      "clothingMask": "male_clothing_mask.png",
+      "demo": "male_recolor_demo.png"
+    },
+    "female": {
+      "sheet": "female_spritesheet.png",
+      "hairMask": "female_hair_mask.png",
+      "clothingMask": "female_clothing_mask.png",
+      "demo": "female_recolor_demo.png"
+    },
+    "female_cto": {
+      "sheet": "female_cto_spritesheet.png",
+      "hairMask": "female_cto_hair_mask.png",
+      "clothingMask": "female_cto_clothing_mask.png",
+      "demo": "female_cto_recolor_demo.png"
+    },
+    "female_cdo": {
+      "sheet": "female_cdo_spritesheet.png",
+      "hairMask": "female_cdo_hair_mask.png",
+      "clothingMask": "female_cdo_clothing_mask.png",
+      "demo": "female_cdo_recolor_demo.png"
+    },
+    "male_ceo": {
+      "sheet": "male_ceo_spritesheet.png",
+      "hairMask": "male_ceo_hair_mask.png",
+      "clothingMask": "male_ceo_clothing_mask.png",
+      "demo": "male_ceo_recolor_demo.png"
+    },
+    "male_cco": {
+      "sheet": "male_cco_spritesheet.png",
+      "hairMask": "male_cco_hair_mask.png",
+      "clothingMask": "male_cco_clothing_mask.png",
+      "demo": "male_cco_recolor_demo.png"
+    },
+    "male_cfo": {
+      "sheet": "male_cfo_spritesheet.png",
+      "hairMask": "male_cfo_hair_mask.png",
+      "clothingMask": "male_cfo_clothing_mask.png",
+      "demo": "male_cfo_recolor_demo.png"
+    },
+    "male_cro": {
+      "sheet": "male_cro_spritesheet.png",
+      "hairMask": "male_cro_hair_mask.png",
+      "clothingMask": "male_cro_clothing_mask.png",
+      "demo": "male_cro_recolor_demo.png"
+    },
+    "male_ceo_v2": {
+      "sheet": "male_ceo_v2_spritesheet.png",
+      "hairMask": "male_ceo_v2_hair_mask.png",
+      "clothingMask": "male_ceo_v2_clothing_mask.png",
+      "demo": "male_ceo_v2_recolor_demo.png"
+    }
+  },
+  "recolor": {
+    "hair": "white pixels in *_hair_mask.png",
+    "clothing": "white pixels in *_clothing_mask.png"
+  }
+}

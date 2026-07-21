@@ -2,13 +2,16 @@
 
 export async function loadWorld(config) {
   const map = await (await fetch(config.mapJson)).json();
-  const [mapImg, sheetImg, avatarMeta] = await Promise.all([
+  const avatarMeta = await (await fetch(config.avatarMeta)).json();
+  const assetsBase = new URL(config.avatarMeta, location.href);
+  const [mapImg, sheetImg, hairMaskImg, clothingMaskImg] = await Promise.all([
     loadImage(new URL(map.art, new URL(config.mapJson, location.href)).href),
     loadImage(config.avatarSheet),
-    (await fetch(config.avatarMeta)).json(),
+    loadImage(new URL(avatarMeta.hairMask, assetsBase).href),
+    loadImage(new URL(avatarMeta.clothingMask, assetsBase).href),
   ]);
   return {
-    config, map, mapImg, sheetImg, avatarMeta,
+    config, map, mapImg, sheetImg, avatarMeta, hairMaskImg, clothingMaskImg,
     tile: map.tileSize,
     pxW: map.width * map.tileSize,
     pxH: map.height * map.tileSize,

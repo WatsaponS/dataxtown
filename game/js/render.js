@@ -139,8 +139,11 @@ function drawChar(ctx, world, ent) {
   const jumping = ent.emoteType === "jump" && Date.now() < (ent.emoteUntil || 0);
   const hop = jumping ? Math.abs(Math.sin(world.time * 9)) * 6 : 0;
   const dx = Math.round(ent.x - config.frameW / 2), dy = Math.round(ent.y - config.frameH + 1 - hop);
+  // ขนาดเงาคิดสัดส่วนจาก frameW (แทนเลขคงที่ที่จูนไว้กับสไปรท์ 16px เดิม) กันเงาดูเล็ก/ใหญ่ผิดสัดส่วน
+  // ถ้าเปลี่ยนขนาดสไปรท์อีกในอนาคต
+  const shadowW = Math.round(config.frameW * 0.62), shadowH = Math.max(3, Math.round(config.frameH * 0.06));
   ctx.fillStyle = "rgba(0,0,0,0.25)";
-  ctx.fillRect(dx + 3, Math.round(ent.y) - 2, 10, 3);
+  ctx.fillRect(Math.round(ent.x - shadowW / 2), Math.round(ent.y) - 2, shadowW, shadowH);
   ctx.drawImage(img, sx, sy, config.frameW, config.frameH, dx, dy, config.frameW, config.frameH);
 }
 
