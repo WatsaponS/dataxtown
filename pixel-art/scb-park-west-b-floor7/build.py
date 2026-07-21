@@ -10,20 +10,25 @@ import sys
 
 SKILL = r"C:\Users\Admin\.codex\skills\pixel-art-studio\scripts"
 sys.path.insert(0, SKILL)
-from pixelstudio import Sprite
+from pixelstudio import Sprite, ramp
 from PIL import ImageDraw, ImageFont
 
 OUT = Path(__file__).resolve().parent
 SPACE_SCALE = int(os.environ.get("DATAXTOWN_SPACE_SCALE", "1"))
 if SPACE_SCALE not in (1, 2, 3):
     raise ValueError("DATAXTOWN_SPACE_SCALE must be 1, 2, or 3")
-# DATAXTOWN_COMPACT=1: โหมดที่เกมใช้อยู่ — export art ครึ่งขนาด (tile 48->24px)
-# และ collision เปิดเดินอิสระทุกช่องในกรอบตึก (ชนเฉพาะเปลือกอาคารเฉียง)
+# DATAXTOWN_COMPACT=1: โหมดที่เกมใช้อยู่ — export art ย่อกลับไปที่ 24px/tile เท่าเกม
+# (เท่าไหร่ก็ได้ตอนวาด ดูตัวถัดไป) และ collision เปิดเดินอิสระทุกช่องในกรอบตึก
 COMPACT = os.environ.get("DATAXTOWN_COMPACT", "0") == "1"
-TILE = 16 * SPACE_SCALE
+BASE_TILE = 16 * SPACE_SCALE
+# DATAXTOWN_TILE_PX: ความละเอียด "วาดจริง" ต่อ tile แยกอิสระจาก SPACE_SCALE (ตัวเลือกผังห้อง/
+# เฟอร์นิเจอร์ยังคงอิงจาก SPACE_SCALE==3 เหมือนเดิม) — ยิ่งสูงยิ่งวาดเส้นโค้ง/ไล่เฉดสีได้ละเอียดขึ้น
+# ก่อนย่อกลับ 24px ตอน COMPACT (สูงสุดที่ตั้งไว้ 96px ต่อ tile ตามที่ขอ)
+TILE_PX = min(96, int(os.environ.get("DATAXTOWN_TILE_PX", str(BASE_TILE))))
+TILE = TILE_PX
 W = H = 32
 STEM = {1:"scb_floor7_map", 2:"scb_floor7_map_spacious2x", 3:"scb_floor7_map_large3x"}[SPACE_SCALE]
-DETAIL_SCALE = {1:1.0, 2:1.5, 3:2.0}[SPACE_SCALE]
+DETAIL_SCALE = {1:1.0, 2:1.5, 3:2.0}[SPACE_SCALE] * (TILE_PX / BASE_TILE)
 
 def Z(value):
     """Scale small props less than the room geometry to retain extra breathing room."""
@@ -44,13 +49,42 @@ P = {
     "screen_hi": "#b9ecdf", "paper": "#f7e7ba",
 }
 
+# เติมเฉดมืด/สว่างให้วัสดุหลักที่ใช้พื้นที่ใหญ่ (พื้น/ผนัง/เฟอร์นิเจอร์) สำหรับแรเงาแบบไล่โทน
+# (gradient_dither) แทนสีแบนราบเดียว — ยกระดับความละเอียดแบบ GBA/DS-era โดยไม่แตะโครงเฟอร์นิเจอร์เดิม
+# ramp() ไล่โทนแบบ hue-shift จริง (เงาเอียงไปน้ำเงิน, ไฮไลต์เอียงไปเหลือง) ไม่ใช่แค่ปรับความสว่าง
+# setdefault กัน "_hi" ที่ตั้งมือไว้แล้ว (room_hi, core_hi, desk_hi, ...) ไม่โดนทับ
+_TONE_BASES = ["floor","wall","meeting","room","desk","wood_dark","core",
+               "booth","corridor","fabric","glass","carpet","wood"]
+for _key in _TONE_BASES:
+    _lo, _mid, _hi = ramp(P[_key], steps=3, dark=0.22, light=0.30)
+    P.setdefault(f"{_key}_lo", _lo)
+    P.setdefault(f"{_key}_hi", _hi)
+
 s = Sprite(W*TILE, H*TILE, palette=list(P.values()))
+
+def shaded_box(x0, y0, x1, y1, key, light_from="top"):
+    """3-tone gradient-dithered fill (dark->base->light) — the base shading primitive
+    for floors/walls/furniture bodies, replacing a flat s.rect() fill of P[key]."""
+    lo, hi = P.get(f"{key}_lo", P[key]), P.get(f"{key}_hi", P[key])
+    vertical = light_from in ("top", "bottom")
+    colors = [lo, P[key], hi] if light_from in ("top", "left") else [hi, P[key], lo]
+    s.gradient_dither(x0, y0, x1, y1, colors, axis="v" if vertical else "h")
+
+# ย้อนจากสี -> ชื่อคีย์ใน P เพื่อให้ R() รู้ว่าเติมเฉด (_lo/_hi) ได้ไหมโดยไม่ต้องแก้ทุกจุดที่เรียก R()
+_COLOR_TO_KEY = {v: k for k, v in P.items()}
 
 def R(tx0, ty0, tx1, ty1, c, border=None):
     x0, y0, x1, y1 = tx0*TILE, ty0*TILE, (tx1+1)*TILE-1, (ty1+1)*TILE-1
+    key = _COLOR_TO_KEY.get(c)
+    shadeable = key and f"{key}_lo" in P
     if border:
         s.rect(x0, y0, x1, y1, border)
-        s.rect(x0+2, y0+2, x1-2, y1-2, c)
+        if shadeable:
+            shaded_box(x0+2, y0+2, x1-2, y1-2, key)
+        else:
+            s.rect(x0+2, y0+2, x1-2, y1-2, c)
+    elif shadeable:
+        shaded_box(x0, y0, x1, y1, key)
     else:
         s.rect(x0, y0, x1, y1, c)
 
@@ -726,8 +760,9 @@ s.polygon([(21*TILE,0),(32*TILE,0),(32*TILE,32*TILE),(27*TILE,30*TILE),(31*TILE,
 s.rect(0,30*TILE+1,32*TILE-1,32*TILE-1,P["void"])
 edges = [((10,1),(21,1)),((10,1),(0,27)),((0,27),(4,30)),
          ((4,30),(27,30)),((27,30),(31,27)),((31,27),(21,1))]
+_border_half = Z(2)
 for (x0,y0),(x1,y1) in edges:
-    for off in (-2,-1,0,1,2):
+    for off in range(-_border_half, _border_half+1):
         s.line(x0*TILE,y0*TILE+off,x1*TILE,y1*TILE+off,P["outline"])
 
 s.save_png(OUT/f"{STEM}.png")
@@ -736,11 +771,18 @@ s.preview(OUT/f"{STEM}_preview.png", scale=1, bg=P["void"], labels=False)
 s.save_swatch(OUT/f"{STEM}_palette.png")
 stats = s.stats()
 
+GAME_TILE_PX = 24  # ขนาด tile จริงที่เกมคาดหวังเสมอ ไม่ว่าจะวาดต้นฉบับละเอียดแค่ไหน (สูงสุด 96px/tile)
 if COMPACT:
-    # ย่อ art ที่ export แล้วลงครึ่งหนึ่ง (nearest, หาร 2 ลงตัวเพราะ TILE คู่)
+    # ย่อ art ที่วาดไว้ละเอียด (TILE_PX สูงสุด 96) กลับไปที่ 24px/tile เท่าที่เกมใช้จริงเสมอ —
+    # หาร TILE_PX ลงตัวพอดีทุกกรณี (48/24=2 เดิม, 96/24=4 ตอนวาดละเอียดสุด)
     from PIL import Image
     _im = Image.open(OUT/f"{STEM}.png")
-    _im.resize((_im.width // 2, _im.height // 2), Image.NEAREST).save(OUT/f"{STEM}.png")
+    _factor = max(1, TILE_PX // GAME_TILE_PX)
+    # BOX (area-average) กันเบลอทั้งภาพแบบ Lanczos แต่ยังคง "เก็บ" รายละเอียดจากต้นฉบับละเอียด
+    # (ไล่เฉด/เส้นโค้ง) เป็น anti-alias บาง ๆ ที่ขอบ — ต่างจาก NEAREST ที่ทิ้งพิกเซลที่วาดเพิ่มไปเฉย ๆ
+    # (ทดสอบเทียบข้าง ๆ กันแล้ว: NEAREST กับ TILE_PX สูงขึ้นให้ผลเหมือนเดิมทุกพิกเซล ไม่มีประโยชน์อะไรเลย)
+    _resample = Image.BOX if _factor > 1 else Image.NEAREST
+    _im.resize((_im.width // _factor, _im.height // _factor), _resample).save(OUT/f"{STEM}.png")
 
 # Tile-level collision: 0 walkable, 1 blocked. Start blocked, open circulation,
 # then block architectural core, walls and furniture-dense rooms.
@@ -825,7 +867,7 @@ if COMPACT:
                  for y in range(H)]
 
 data = {
-  "format":"DataXTown social-map v1", "tileSize":(TILE // 2 if COMPACT else TILE), "width":W, "height":H,
+  "format":"DataXTown social-map v1", "tileSize":(GAME_TILE_PX if COMPACT else TILE), "width":W, "height":H,
   "art":f"{STEM}.png", "collision":{"blocked":1,"walkable":0,"data":collision},
   "spawnPoints":[
     {"id":"main_entrance","tile":[16,23]}, {"id":"north_lounge","tile":[16,9]},
