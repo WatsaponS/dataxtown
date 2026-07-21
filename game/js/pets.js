@@ -9,6 +9,7 @@ const SAMPLE_MIN_DIST = 10; // px — บันทึกจุดใหม่เ
 const TRAIL_MAX = 80;       // จุดสูงสุดที่เก็บ (เกินพอสำหรับ LAG_DIST เสมอ)
 const CATCH_UP = 6;         // ยิ่งมากยิ่งตามเจ้าของติดขึ้น (หน่วย 1/วินาที)
 const TELEPORT_DIST = 400;  // ไกลผิดปกติ (เพิ่งเลือกสัตว์/สลับแผนที่) ให้กระโดดไปเลย (2x จาก 200)
+const SLEEP_PET_OFFSET_X = 28; // px — เจ้าของหลับอยู่ ให้สัตว์เลี้ยงยืนตายตัวด้านขวา ไม่ทับตัว
 
 let petImg = null;
 export function loadPetImage() {
@@ -39,6 +40,25 @@ export function updatePets(world, dt) {
   for (const ent of world.entities) {
     if (!ent.petId || !ent.pet) continue;
     const pet = ent.pet;
+
+    if (ent.online === false) {
+      // เจ้าของหลับอยู่ — ยืนตายตัวด้านขวาของเจ้าของ ไม่ใช้ระบบเดินตามเทรล กันทับตัว/ท่าทางค้าง
+      // ผิด ๆ จากตำแหน่งเดินตามเดิมตอนก่อนหลุด
+      const tx = ent.x + SLEEP_PET_OFFSET_X, ty = ent.y;
+      const dx = tx - pet.x, dy = ty - pet.y;
+      const dist = Math.hypot(dx, dy);
+      if (dist > TELEPORT_DIST || dist < 0.5) {
+        pet.x = tx; pet.y = ty; pet.moving = false;
+      } else {
+        const k = Math.min(1, dt * CATCH_UP);
+        pet.x += dx * k; pet.y += dy * k;
+        pet.moving = dist > 2;
+      }
+      pet.dir = "down";
+      pet.trail = [{ x: pet.x, y: pet.y }]; // รีเซ็ตเทรล กันพอตื่นแล้วเดินตามย้อนจากจุดเก่าไกล ๆ
+      if (pet.moving) pet.animTime += dt;
+      continue;
+    }
 
     // บันทึกเส้นทางของเจ้าของ (sample ตามระยะ กันจุดถี่เกินไป)
     const trail = pet.trail;

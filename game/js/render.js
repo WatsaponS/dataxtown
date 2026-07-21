@@ -67,7 +67,11 @@ export function draw(ctx, world, cam) {
   for (const ent of sorted) {
     const sxp = (ent.x - cam.x) * cam.zoom, syp = (ent.y - cam.y) * cam.zoom;
     drawNameTag(ctx, ent, sxp, syp - (config.frameH + 3) * cam.zoom, ent === p, nameTagPrefix(world, ent));
-    if (ent.bubble && world.time < ent.bubble.until && canHear(world, p, ent)) {
+    if (ent.online === false) {
+      // ค้าง "Zzz.." ไว้ตลอด ไม่มี timeout/canHear เหมือน bubble แชตปกติ — ให้เห็นสถานะหลับ
+      // จากระยะไกลได้เลย ไม่ต้องเดินเข้าใกล้
+      drawBubble(ctx, "Zzz..", sxp, syp - (config.frameH + 12) * cam.zoom);
+    } else if (ent.bubble && world.time < ent.bubble.until && canHear(world, p, ent)) {
       drawBubble(ctx, ent.bubble.text, sxp, syp - (config.frameH + 12) * cam.zoom);
     }
     if (ent.petId && ent.pet) {
@@ -76,9 +80,6 @@ export function draw(ctx, world, cam) {
     }
     if (ent.emoteType && Date.now() < (ent.emoteUntil || 0)) {
       drawEmote(ctx, world, ent.emoteType, sxp, syp - (config.frameH + 20) * cam.zoom);
-    }
-    if (ent.online === false) {
-      drawSleepIndicator(ctx, world, sxp, syp - (config.frameH + 20) * cam.zoom);
     }
   }
 
@@ -118,16 +119,6 @@ function drawEmote(ctx, world, type, x, y) {
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
   ctx.fillText(emoji, x, y - bob);
-}
-
-// สถานะหลับ (หลุด/ปิดแท็บไปแล้ว แต่ตัวละครค้างอยู่ที่เดิม) — ลอยเบา ๆ ตลอดเวลา ต่างจาก
-// drawEmote ที่หายไปเองตาม emoteUntil
-function drawSleepIndicator(ctx, world, x, y) {
-  const bob = Math.sin(world.time * 1.5) * 3;
-  ctx.font = "16px 'Segoe UI Emoji', 'Segoe UI', sans-serif";
-  ctx.textAlign = "center";
-  ctx.textBaseline = "middle";
-  ctx.fillText("💤", x, y - bob);
 }
 
 function drawPetTag(ctx, text, x, y) {
