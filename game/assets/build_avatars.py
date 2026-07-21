@@ -38,6 +38,11 @@ FW, FH = 32, 50          # เฟรมสุดท้ายในเกม (~2x
 TARGET_H = 48              # เนื้อตัวละคร (ไม่รวมขอบ) สูงสุดที่ยอมให้สูง — เว้นขอบบนไว้เล็กน้อย
 # แถวที่ 0-1 = ตัวผู้เล่น (ชาย/หญิง ทั่วไป ปรับสีผม/เสื้อได้อิสระ)
 # แถวที่ 2+ = ดีไซน์เฉพาะของผู้บริหารแต่ละคน (ผู้ใช้เตรียม DALL-E มาให้ตรงตัวอยู่แล้ว ไม่ต้อง recolor)
+# male_cro_spritesheet.png มีแถว "right"/"left" ต้นฉบับสลับป้ายกัน (แถวที่บอกว่า right จริง ๆ
+# หันซ้าย และในทางกลับกัน) เดินไปทางขวาเลยเห็นตัวละครหันหน้าซ้าย ดูเหมือนเดินถอยหลัง —
+# เช็คแล้วมีแค่ CRO ตัวเดียวที่เป็นแบบนี้ (อีก 5 คนแถวถูกต้องปกติ) เลยสลับกลับเฉพาะ prefix นี้
+SWAP_LR_PREFIXES = {"male_cro"}
+
 VARIANTS = [
     ("male", "m", None), ("female", "f", None),
     ("male_ceo_v2", "m", "ceo"), ("female_cto_v2", "f", "cto"), ("male_cco_v2", "m", "cco"),
@@ -96,8 +101,9 @@ def resize_rgba_premultiplied(im, new_w, new_h):
     return out
 
 
-def place(cropped, scale, mode):
-    """ย่อ + วางกึ่งกลางแนวนอน ชิดขอบล่าง (เท้าแนบพื้นเฟรมพอดี) บนแคนวาสขนาด FW x FH"""
+def place(cropped, scale, mode, offset=(0, 0)):
+    """ย่อ + วางกึ่งกลางแนวนอน ชิดขอบล่าง (เท้าแนบพื้นเฟรมพอดี) บนแคนวาสขนาด FW x FH — offset
+    ขยับตำแหน่งภายในแคนวาสเอง (ไม่ใช่ขยับตำแหน่งแปะบนชีทรวม) กัน paste เหลื่อมไปโดนเฟรมข้าง ๆ"""
     w, h = cropped.size
     new_w, new_h = max(1, round(w * scale)), max(1, round(h * scale))
     if mode == "RGBA":
@@ -105,7 +111,7 @@ def place(cropped, scale, mode):
     else:
         resized = cropped.resize((new_w, new_h), Image.LANCZOS)
     canvas = Image.new(mode, (FW, FH), (0, 0, 0, 0) if mode == "RGBA" else 0)
-    dx, dy = (FW - new_w) // 2, FH - new_h
+    dx, dy = (FW - new_w) // 2 + offset[0], FH - new_h + offset[1]
     if mode == "RGBA":
         canvas.alpha_composite(resized, (dx, dy))
     else:
@@ -150,8 +156,10 @@ def drop_small_components(mask_l, min_ratio=0.2):
 
 # ชุดสไปรท์เฉพาะคน (ผู้บริหารแต่ละคน) หลายชุด แถวหน้า/หลัง (front/back) จาก DALL-E มีแค่ pose
 # นิ่งซ้ำ ๆ ไม่มี walk cycle จริงแบบแถวข้าง (ซ้าย/ขวามีขาไขว้สลับชัดเจน แต่หน้า/หลังแทบนิ่งสนิท)
-# เดินหันหน้า/หลังเลยดูเหมือนตัวละครลอยไม่เดิน — เสริมจังหวะเด้งขึ้นลงสังเคราะห์เองให้ดูเดินจริง
-BOB_PATTERN = [0, -1, 0, 1]  # px ต่อเฟรม 0-3, ใช้เฉพาะทิศ down/up (game dir index 0, 3)
+# เดินหันหน้า/หลังเลยดูเหมือนตัวละครลอยไม่เดิน — เสริมจังหวะเด้งขึ้นลง+ส่ายซ้ายขวาเบา ๆ สังเคราะห์เอง
+# ให้ดูเดินจริงมากขึ้น (ขยับแรงขึ้นจากรอบก่อน ±1px -> ±2px แนวตั้ง เพราะรอบก่อนเบาไปจนแทบไม่เห็น)
+BOB_PATTERN_Y = [0, -2, 0, 2]  # px ต่อเฟรม 0-3, ใช้เฉพาะทิศ down/up (game dir index 0, 3)
+BOB_PATTERN_X = [0, 1, 0, -1]  # ส่ายซ้ายขวาเบา ๆ ให้ดูมีน้ำหนักตัวเปลี่ยนข้างตอนก้าว ไม่ใช่แค่เด้งขึ้นลง
 
 
 def build():
@@ -179,7 +187,13 @@ def build():
         hair_mask = ImageChops.subtract(hair_mask, overlap)
         clothing_mask = ImageChops.subtract(clothing_mask, overlap)
 
-        for gdi, src_row in enumerate(SRC_ROW_FOR_GAME_DIR):
+        row_for_game_dir = SRC_ROW_FOR_GAME_DIR
+        if prefix in SWAP_LR_PREFIXES:
+            row_for_game_dir = list(SRC_ROW_FOR_GAME_DIR)
+            li, ri = GAME_DIRS.index("left"), GAME_DIRS.index("right")
+            row_for_game_dir[li], row_for_game_dir[ri] = row_for_game_dir[ri], row_for_game_dir[li]
+
+        for gdi, src_row in enumerate(row_for_game_dir):
             for col in range(SRC_COLS):
                 box = (col * SRC_FRAME, src_row * SRC_FRAME, (col + 1) * SRC_FRAME, (src_row + 1) * SRC_FRAME)
                 frame = sheet.crop(box)
@@ -191,13 +205,16 @@ def build():
                 hair_cropped = drop_small_components(hair_mask.crop(box).crop(bbox))
                 clothing_cropped = drop_small_components(clothing_mask.crop(box).crop(bbox))
 
-                placed_frame = place(frame_cropped, scale, "RGBA")
-                placed_hair = rebinarize_mask(place(hair_cropped, scale, "L"))
-                placed_clothing = rebinarize_mask(place(clothing_cropped, scale, "L"))
+                facing_down_up = gdi in (0, 3)
+                offset = (BOB_PATTERN_X[col], BOB_PATTERN_Y[col]) if facing_down_up else (0, 0)
+                placed_frame = place(frame_cropped, scale, "RGBA", offset)
+                placed_hair = rebinarize_mask(place(hair_cropped, scale, "L", offset))
+                placed_clothing = rebinarize_mask(place(clothing_cropped, scale, "L", offset))
 
+                # ตำแหน่งแปะบนชีทรวมอิงกริดตรง ๆ เสมอ (ไม่ขยับ) — จังหวะเด้ง/ส่ายอยู่ *ภายใน*
+                # แคนวาสของเฟรมเอง (ดู offset ใน place()) กัน paste เหลื่อมไปโดนเฟรมข้าง ๆ บนชีทรวม
                 dst_x = (gdi * SRC_COLS + col) * FW
-                bob = BOB_PATTERN[col] if gdi in (0, 3) else 0
-                dst_y = gi * FH + bob
+                dst_y = gi * FH
                 out_sheet.alpha_composite(placed_frame, (dst_x, dst_y))
                 out_hair.paste(placed_hair, (dst_x, dst_y))
                 out_clothing.paste(placed_clothing, (dst_x, dst_y))
