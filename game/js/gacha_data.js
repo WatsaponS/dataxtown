@@ -77,9 +77,9 @@ export const GACHA_ITEMS = [
 export const GACHA_SHEET_COLS = 5;
 export const GACHA_COST = 100;
 
-// tile ~[27.6,22] บนแผนที่ COMPACT (tile 24px) — โถงเปิดระหว่างเวิร์คสเตชันตะวันออกกับห้องประชุม
-// (ย้ายออกจากมุมห้องเก็บของเดิม ให้เห็นตู้กาชาปองชัดและเดินถึงง่ายกว่า)
-export const GACHA_X = 662, GACHA_Y = 528;
+// tile ~[26.4,23.7] บนแผนที่ COMPACT (tile 24px) — กลางโถงเปิดระหว่างเวิร์คสเตชันตะวันออกกับ
+// ห้องประชุม (ขยับเข้ามาจากขอบกำแพงเฉียงทางขวาให้อยู่กลางโถงมากขึ้น)
+export const GACHA_X = 634, GACHA_Y = 569;
 
 // จำนวนชิ้นต่อ tier (คำนวณจาก GACHA_ITEMS จริง กันเลขไม่ตรงกันถ้าแก้แคตตาล็อกทีหลัง)
 function tierCounts() {

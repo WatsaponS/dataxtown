@@ -690,7 +690,8 @@ if SPACE_SCALE == 3:
     cabinet(7.25,22.25,1.85,.75); glass_table(7.55,23.45,9.15,24.05)
     # ตู้กาชาปอง — ย้ายออกมาจากมุมห้องเก็บของ (เดิมซ้อนกับ server_rack) มาไว้ในโถงเปิด
     # ระหว่างโซนเวิร์คสเตชันฝั่งตะวันออกกับห้องประชุมแถวล่าง ให้เห็นเด่นชัดและเดินถึงง่ายกว่า
-    gacha_machine(27.2,21.0)
+    # (ขยับเข้ามากลางโถงมากขึ้น — เดิมชิดกำแพงเฉียงทางขวาไปหน่อย)
+    gacha_machine(26.0,22.3)
 if SPACE_SCALE != 3:
     R(22,20,24,24,P["carpet"],P["wall"]); R(25,21,30,24,P["room"],P["wall"])
 
@@ -707,7 +708,11 @@ if SPACE_SCALE == 3:
     # Two former dead-end rooms east of the phone booths get real purposes + wall decor.
     cabinet(27.3,25.5,.75,1.4); bookshelf(28.0,25.5,.85)
     meeting_table(27.3,27.15,28.7,27.7,2)
-    server_rack(29.12,25.55,1.6)
+    # แทน server_rack เดิม — สีสัน/จุดไฟกะพริบมันดันคล้ายตู้กาชาปองเกินไป เลยเปลี่ยนเป็นตู้เก็บของ
+    # ธรรมดา (โทนไม้ ไม่มีจุดสีสด) ให้ห้องนี้อ่านชัดว่าเป็นห้องเก็บอุปกรณ์ ไม่ใช่ตู้สุ่มไอเทมอีกใบ
+    cabinet(29.15,25.5,1.3,1.9)
+    s.rect(int(29.3*TILE),int(27.55*TILE),int(29.3*TILE)+Z(14),int(27.55*TILE)+Z(10),P["wood"])
+    s.rect(int(29.3*TILE)+Z(2),int(27.55*TILE)+Z(2),int(29.3*TILE)+Z(12),int(27.55*TILE)+Z(8),P["wood_dark"])
 if SPACE_SCALE == 3:
     meeting_table(9.45,26.25,12.45,27.1,4)
     meeting_table(13.55,26.2,17.4,27.25,8)
