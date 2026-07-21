@@ -340,8 +340,13 @@ function startRoomAnim(world) {
   let sheet = null;
   try { sheet = makeCustomSheet(world, av.variant || 0, { hair: av.hair, shirt: av.shirt }); } catch {}
   const ownerName = v.mine ? world.player.name : (home && home.name) || "?";
-  const petId = v.mine ? dec.myHome.pet : (home && home.pet);
-  const petName = v.mine ? dec.myHome.petName : (home && home.petName);
+  // ห้องตัวเอง: อ่านสัตว์เลี้ยงจาก world.player.petId ตรง ๆ (ค่าที่ใช้งานจริงตอนนี้) แทน
+  // dec.myHome.pet ซึ่งเป็นแค่ snapshot ที่โหลดมาจาก Firebase ตอนเข้าเกม — ถ้า snapshot นั้น
+  // เก่ากว่ารอบสัตว์เลี้ยงชุดปัจจุบัน (เช่น เคยเลือกสัตว์ชุดก่อนไว้ ยังไม่เคยกดบันทึกใหม่)
+  // id เก่าจะ resolve ไม่ได้ใน petFrameRow() ทำให้สัตว์เลี้ยงเงียบ ๆ ไม่โผล่ในห้องทั้งที่โผล่ใน
+  // ฉากโลกได้ปกติ (ฉากโลกอ่านจาก player.petId อยู่แล้ว ไม่ได้อ่านจาก myHome)
+  const petId = v.mine ? world.player.petId : (home && home.pet);
+  const petName = v.mine ? world.player.petName : (home && home.petName);
   const now = performance.now() / 1000;
   dec.anim = {
     sheet, ownerName,
