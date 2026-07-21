@@ -1,14 +1,31 @@
 // โหลดแผนที่ (format: DataXTown social-map v1) และให้บริการ collision / zone queries
 
+// กัน fetch/รูปค้างเงียบ ๆ ไม่จบไม่สิ้น (เจอจริงบน wifi ออฟฟิศไม่เสถียร) — ฟอร์มสร้างตัวละคร
+// จะดูพร้อมกดได้ทันทีแต่ event listener ยังไม่ผูกจนกว่า loadWorld() จะ resolve ก่อน ถ้าไม่มี
+// timeout ผู้เล่นจะเจอฟอร์มที่กดไม่ติดค้างอยู่แบบนั้นตลอดไปโดยไม่รู้สาเหตุ (ดู main.js ที่เรียก)
+const LOAD_TIMEOUT_MS = 15000;
+
+function withTimeout(promise, label) {
+  return Promise.race([
+    promise,
+    new Promise((_, reject) => setTimeout(() => reject(new Error(`โหลด${label}หมดเวลา`)), LOAD_TIMEOUT_MS)),
+  ]);
+}
+
+async function fetchJson(url, label) {
+  const res = await withTimeout(fetch(url), label);
+  return res.json();
+}
+
 export async function loadWorld(config) {
-  const map = await (await fetch(config.mapJson)).json();
-  const avatarMeta = await (await fetch(config.avatarMeta)).json();
+  const map = await fetchJson(config.mapJson, "แผนที่");
+  const avatarMeta = await fetchJson(config.avatarMeta, "ข้อมูลตัวละคร");
   const assetsBase = new URL(config.avatarMeta, location.href);
   const [mapImg, sheetImg, hairMaskImg, clothingMaskImg] = await Promise.all([
-    loadImage(new URL(map.art, new URL(config.mapJson, location.href)).href),
-    loadImage(config.avatarSheet),
-    loadImage(new URL(avatarMeta.hairMask, assetsBase).href),
-    loadImage(new URL(avatarMeta.clothingMask, assetsBase).href),
+    withTimeout(loadImage(new URL(map.art, new URL(config.mapJson, location.href)).href), "ภาพแผนที่"),
+    withTimeout(loadImage(config.avatarSheet), "สไปรท์ตัวละคร"),
+    withTimeout(loadImage(new URL(avatarMeta.hairMask, assetsBase).href), "มาสก์ผม"),
+    withTimeout(loadImage(new URL(avatarMeta.clothingMask, assetsBase).href), "มาสก์เสื้อ"),
   ]);
   return {
     config, map, mapImg, sheetImg, avatarMeta, hairMaskImg, clothingMaskImg,

@@ -31,6 +31,12 @@ export function moveEntity(world, ent, dx, dy) {
   return movedX || movedY;
 }
 
+// จอมือถือ (โดยเฉพาะแนวตั้ง) แคบกว่าจอเดสก์ท็อปมาก แต่ zoom กล้องคงที่เท่ากันทุกอุปกรณ์
+// (ดู render.js defaultZoom) — พื้นที่โลกที่มองเห็นบนจอเลยแคบกว่ามาก ความเร็วเดินระดับโลก
+// เท่ากันจึงข้ามจอสัดส่วนเร็วกว่าเดสก์ท็อปมาก รู้สึกว่าเดินเร็วผิดปกติทั้งที่ตัวเลขเท่ากัน —
+// ลดความเร็วเฉพาะตอนควบคุมด้วยจอย (มือถือ) ไม่กระทบคีย์บอร์ด
+const TOUCH_SPEED_MULT = 0.6;
+
 // controls = { keys: Set<KeyboardEvent.code>, joy: {x, y, active} } — joy มาจาก virtual joystick บนจอสัมผัส
 export function updatePlayer(world, controls, dt) {
   const p = world.player;
@@ -43,7 +49,8 @@ export function updatePlayer(world, controls, dt) {
   if (keys.has("ArrowDown") || keys.has("KeyS")) dy += 1;
 
   let run = keys.has("ShiftLeft") || keys.has("ShiftRight");
-  if (controls.joy && controls.joy.active) {
+  const usingJoy = controls.joy && controls.joy.active;
+  if (usingJoy) {
     dx = controls.joy.x; dy = controls.joy.y;
     if (Math.hypot(dx, dy) > 0.9) run = true; // ดันสุดขอบ = วิ่ง
   }
@@ -53,7 +60,7 @@ export function updatePlayer(world, controls, dt) {
   p.running = p.moving && run;
   if (p.moving) {
     if (mag > 1) { dx /= mag; dy /= mag; }
-    const speed = cfg.walkSpeed * (run ? cfg.runMultiplier : 1);
+    const speed = cfg.walkSpeed * (run ? cfg.runMultiplier : 1) * (usingJoy ? TOUCH_SPEED_MULT : 1);
     moveEntity(world, p, dx * speed * dt, dy * speed * dt);
     p.dir = Math.abs(dx) > Math.abs(dy) ? (dx < 0 ? "left" : "right") : (dy < 0 ? "up" : "down");
     p.animTime += dt;

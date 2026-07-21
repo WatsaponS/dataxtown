@@ -68,6 +68,21 @@ export async function connectFirebase(world, ui) {
       update(meRef, { pet: petId || null, petName: petName || null }).catch(() => {});
     addSystemLine(ui, "🟢 ออนไลน์ผ่าน Firebase — คนอื่นในออฟฟิศจะเห็นคุณ");
 
+    // ---------- สถานะการเชื่อมต่อของตัวเอง ----------
+    // .info/connected เป็น path พิเศษของ Firebase SDK เอง บอกว่า client ต่อ backend แบบเรียลไทม์
+    // อยู่ไหมตอนนี้ (คนละเรื่องกับ presence node — อันนั้นให้ "คนอื่น" เห็นเรา อันนี้ให้ "เรา" รู้ตัวเอง
+    // ก่อนหน้านี้เห็นแค่คนอื่นหลับ ไม่มีสัญญาณบอกเลยว่าตัวเองหลุดสัญญาณอยู่หรือเปล่า)
+    let sawConnectedOnce = false;
+    onValue(ref(db, ".info/connected"), snap => {
+      const isUp = snap.val() === true;
+      if (isUp) {
+        if (sawConnectedOnce) addSystemLine(ui, "🟢 เชื่อมต่อกลับมาแล้ว");
+        sawConnectedOnce = true;
+      } else if (sawConnectedOnce) {
+        addSystemLine(ui, "🔴 หลุดการเชื่อมต่อ — กำลังลองเชื่อมต่อใหม่...");
+      }
+    });
+
     // ---------- ผู้เล่นคนอื่น ----------
     const joinedAt = Date.now();
     const playersRef = ref(db, "rooms/main/players");

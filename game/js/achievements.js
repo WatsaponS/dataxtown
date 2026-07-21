@@ -102,8 +102,14 @@ function render(world) {
     prog.textContent = unlocked ? "ปลดล็อกแล้ว ✓" : `${Math.min(a.stats[item.stat] || 0, item.target)}/${item.target}`;
     cell.append(icon, name, prog);
     if (unlocked) {
+      // ก่อนหน้านี้บอกวิธีใช้ผ่าน title attribute (hover tooltip) อย่างเดียว — มือถือไม่มี hover
+      // เลยไม่มีใครรู้ว่ากดแล้วตั้งเป็นตำแหน่งแสดงได้ ใส่ข้อความให้เห็นตลอดแทน
       cell.title = "กดเพื่อเลือก/ยกเลิกเป็นตำแหน่งแสดง";
       cell.addEventListener("click", () => selectTitle(world, a.selected === item.id ? null : item.id));
+      const hint = document.createElement("div");
+      hint.className = "achv-hint";
+      hint.textContent = a.selected === item.id ? "✓ ใช้อยู่ (กดยกเลิก)" : "แตะเพื่อตั้งเป็นตำแหน่ง";
+      cell.appendChild(hint);
     }
     grid.appendChild(cell);
   }

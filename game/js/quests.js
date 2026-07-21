@@ -80,6 +80,19 @@ export function seasonId(d = new Date()) {
   return `${date.getUTCFullYear()}-W${String(weekNo).padStart(2, "0")}`;
 }
 
+// เวลาสิ้นสุดสัปดาห์ปัจจุบัน (เที่ยงคืนวันอาทิตย์ UTC) — ใช้โชว์นับถอยหลังในแท็บ "สัปดาห์นี้"
+// กันคนไม่รู้ว่าเหลือเวลาอีกเท่าไหร่ก่อนกระดานจะรีเซ็ต
+function seasonCountdownText(d = new Date()) {
+  const dayNum = d.getUTCDay() || 7;
+  const end = new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate() + (7 - dayNum), 23, 59, 59));
+  const msLeft = Math.max(0, end - d);
+  const days = Math.floor(msLeft / 86400000);
+  const hours = Math.floor((msLeft % 86400000) / 3600000);
+  if (days > 0) return `⏳ กระดานสัปดาห์นี้รีเซ็ตในอีก ${days} วัน ${hours} ชม.`;
+  if (hours > 0) return `⏳ กระดานสัปดาห์นี้รีเซ็ตในอีก ${hours} ชม.`;
+  return "⏳ กระดานสัปดาห์นี้กำลังจะรีเซ็ตเร็ว ๆ นี้";
+}
+
 function randomSpot(world, q) {
   for (let attempt = 0; attempt < 200; attempt++) {
     const tx = Math.floor(Math.random() * world.map.width);
@@ -250,6 +263,13 @@ function renderBoard(world) {
   const season = q.boardMode === "season";
   const sid = seasonId();
   const myUid = world.net && world.net.uid;
+
+  if (season) {
+    const countdown = document.createElement("div");
+    countdown.className = "board-countdown";
+    countdown.textContent = seasonCountdownText();
+    list.appendChild(countdown);
+  }
 
   let rows;
   if (season) {

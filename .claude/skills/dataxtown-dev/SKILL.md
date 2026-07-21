@@ -96,9 +96,9 @@ python game/tools/cdp_shot.py --url "http://localhost:8700/index.html?autostart=
 | sprite ไอเทมตกแต่ง (ลำดับต้องตรงแคตตาล็อก) | `game/assets/build_items.py` → `items.png` |
 | ประวัติแชตรวม (โหลดจาก rooms/main/chat) | `game/js/history.js` |
 | สัตว์เลี้ยง — เดินตามเจ้าของด้วย trail-follow, sync ผ่าน join payload | `game/js/pets.js`, `game/js/pets_data.js` |
-| sprite สัตว์เลี้ยง (18 แถว × 2 เฟรม: 0-14 พื้นฐาน, 15-17 legendary — ลำดับต้องตรง pets_data.js) | `game/assets/build_pets.py` → `pets.png` |
-| เมนู 🐾 เปลี่ยน/ตั้งชื่อสัตว์เลี้ยงในเกม + lock legendary ที่ยังไม่ปลดล็อก | `game/js/pet_menu.js` |
-| ท้าเป่ายิ้งฉุบ (2/3=20 แต้ม, path `duels/<id>` top-level) — เดินใกล้+กด F หรือปุ่ม ⚔️ ใน online-list | `game/js/duel.js` |
+| sprite สัตว์เลี้ยง (13 นักษัตร × 4 ทิศ × 4 เฟรมเดินจริง, cell 32px — ลำดับต้องตรง pets_data.js PETS) | `game/assets/build_pets.py` → `pets.png` (ต้นฉบับ: `pixel-art/zodiac-pets-economy`) |
+| เมนู 🐾 เปลี่ยน/ตั้งชื่อสัตว์เลี้ยงในเกม — เลือกได้ทั้ง 13 ตัวตั้งแต่ต้น ไม่มีล็อก legendary แล้ว | `game/js/pet_menu.js` |
+| ท้าเป่ายิ้งฉุบ (2/3=20 แต้ม) — เดินใกล้+กด F/ปุ่ม ⚔️; ท้า NPC (C-level) ได้ด้วย (จำลองในเครื่อง ไม่ผ่าน Firebase, อัตราชนะจูนที่ `duelWinRate` ใน `data.js`) | `game/js/duel.js` |
 | ตู้กาชาปอง (100 แต้ม/ครั้ง, ตำแหน่งคงที่ tile [29,26], เดินใกล้+กด G) — แคตตาล็อก+weighted random | `game/js/gacha.js`, `game/js/gacha_data.js` |
 | sprite ตู้กาชา (static 1 ชิ้น) / ไอเทมรางวัล 50 ชิ้น (5x10, prefix id `gacha`) | `build_gacha_machine.py`→`gacha_machine.png`, `build_gacha_items.py`→`gacha_items.png` |
 | สัตว์เลี้ยงเดินเล่น+โผล่ทริกในห้องส่วนตัว (แยกจาก trail-follow นอกห้อง) | `updateRoomPet`/`drawRoomPet` ใน `game/js/decor.js` |
@@ -108,8 +108,10 @@ python game/tools/cdp_shot.py --url "http://localhost:8700/index.html?autostart=
 
 ## Workflow แก้แผนที่ (สำคัญ — มี copy step)
 
-**เกมใช้ `scb_floor7_map_large3x.json` โหมด COMPACT — grid 32×32, tileSize 24px (ภาพ 768×768),
-เดินได้ทุกช่องในกรอบตึก (ชนเฉพาะเปลือกอาคารเฉียง — เดินทะลุเฟอร์นิเจอร์ได้โดยตั้งใจ)**
+**เกมใช้ `scb_floor7_map_large3x.json` — grid 32×32, tileSize 48px (ภาพ 1536×1536, ขยับจาก
+tileSize 24px รอบที่ตัวละคร/สไปรท์ใหญ่ขึ้นเป็น DALL-E art — COMPACT downsample factor เลย
+กลายเป็น 1 คือไม่มีการย่อคุณภาพจริง ๆ), เดินได้ทุกช่องในกรอบตึก (ชนเฉพาะเปลือกอาคารเฉียง —
+เดินทะลุเฟอร์นิเจอร์ได้โดยตั้งใจ)**
 ทุกอย่าง generate จาก `build.py` ตัวเดียว ควบคุมผ่าน env vars:
 
 ```powershell
@@ -135,23 +137,29 @@ Copy-Item scb_floor7_map_large3x.json ..\..\game\assets\ -Force
 
 ## Workflow แก้ avatar
 
-1. แก้ `game/assets/build_avatars.py` — **16 แถว**: rows 0-7 ชาย, rows 8-15 หญิง (8 สีเดียวกัน,
-   หญิง = ผมยาวข้างแก้ม + กระโปรง ใน `draw_frame(..., female=True)`), 4 ทิศ × 3 เฟรม, เฟรม 16×24
-2. `python game/assets/build_avatars.py` → ได้ `avatars.png` + `avatars.json` ใหม่
-3. ถ้าเปลี่ยนจำนวน variant/ขนาดเฟรม ต้องอัปเดต `CONFIG` ใน `game/js/data.js` ให้ตรง
-   (`avatarVariants` = แถวทั้งหมด, `colorsPerGender` = แถวต่อเพศ; variant index = gender×8+color)
+**เปลี่ยนจาก PIL-วาดมือเป็นสไปรท์ DALL-E แล้ว (office-avatar-sprites)** — ต้นฉบับอยู่ที่
+`pixel-art/office-avatar-sprites/*_spritesheet.png` (chroma-keyed มาแล้ว) บวก `*_hair_mask.png`/
+`*_clothing_mask.png` ให้ recolor ทีหลัง เจนจากเครื่องมือของผู้ใช้เอง (`tools/sprite-generator`)
 
-### ระบบ customize สีผม/สีเสื้อ (palette swap)
+1. แก้/เพิ่มรายการใน `VARIANTS` ของ `game/assets/build_avatars.py` — **8 แถว**: แถว 0-1 = ชาย/หญิง
+   ทั่วไป (recolor ได้อิสระ), แถว 2+ = ดีไซน์เฉพาะผู้บริหารแต่ละคน (ใช้ตรงตัว ไม่ recolor)
+   4 ทิศ (down/left/right/up) × 4 เฟรมเดิน, เฟรมเกม 32×50 (ย่อจากต้นฉบับ 128px/เฟรม)
+2. `python game/assets/build_avatars.py` → ได้ `avatars.png` + มาสก์ผม/เสื้อ + `avatars.json` ใหม่
+   (ใช้ `resize_rgba_premultiplied()` แบบ BOX filter + hard alpha cutoff — **อย่าเปลี่ยนกลับเป็น
+   LANCZOS** เด็ดขาด ต้นฉบับเป็น binary-alpha mask ล้วน LANCZOS จะ ring จนขอบตัวละครมีฝ้าเทารอบตัว
+   ทั้งตัว เจอบั๊กนี้มาแล้วทั้งในสไปรท์ตัวละครและสัตว์เลี้ยง)
+3. ถ้าเปลี่ยนขนาดเฟรม ต้องอัปเดต `CONFIG.frameW/frameH` ใน `game/js/data.js` ให้ตรง
 
-- `game/js/avatar.js` → `makeCustomSheet(world, variant, {hair, shirt})` คืน canvas 1 แถว 12 เฟรม
-  โดย find-and-replace pixel ที่ตรงกับสี key ของ variant นั้น (สีเงาเสื้อ = สีเสื้อใหม่ × 0.7)
-- สี key ต่อ variant อ่านจาก `game/assets/avatars.json` ซึ่ง **generate จาก build_avatars.py** —
-  ห้ามแก้ json ตรง ๆ และถ้าเปลี่ยนสีใน `VARIANTS` ของ python ต้องรัน build ใหม่เสมอ ไม่งั้น recolor พัง
-  (การ swap เทียบสีแบบ exact-match ต่อ pixel)
-- entity ที่มี `ent.sheet` (canvas เฉพาะตัว) → `render.js` ใช้แทน sheet รวม (sy=0);
-  remote player ในอนาคตใช้กลไกเดียวกันได้เลย
+### ระบบ customize สีผม/สีเสื้อ (mask-based recolor)
+
+- `game/js/avatar.js` → `makeCustomSheet(world, variant, {hair, shirt})` คืน canvas 1 แถวเต็ม
+  โดยใช้ `applyMaskRecolor()`: พิกเซลใต้มาสก์สีขาว (จาก `*_hair_mask.png`/`*_clothing_mask.png`)
+  ถูก remap แบบรักษาความสว่างเดิม (`k = 0.55 + 0.45*((v-lo)/span)`) ไปทางสีที่เลือก — **ไม่ใช่**
+  exact-pixel palette swap แบบเดิมอีกต่อไป จึงรับสี hex อะไรก็ได้ ไม่ต้องเทียบสี key เป๊ะ ๆ
+- แถวที่มี `role` (ผู้บริหาร) ไม่ผ่าน recolor เลย (ใช้ art ตรงตัวตามที่เตรียมมา)
+- entity ที่มี `ent.sheet` (canvas เฉพาะตัว) → `render.js` ใช้แทน sheet รวม (sy=0)
 - พาเลตที่ให้เลือกอยู่ที่ `HAIR_COLORS` / `SHIRT_COLORS` ใน `data.js`; ตัวเลือกถูกจำใน
-  `localStorage["dataxtown.avatar"]` (name, variant, hair, shirt)
+  `localStorage["dataxtown.avatar"]` (name, variant, hair, shirt, pet, dept)
 - ทดสอบผ่าน URL: `&hair=e5d9c0&shirt=c94f4f` (hex ไม่ใส่ #, ใช้คู่กับ autostart ได้)
 
 ## กติกาสำคัญที่ห้ามพังโดยไม่ตั้งใจ
@@ -171,18 +179,26 @@ Copy-Item scb_floor7_map_large3x.json ..\..\game\assets\ -Force
 
 ## กติกาสำคัญ: ห้องส่วนตัว (decor.js) ใช้ระบบพิกัด "base" ไม่ใช่ "scaled"
 
-`room-canvas` วาดที่ 384×288 แต่ทุกพิกัด (ตำแหน่งบอท/สัตว์เลี้ยง/เป้าหมายเดิน) เก็บเป็น
-พิกัด **base** (192×144, ยังไม่คูณ `S=2`) แล้วค่อยคูณ `S` ตอนวาดจริงเท่านั้น — ถ้าเผลอ spawn
-ตำแหน่งเป็นพิกัด scaled (เช่น y > 144) วัตถุจะไปโผล่นอกกรอบห้องโดยไม่มี error ให้เห็น (เจอบั๊กนี้
-ตอนทำสัตว์เลี้ยงในห้อง — spawn y:190 เกิน 144 ไปแล้ว) ก่อนเพิ่มวัตถุเคลื่อนไหวใหม่ในห้อง
-ให้เช็คช่วง x∈[16,176] y∈[62,136] (ช่วงที่ `updateRoomPet`/`updateBot` สุ่มเป้าหมายจริง)
+`room-canvas` วาดที่ 384×384 (ขยายจาก 384×288 รอบที่สไปรท์ตัวละครสูงขึ้นเป็น 50px — ดู
+`ROOM_ROWS` ใน decor.js) แต่ทุกพิกัด (ตำแหน่งบอท/สัตว์เลี้ยง/เป้าหมายเดิน) เก็บเป็นพิกัด **base**
+(192×192, `ROOM_COLS/ROOM_ROWS * CELL(24)`, ยังไม่คูณ `S=2`) แล้วค่อยคูณ `S` ตอนวาดจริงเท่านั้น —
+ถ้าเผลอ spawn ตำแหน่งเป็นพิกัด scaled วัตถุจะไปโผล่นอกกรอบห้องโดยไม่มี error ให้เห็น (เจอบั๊กนี้
+ตอนทำสัตว์เลี้ยงในห้องมาแล้ว) ก่อนเพิ่มวัตถุเคลื่อนไหวใหม่ในห้องให้เช็คช่วง x∈[16,176]
+(บอท/สัตว์เลี้ยงเหมือนกัน), y∈[62,184] สำหรับสัตว์เลี้ยง (`ROOM_PET_Y_MIN/MAX`) หรือ y∈[101,186]
+สำหรับบอทเจ้าของห้อง (`ROOM_BOT_Y_MIN/MAX`, เผื่อที่ด้านบนให้พอกับหัวสไปรท์ที่สูงกว่า)
 
 ## Multiplayer (เฟส 2 — ใช้งานได้แล้ว, มี 2 โหมด)
 
 **โหมด Firebase (ปัจจุบัน)**: `game/js/firebase-config.js` มี config → `net_firebase.js` ใช้
 Realtime Database (`rooms/main/players/<uid>`, `rooms/main/chat`) ผ่าน SDK จาก gstatic CDN
-(pin เวอร์ชันใน `SDK` const) — ไม่ต้องมีเซิร์ฟเวอร์เอง, onDisconnect ลบผู้เล่นอัตโนมัติ,
-uid สุ่มเก็บใน `localStorage["dataxtown.uid"]` (ไม่ใช้ Firebase Auth)
+(pin เวอร์ชันใน `SDK` const) — ไม่ต้องมีเซิร์ฟเวอร์เอง
+
+**onDisconnect ไม่ลบผู้เล่นอัตโนมัติแล้ว** (เปลี่ยนพฤติกรรมรอบที่เพิ่มฟีเจอร์ "หลับ") — แค่
+`update({online:false, dir:"down", moving:false})` ตัวละครค้างอยู่ที่เดิม ยืนหน้าตรง จาง+ขาวดำ
+ขึ้น bubble "Zzz.." ค้างไว้ (`ent.online === false` เช็คได้จาก entity ทุกจุดที่ต้อง gate เช่น
+duel proximity/online-list) พอ uid เดิมกลับมาต่อใหม่ (`connectFirebase`) จะ resume ตำแหน่ง x/y/dir
+ล่าสุดจาก node เดิมแทน spawn ปกติเอง (เว้นแต่มี `?spawn=` ระบุมาเอง) — uid สุ่มเก็บใน
+`localStorage["dataxtown.uid"]` (ไม่ใช้ Firebase Auth)
 - Rules อยู่ที่ `docs/firebase-rules.json` — วางใน console แท็บ Rules; เผื่อโครง points/leaderboard ไว้แล้ว (client เขียนไม่ได้)
   ทุกครั้งที่เพิ่ม path ใหม่ใต้ `rooms/main/*` หรือ top-level (เช่น `duels`, `homes`) ต้อง publish rules
   ใหม่ก่อนเสมอ ไม่งั้นได้ 401 Unauthorized เงียบ ๆ — เทสต์ผ่าน REST PUT ก่อนเชื่อว่าใช้ได้จริง
@@ -192,6 +208,12 @@ uid สุ่มเก็บใน `localStorage["dataxtown.uid"]` (ไม่ใ
   จริงแทน (เร็วกว่า ไม่ต้องรบกวน user ซ้ำ) — เช็ค path จริงด้วย REST PUT ตรง ๆ ก่อนสรุปว่า "รออะไร"
 - ทดสอบ/จำลองผู้เล่นผ่าน REST ได้ตรง ๆ: `PUT <databaseURL>/rooms/main/players/<id>.json`
 - ตั้ง `FIREBASE_CONFIG = null` = กลับไปใช้ WebSocket server ในเครื่องแบบเดิม
+- ⚠️ **นี่คือฐานข้อมูลจริงที่พนักงานจริงใช้งานอยู่ ไม่ใช่แค่ sandbox ทดสอบ** — ก่อนลบอะไรต้อง
+  `GET` เช็คก่อนเสมอ และลบเฉพาะ entry ที่ตัวเองเพิ่งสร้างขึ้นทดสอบ (เทียบชื่อ/timestamp) ห้ามลบของ
+  ผู้เล่นจริงเด็ดขาด — และอย่าลืมว่าเก็บกวาดต้องครบทั้ง 3 path ที่ test เขียนไปมักโดน: **`rooms/main/players`,
+  `leaderboard`, `homes`** (ลืม 2 อันหลังมาแล้ว เจอ "Tester" ค้างซ้ำ ๆ บน leaderboard จริงจากรอบทดสอบ
+  ก่อน ๆ ที่ล้างแค่ players อย่างเดียว) — และตั้งแต่มีฟีเจอร์ "หลับ" แล้ว test session ที่ปิดเบราว์เซอร์
+  ไปจะ**ไม่หายเองอีกต่อไป** (แค่ online:false ค้างไว้) ต้องลบมือทุกครั้งหลังทดสอบ
 
 **โหมด WebSocket ในเครื่อง (fallback/dev)**: รายละเอียดด้านล่าง
 

@@ -42,7 +42,23 @@ function fitCanvas() {
 window.addEventListener("resize", fitCanvas);
 fitCanvas();
 
-const world = await loadWorld(CONFIG);
+// ฟอร์มสร้างตัวละครใน #start-card ดูพร้อมกดได้ทันทีตั้งแต่ HTML แสดงผล แต่ event listener
+// ทั้งหมดผูกหลัง loadWorld() resolve เท่านั้น — โชว์การ์ด "กำลังโหลด..." บังไว้ก่อน กันผู้เล่นกด
+// ฟอร์มที่ยังไม่ทำงานจริงเงียบ ๆ (โดยเฉพาะถ้า fetch ค้างจาก wifi ไม่เสถียร ดู timeout ใน world.js)
+let world;
+try {
+  world = await loadWorld(CONFIG);
+} catch (err) {
+  console.error("loadWorld failed:", err);
+  document.getElementById("start-loading-spinner").style.display = "none";
+  document.getElementById("start-loading-text").textContent = `โหลดไม่สำเร็จ: ${err.message}`;
+  const retryBtn = document.getElementById("start-loading-retry");
+  retryBtn.classList.remove("hidden");
+  retryBtn.addEventListener("click", () => location.reload());
+  throw err; // หยุดโค้ดที่เหลือทั้งไฟล์ — ทุกอย่างข้างล่างพึ่ง world ต้องไม่รันถ้าโหลดไม่สำเร็จ
+}
+document.getElementById("start-loading-card").classList.add("hidden");
+document.getElementById("start-card").classList.remove("hidden");
 const cam = makeCamera(CONFIG);
 let ui = null;
 
@@ -232,6 +248,7 @@ function startGame() {
     ent.home = [ent.x, ent.y];
     ent.roam = n.roam;
     ent.lines = n.lines;
+    ent.duelWinRate = n.duelWinRate;
     if (n.roomBox) ent.roomBox = n.roomBox.map(v => v * world.tile);
     if (n.hair || n.shirt) ent.sheet = makeCustomSheet(world, n.variant, { hair: n.hair, shirt: n.shirt });
     world.entities.push(ent);

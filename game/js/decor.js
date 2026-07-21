@@ -13,7 +13,7 @@ import { CONFIG } from "./data.js";
 import { LOGIN_ITEMS, LOGIN_SHEET_COLS, loginItemName } from "./login_data.js";
 import { GACHA_SHEET_COLS, gachaItemName } from "./gacha_data.js";
 import { SEASON_SHEET_COLS, seasonItemName } from "./season_data.js";
-import { EVENT_ITEMS, EVENT_NAME, EVENT_END, EVENT_SHEET_COLS, isEventActive, eventItemName } from "./events_data.js";
+import { EVENT_ID, EVENT_ITEMS, EVENT_NAME, EVENT_END, EVENT_SHEET_COLS, isEventActive, eventItemName } from "./events_data.js";
 import { petImageEl, setPet } from "./pets.js";
 import { PET_FRAME, petFrameRow } from "./pets_data.js";
 
@@ -111,6 +111,13 @@ export function initDecor(world, ui) {
         if (v.pet && !world.player.petId) setPet(world.player, v.pet, v.petName);
       }
     } catch {}
+    // เตือนครั้งเดียวต่ออีเวนต์ว่ามีของตกแต่งจำกัดเวลาขายอยู่ — ไม่งั้นมีแค่ banner เล็ก ๆ ในร้านค้า
+    // ที่ต้องเปิดเมนูเองถึงจะเห็น คนส่วนใหญ่พลาดอีเวนต์ไปเลยถ้าไม่เคยเปิดร้านดู
+    if (isEventActive() && dec.myHome.seenEventId !== EVENT_ID) {
+      dec.myHome.seenEventId = EVENT_ID;
+      saveHome(world);
+      addSystemLine(ui, `🌧️ ของตกแต่งอีเวนต์ "${EVENT_NAME}" เข้าร้านแล้ว ถึง ${EVENT_END} เท่านั้น — ไปดูที่ปุ่ม 🛍️ ได้เลย!`);
+    }
   })();
 
   document.getElementById("shop-btn").addEventListener("click", () => toggleShop(world, true));

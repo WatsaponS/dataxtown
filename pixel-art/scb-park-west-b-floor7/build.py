@@ -17,7 +17,7 @@ OUT = Path(__file__).resolve().parent
 SPACE_SCALE = int(os.environ.get("DATAXTOWN_SPACE_SCALE", "1"))
 if SPACE_SCALE not in (1, 2, 3):
     raise ValueError("DATAXTOWN_SPACE_SCALE must be 1, 2, or 3")
-# DATAXTOWN_COMPACT=1: โหมดที่เกมใช้อยู่ — export art ย่อกลับไปที่ 24px/tile เท่าเกม
+# DATAXTOWN_COMPACT=1: โหมดที่เกมใช้อยู่ — export art ย่อกลับไปที่ GAME_TILE_PX/tile เท่าเกม
 # (เท่าไหร่ก็ได้ตอนวาด ดูตัวถัดไป) และ collision เปิดเดินอิสระทุกช่องในกรอบตึก
 COMPACT = os.environ.get("DATAXTOWN_COMPACT", "0") == "1"
 BASE_TILE = 16 * SPACE_SCALE

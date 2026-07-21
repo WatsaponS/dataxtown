@@ -69,13 +69,28 @@ export function addChatLine(ui, name, text, self) {
   scheduleFade(div);
 }
 
+// เหตุการณ์เดียว (เช่นตอบ quiz ถูก) มักปลุก hook หลายระบบพร้อมกัน (quest คะแนน + tutorial mission +
+// daily mission ต่อคิวกันเรียก addSystemLine ในสแต็กเดียวกัน) ถ้าปล่อยให้แยกกันคนละบรรทัด ผู้เล่น
+// มักพลาดข้อความสั้น ๆ ที่โผล่ถี่ ๆ ติดกัน — รวมทุกข้อความที่เรียกในติ๊กเดียวกัน (ก่อน microtask
+// ถัดไป) ให้ขึ้นเป็นบรรทัดเดียวคั่นด้วย " · " แทน
+let pendingSystemLines = [];
+let systemFlushQueued = false;
+
 export function addSystemLine(ui, text) {
-  const div = document.createElement("div");
-  div.className = "msg sys";
-  div.textContent = text;
-  ui.chatLog.appendChild(div);
-  ui.chatLog.scrollTop = ui.chatLog.scrollHeight;
-  scheduleFade(div);
+  pendingSystemLines.push(text);
+  if (systemFlushQueued) return;
+  systemFlushQueued = true;
+  queueMicrotask(() => {
+    systemFlushQueued = false;
+    const combined = pendingSystemLines.join(" · ");
+    pendingSystemLines = [];
+    const div = document.createElement("div");
+    div.className = "msg sys";
+    div.textContent = combined;
+    ui.chatLog.appendChild(div);
+    ui.chatLog.scrollTop = ui.chatLog.scrollHeight;
+    scheduleFade(div);
+  });
 }
 
 // แบนเนอร์เมื่อผู้เล่นเข้า/ออกโซน

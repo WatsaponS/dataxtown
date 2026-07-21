@@ -64,22 +64,39 @@ export function draw(ctx, world, cam) {
   drawQuestMarkers(ctx, world, cam);
 
   // ป้ายชื่อ + bubble วาดใน screen space (คมชัดทุกระดับซูม)
-  for (const ent of sorted) {
-    const sxp = (ent.x - cam.x) * cam.zoom, syp = (ent.y - cam.y) * cam.zoom;
-    drawNameTag(ctx, ent, sxp, syp - (config.frameH + 3) * cam.zoom, ent === p, nameTagPrefix(world, ent));
+  // หลายคนยืนจุดเดียวกันพอดี (เช่น spawn point ตอนมีลิงก์แชร์เข้ามาพร้อมกัน) ป้ายชื่อจะซ้อนทับ
+  // จนอ่านไม่ออก — จัดกลุ่มคนที่อยู่ใกล้กันมากบนจอ แล้วเลื่อนป้าย+bubble ขึ้นทีละชั้นตามลำดับ
+  const TAG_CLUSTER_RADIUS = 24, TAG_STACK_GAP = 15;
+  const screenPos = sorted.map(ent => ({ ent, sx: (ent.x - cam.x) * cam.zoom, sy: (ent.y - cam.y) * cam.zoom }));
+  const stackIndex = new Map();
+  for (let i = 0; i < screenPos.length; i++) {
+    if (stackIndex.has(screenPos[i].ent)) continue;
+    let n = 0;
+    stackIndex.set(screenPos[i].ent, n++);
+    for (let j = i + 1; j < screenPos.length; j++) {
+      if (stackIndex.has(screenPos[j].ent)) continue;
+      if (Math.hypot(screenPos[i].sx - screenPos[j].sx, screenPos[i].sy - screenPos[j].sy) < TAG_CLUSTER_RADIUS) {
+        stackIndex.set(screenPos[j].ent, n++);
+      }
+    }
+  }
+
+  for (const { ent, sx: sxp, sy: syp } of screenPos) {
+    const stackOffset = stackIndex.get(ent) * TAG_STACK_GAP;
+    drawNameTag(ctx, ent, sxp, syp - (config.frameH + 3) * cam.zoom - stackOffset, ent === p, nameTagPrefix(world, ent));
     if (ent.online === false) {
       // ค้าง "Zzz.." ไว้ตลอด ไม่มี timeout/canHear เหมือน bubble แชตปกติ — ให้เห็นสถานะหลับ
       // จากระยะไกลได้เลย ไม่ต้องเดินเข้าใกล้
-      drawBubble(ctx, "Zzz..", sxp, syp - (config.frameH + 12) * cam.zoom);
+      drawBubble(ctx, "Zzz..", sxp, syp - (config.frameH + 12) * cam.zoom - stackOffset);
     } else if (ent.bubble && world.time < ent.bubble.until && canHear(world, p, ent)) {
-      drawBubble(ctx, ent.bubble.text, sxp, syp - (config.frameH + 12) * cam.zoom);
+      drawBubble(ctx, ent.bubble.text, sxp, syp - (config.frameH + 12) * cam.zoom - stackOffset);
     }
     if (ent.petId && ent.pet) {
       const psx = (ent.pet.x - cam.x) * cam.zoom, psy = (ent.pet.y - cam.y) * cam.zoom;
       drawPetTag(ctx, ent.petName || petDisplayName(ent.petId), psx, psy - (config.frameW + 2) * cam.zoom);
     }
     if (ent.emoteType && Date.now() < (ent.emoteUntil || 0)) {
-      drawEmote(ctx, world, ent.emoteType, sxp, syp - (config.frameH + 20) * cam.zoom);
+      drawEmote(ctx, world, ent.emoteType, sxp, syp - (config.frameH + 20) * cam.zoom - stackOffset);
     }
   }
 
@@ -149,9 +166,11 @@ function drawChar(ctx, world, ent) {
   ctx.fillStyle = "rgba(0,0,0,0.25)";
   ctx.fillRect(Math.round(ent.x - shadowW / 2), Math.round(ent.y) - 2, shadowW, shadowH);
   const asleep = ent.online === false;
-  if (asleep) ctx.globalAlpha = 0.6; // คนที่หลุด/ปิดแท็บไปแล้ว — จางลงให้ดูออกว่าไม่ได้อยู่จริง
+  // คนที่หลุด/ปิดแท็บไปแล้ว — จางลง + ลดสีเกือบขาวดำ ให้ดูออกชัดเจนว่าไม่ได้อยู่จริง (จางอย่างเดียว
+  // แยกยากตอนอยู่ในโหมดปกติ เทียบกับคนที่แค่ยืนนิ่งเฉย ๆ)
+  if (asleep) { ctx.globalAlpha = 0.65; ctx.filter = "grayscale(80%)"; }
   ctx.drawImage(img, sx, sy, config.frameW, config.frameH, dx, dy, config.frameW, config.frameH);
-  if (asleep) ctx.globalAlpha = 1;
+  if (asleep) { ctx.globalAlpha = 1; ctx.filter = "none"; }
 }
 
 // ตำแหน่ง (title) + ทีม ที่เลือกไว้ — ของตัวเองอ่านตรงจาก decor/player state, ของคนอื่นอ่านจาก leaderboard
