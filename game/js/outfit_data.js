@@ -9,8 +9,8 @@ export const OUTFITS = [
 
 // สูงเท่าเฟรมตัวละครฐาน (50) แต่กว้างกว่า (32) เพราะท่าหน้าตรงมีปีกกางออกด้านข้าง — ค่าคำนวณ
 // จากคอนเทนต์จริงใน build_outfits.py (อย่าเดาเอง ไม่งั้นปีกจะโดนตัดขอบเหมือนที่เคยเกิด)
-export const OUTFIT_FRAME_W = 52;
-export const OUTFIT_FRAME_H = 50;
+export const OUTFIT_FRAME_W = 56;
+export const OUTFIT_FRAME_H = 55;
 export const OUTFIT_DIRS = ["down", "left", "right", "up"];
 export const OUTFIT_FRAMES = 4;
 
