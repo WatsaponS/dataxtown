@@ -1,0 +1,21 @@
+{
+  "frameWidth": 128,
+  "frameHeight": 128,
+  "columns": 4,
+  "rows": 4,
+  "framesPerDirection": 4,
+  "directions": [
+    "down",
+    "left",
+    "right",
+    "up"
+  ],
+  "frameDurationMs": 140,
+  "order": "row-major",
+  "groundAnchorY": 120,
+  "background": "transparent",
+  "paletteColors": 96,
+  "paletteScope": "shared-sheet",
+  "layer": "full-character",
+  "source": "Image API concept + deterministic component extraction/registration"
+}

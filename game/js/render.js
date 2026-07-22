@@ -10,7 +10,7 @@ import { drawFx } from "./fx.js";
 import { emoteEmoji } from "./emotes_data.js";
 import { achievementById } from "./achievements_data.js";
 import { teamById } from "./teams_data.js";
-import { drawCosmeticLayer } from "./cosmetics.js";
+import { drawOutfitFrame } from "./outfit.js";
 
 export function makeCamera(config) {
   return { x: 0, y: 0, zoom: config.defaultZoom };
@@ -170,11 +170,10 @@ function drawChar(ctx, world, ent) {
   // คนที่หลุด/ปิดแท็บไปแล้ว — จางลง + ลดสีเกือบขาวดำ ให้ดูออกชัดเจนว่าไม่ได้อยู่จริง (จางอย่างเดียว
   // แยกยากตอนอยู่ในโหมดปกติ เทียบกับคนที่แค่ยืนนิ่งเฉย ๆ)
   if (asleep) { ctx.globalAlpha = 0.65; ctx.filter = "grayscale(80%)"; }
-  drawCosmeticLayer(ctx, ent, "wings", dx, dy); // ปีกอยู่หลังลำตัว วาดก่อน
-  ctx.drawImage(img, sx, sy, config.frameW, config.frameH, dx, dy, config.frameW, config.frameH);
-  drawCosmeticLayer(ctx, ent, "bottom", dx, dy);
-  drawCosmeticLayer(ctx, ent, "shirt", dx, dy);
-  drawCosmeticLayer(ctx, ent, "hat", dx, dy);
+  // ชุดคอสตูมครอบทับตัวละครทั้งตัว — วาดแทนสไปรท์ตัวละครเดิมไปเลยถ้าใส่อยู่
+  if (!drawOutfitFrame(ctx, world, ent, dx, dy)) {
+    ctx.drawImage(img, sx, sy, config.frameW, config.frameH, dx, dy, config.frameW, config.frameH);
+  }
   if (asleep) { ctx.globalAlpha = 1; ctx.filter = "none"; }
 }
 

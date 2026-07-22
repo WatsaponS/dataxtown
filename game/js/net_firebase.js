@@ -57,7 +57,8 @@ export async function connectFirebase(world, ui) {
     }
     await set(meRef, {
       name: p.name, variant: p.variant, hair: p.hair || null, shirt: p.shirt || null,
-      pet: p.petId || null, petName: p.petName || null, cosmetics: p.cosmetics || null,
+      pet: p.petId || null, petName: p.petName || null,
+      outfit: p.outfit || null, outfitColor: p.outfitColor || null,
       x: p.x, y: p.y, dir: p.dir, moving: false, online: true, ts: serverTimestamp(),
     });
     // หลุด/ปิดแท็บ = ไม่ลบ node ทิ้งอีกต่อไป แค่ทำเครื่องหมาย "หลับ" (ยืนหน้าตรง ค้างตำแหน่งเดิม
@@ -66,7 +67,7 @@ export async function connectFirebase(world, ui) {
     net.connected = true;
     net.updatePet = (petId, petName) =>
       update(meRef, { pet: petId || null, petName: petName || null }).catch(() => {});
-    net.updateCosmetics = cosmetics => update(meRef, { cosmetics }).catch(() => {});
+    net.updateOutfit = (outfit, outfitColor) => update(meRef, { outfit: outfit || null, outfitColor: outfitColor || null }).catch(() => {});
     addSystemLine(ui, "🟢 ออนไลน์ผ่าน Firebase — คนอื่นในออฟฟิศจะเห็นคุณ");
 
     // ---------- สถานะการเชื่อมต่อของตัวเอง ----------
@@ -114,7 +115,7 @@ export async function connectFirebase(world, ui) {
         // เปลี่ยนแค่ชื่อสัตว์เลี้ยง (ชนิดเดิม) ไม่ต้องรีเซ็ต trail ที่กำลังเดินตามอยู่
         if (v.pet !== ent.petId) setPet(ent, v.pet, v.petName);
         else if (ent.petId) ent.petName = v.petName || null;
-        if (v.cosmetics) ent.cosmetics = v.cosmetics;
+        if (v.outfit !== undefined) { ent.outfit = v.outfit; ent.outfitColor = v.outfitColor || null; }
         // ท่าทาง — ใช้เวลาที่รับสดบนเครื่องเราเอง (กันนาฬิกา client เพี้ยนกับ serverTimestamp)
         if (v.emote) { ent.emoteType = v.emote.type; ent.emoteUntil = Date.now() + EMOTE_DURATION_MS; }
         if (wasOnline && !ent.online) addSystemLine(ui, `${ent.name} ออกจากออฟฟิศชั่วคราว 💤`);

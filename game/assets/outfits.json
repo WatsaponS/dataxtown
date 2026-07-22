@@ -1,0 +1,16 @@
+{
+  "frameW": 32,
+  "frameH": 50,
+  "dirs": [
+    "down",
+    "left",
+    "right",
+    "up"
+  ],
+  "frames": 4,
+  "variants": [
+    "male_cyber_fantasy",
+    "female_cyber_fantasy"
+  ],
+  "recolor": "whole-sprite-alpha (no separate mask -- entire opaque area is the recolor target)"
+}

@@ -23,8 +23,8 @@ import { initEmotes, toggleEmotePanel, isEmotePanelOpen } from "./emotes.js";
 import { initAchievements, toggleAchievements } from "./achievements.js";
 import { initMissions, toggleMissions } from "./missions.js";
 import { TEAMS } from "./teams_data.js";
-import { loadCosmeticsImage } from "./cosmetics.js";
-import { initCosmeticsMenu, toggleCosmeticsMenu } from "./cosmetics_menu.js";
+import { loadOutfitsImage } from "./outfit.js";
+import { initOutfitMenu, toggleOutfitMenu } from "./outfit_menu.js";
 import { makeCamera, updateCamera, draw } from "./render.js";
 import {
   setupUI, isChatOpen, toggleChat, submitChat,
@@ -77,7 +77,7 @@ window.__music = music; // hooks สำหรับ automated test ผ่าน 
 window.__world = world;
 const petImg = loadPetImage(); // โหลดคู่ขนานไปเลย ไม่ต้องรอ
 loadGachaMachineImage();
-loadCosmeticsImage();
+loadOutfitsImage();
 
 // ---------- หน้าจอเริ่มเกม: ชื่อ + เพศ + สีผม/สีเสื้อ ----------
 // สไปรท์ต้นฉบับมีแค่ชาย/หญิงอย่างละ 1 แบบ (variant 0/1) ต่างคนต่างสีผ่าน mask recolor
@@ -88,7 +88,8 @@ let chosenGender = Math.min(1, Math.max(0, saved.variant ?? Math.round(Math.rand
 let chosenHair = saved.hair ?? null;    // null = สีเดิมของสไปรท์ต้นฉบับ
 let chosenShirt = saved.shirt ?? null;
 let chosenPet = saved.pet ?? null;      // null = ไม่มีสัตว์เลี้ยง
-let chosenCosmetics = saved.cosmetics ?? { hat: null, shirt: null, bottom: null, wings: null };
+let chosenOutfit = saved.outfit ?? null;         // null = ไม่ใส่ชุดคอสตูม ใช้ตัวละครเดิม
+let chosenOutfitColor = saved.outfitColor ?? null; // null = สีเดิมของชุด
 let chosenPetName = saved.petName ?? "";
 let chosenDept = saved.dept ?? TEAMS[Math.floor(Math.random() * TEAMS.length)].id; // สุ่มทีมให้ครั้งแรก เปลี่ยนได้เสมอ
 if (saved.name) document.getElementById("name-input").value = saved.name;
@@ -238,11 +239,13 @@ function startGame() {
     world.player.sheet = makeCustomSheet(world, variantIndex(), { hair: chosenHair, shirt: chosenShirt });
   }
   setPet(world.player, chosenPet, chosenPetName); // เรียกก่อน connect net ให้ payload join มี pet ติดไปด้วย
-  world.player.cosmetics = chosenCosmetics;
+  world.player.outfit = chosenOutfit;
+  world.player.outfitColor = chosenOutfitColor;
   world.entities.push(world.player);
   localStorage.setItem("dataxtown.avatar", JSON.stringify({
     name, variant: variantIndex(), hair: chosenHair, shirt: chosenShirt,
-    pet: chosenPet, petName: chosenPetName, dept: chosenDept, cosmetics: chosenCosmetics,
+    pet: chosenPet, petName: chosenPetName, dept: chosenDept,
+    outfit: chosenOutfit, outfitColor: chosenOutfitColor,
   }));
 
   for (const n of NPCS) {
@@ -279,7 +282,7 @@ function startGame() {
     initDuel(world, ui);         // ท้าเป่ายิ้งฉุบผู้เล่นออนไลน์ ชนะ 2 ใน 3 ได้ 20 แต้ม
     initGacha(world, ui);        // ตู้กาชาปอง — สุ่มไอเทม exclusive 100 แต้ม/ครั้ง
     initEmotes(world, ui);       // ปุ่มท่าทาง (V) — โบกมือ/ปรบมือ/ฯลฯ เห็นได้ทุกคนใกล้เคียง
-    initCosmeticsMenu(world, ui); // เมนู 🎭 ใส่/ถอดเครื่องแต่งกาย ฟรี เห็นได้ทุกคนใกล้เคียง
+    initOutfitMenu(world, ui);   // เมนู 👕 ใส่/ถอดชุดคอสตูมเต็มตัว ฟรี เห็นได้ทุกคนใกล้เคียง
   });
   requestAnimationFrame(loop);
 }
@@ -308,7 +311,7 @@ window.addEventListener("keydown", e => {
     toggleShop(world, false); toggleRoom(world, false); toggleLogin(world, false);
     toggleTutorial(world, false); togglePetMenu(world, false); toggleGacha(world, false);
     toggleEmotePanel(false); toggleAchievements(world, false); toggleMissions(world, false);
-    toggleCosmeticsMenu(world, false);
+    toggleOutfitMenu(world, false);
     // Esc บนคำท้าที่เข้ามา = ปฏิเสธจริง (ไม่ใช่แค่ซ่อน) กันสถานะ duel ค้างในหน่วยความจำ
     if (!document.getElementById("duel-incoming-overlay").classList.contains("hidden")) {
       document.getElementById("duel-decline-btn").click();
