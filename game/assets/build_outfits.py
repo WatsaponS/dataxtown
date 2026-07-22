@@ -85,6 +85,13 @@ VARIANTS = [
 ]
 SRC_FRAME = 128
 
+# ทุก variant ใหม่จาก pixel-art/layer/ (สร้างผ่าน pipeline ภายนอกคนละตัวกับ 2 ตัวแรก) มีปัญหา
+# เดียวกันหมด: แถว "right" ในภาพต้นฉบับหันหน้าไปทางเดียวกับแถว "left" จริง ๆ (ไม่ได้ mirror กัน
+# ตามที่ควรจะเป็น) เช็คแล้วทั้ง 9 ชุดเดี่ยวและ 22 ชุดคู่เป็นแบบนี้หมด (เทียบ left_0.png/right_0.png
+# ทุกตัวแล้วหันทิศเดียวกันชัดเจน) — สร้างเฟรม "right" เอาเองจากเฟรม "left" กลับด้านซ้าย-ขวาแทนที่
+# จะอ่านจากต้นฉบับที่พัง รับประกันว่า mirror ถูกต้องเสมอไม่ว่าต้นฉบับจะเพี้ยนแค่ไหน
+MIRROR_RIGHT_FROM_LEFT = {v for v, _ in VARIANTS if v not in ("male_cyber_fantasy", "female_cyber_fantasy")}
+
 
 def content_bbox(frame_rgba):
     return frame_rgba.getchannel("A").getbbox()
@@ -166,14 +173,21 @@ def build():
 
     for gi, (variant_id, path) in enumerate(VARIANTS):
         sheet = Image.open(path).convert("RGBA")
+        left_placed = [None] * FRAMES  # เก็บเฟรม "left" ที่ place() แล้วไว้ mirror ต่อเป็น "right"
         for row in range(4):  # row order in source sheet already matches DIRS (down,left,right,up)
+            direction = DIRS[row]
             for col in range(FRAMES):
-                box = (col * SRC_FRAME, row * SRC_FRAME, (col + 1) * SRC_FRAME, (row + 1) * SRC_FRAME)
-                frame = sheet.crop(box)
-                bbox = content_bbox(frame)
-                if not bbox:
-                    continue
-                placed = place(frame.crop(bbox), dir_scales[row], fw, fh)
+                if direction == "right" and variant_id in MIRROR_RIGHT_FROM_LEFT:
+                    placed = left_placed[col].transpose(Image.FLIP_LEFT_RIGHT)
+                else:
+                    box = (col * SRC_FRAME, row * SRC_FRAME, (col + 1) * SRC_FRAME, (row + 1) * SRC_FRAME)
+                    frame = sheet.crop(box)
+                    bbox = content_bbox(frame)
+                    if not bbox:
+                        continue
+                    placed = place(frame.crop(bbox), dir_scales[row], fw, fh)
+                    if direction == "left":
+                        left_placed[col] = placed
                 dst_x = (row * FRAMES + col) * fw
                 dst_y = gi * fh
                 out_sheet.alpha_composite(placed, (dst_x, dst_y))
