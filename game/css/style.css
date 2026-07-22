@@ -625,6 +625,14 @@ body.touch #controls-hint { display: none; }
   border: 2px solid #394158; border-radius: 8px;
 }
 #gender-picker button.selected { border-color: #e7b94f; background: #26324a; }
+#hires-picker { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 4px; }
+#hires-picker button {
+  flex: 1 1 auto; padding: 8px 10px; font-size: 12px; cursor: pointer;
+  background: #171b2c; color: #fff6dc;
+  border: 2px dashed #394158; border-radius: 8px;
+}
+#hires-picker button.selected { border-color: #e7b94f; border-style: solid; background: #26324a; }
+#custom-cols.hidden { display: none; }
 #avatar-picker { display: flex; gap: 8px; flex-wrap: wrap; }
 #avatar-picker canvas {
   width: 48px; height: 72px; image-rendering: pixelated;

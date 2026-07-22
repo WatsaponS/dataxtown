@@ -12,6 +12,7 @@ import { speak } from "./entities.js";
 import { refreshOnlineList, addSystemLine } from "./ui.js";
 import { findRemote, addRemote } from "./net.js";
 import { setPet } from "./pets.js";
+import { preloadSprite } from "./sprites.js";
 import { FIREBASE_CONFIG } from "./firebase-config.js";
 import { EMOTE_DURATION_MS } from "./emotes_data.js";
 
@@ -59,6 +60,8 @@ export async function connectFirebase(world, ui) {
       name: p.name, variant: p.variant, hair: p.hair || null, shirt: p.shirt || null,
       pet: p.petId || null, petName: p.petName || null,
       outfit: p.outfit || null,
+      // แค่ id อ้างอิง manifest (sprites_manifest.js) ไม่ส่งรูปภาพ/base64 ผ่าน Firebase เด็ดขาด
+      spriteId: p.spriteId || null,
       x: p.x, y: p.y, dir: p.dir, moving: false, online: true, ts: serverTimestamp(),
     });
     // หลุด/ปิดแท็บ = ไม่ลบ node ทิ้งอีกต่อไป แค่ทำเครื่องหมาย "หลับ" (ยืนหน้าตรง ค้างตำแหน่งเดิม
@@ -116,6 +119,9 @@ export async function connectFirebase(world, ui) {
         if (v.pet !== ent.petId) setPet(ent, v.pet, v.petName);
         else if (ent.petId) ent.petName = v.petName || null;
         if (v.outfit !== undefined) ent.outfit = v.outfit;
+        // spriteId ไม่เปลี่ยนกลางเซสชันในตอนนี้ (เลือกตอนสร้างตัวละครครั้งเดียว) แต่เผื่อ record
+        // แรกที่ onChildAdded รับไปยังไม่มีฟิลด์นี้ (client เก่ากว่า) ก็ยัง sync ทีหลังได้
+        if (v.spriteId && v.spriteId !== ent.spriteId) { ent.spriteId = v.spriteId; preloadSprite(v.spriteId); }
         // ท่าทาง — ใช้เวลาที่รับสดบนเครื่องเราเอง (กันนาฬิกา client เพี้ยนกับ serverTimestamp)
         if (v.emote) { ent.emoteType = v.emote.type; ent.emoteUntil = Date.now() + EMOTE_DURATION_MS; }
         if (wasOnline && !ent.online) addSystemLine(ui, `${ent.name} ออกจากออฟฟิศชั่วคราว 💤`);

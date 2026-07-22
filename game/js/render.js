@@ -12,6 +12,7 @@ import { achievementById } from "./achievements_data.js";
 import { teamById } from "./teams_data.js";
 import { drawOutfitFrame } from "./outfit.js";
 import { OUTFIT_FRAME_H } from "./outfit_data.js";
+import { drawHiresCharacter, hiresAnchorHeight } from "./sprites.js";
 
 export function makeCamera(config) {
   return { x: 0, y: 0, zoom: config.defaultZoom };
@@ -85,8 +86,9 @@ export function draw(ctx, world, cam) {
 
   for (const { ent, sx: sxp, sy: syp } of screenPos) {
     const stackOffset = stackIndex.get(ent) * TAG_STACK_GAP;
-    // ชุดคอสตูมเฟรมสูงกว่าตัวละครฐาน — ป้าย/บับเบิลต้องขยับขึ้นเพิ่มตามส่วนสูงที่เกินมา กันซ้อนหัว
-    const extraH = (ent.outfit ? Math.max(0, OUTFIT_FRAME_H - config.frameH) : 0) * cam.zoom;
+    // ชุดคอสตูม/สไปรท์ความละเอียดสูงอาจสูงกว่าตัวละครฐาน — ป้าย/บับเบิลต้องขยับขึ้นเพิ่มตาม
+    // ส่วนสูงที่เกินมา กันซ้อนหัว (outfit มาก่อนเพราะ drawChar วาดทับตัวละครฐานเสมอถ้าใส่อยู่)
+    const extraH = extraTagHeight(ent, config) * cam.zoom;
     drawNameTag(ctx, ent, sxp, syp - (config.frameH + 3) * cam.zoom - stackOffset - extraH, ent === p, nameTagPrefix(world, ent));
     if (ent.online === false) {
       // ค้าง "Zzz.." ไว้ตลอด ไม่มี timeout/canHear เหมือน bubble แชตปกติ — ให้เห็นสถานะหลับ
@@ -105,6 +107,17 @@ export function draw(ctx, world, cam) {
   }
 
   drawDuelPrompt(ctx, world, cam);
+}
+
+// ส่วนสูงเกินมาจากตัวละครฐาน (config.frameH) ที่ต้องเผื่อให้ป้ายชื่อ/บับเบิล/อีโมทลอยพ้นหัว —
+// outfit มาก่อนเสมอ (drawChar วาดทับตัวละครฐานถ้าใส่ชุดอยู่ไม่ว่าจะมี spriteId ด้วยหรือไม่)
+function extraTagHeight(ent, config) {
+  if (ent.outfit) return Math.max(0, OUTFIT_FRAME_H - config.frameH);
+  if (ent.spriteId) {
+    const h = hiresAnchorHeight(ent.spriteId);
+    if (h != null) return Math.max(0, h - config.frameH);
+  }
+  return 0;
 }
 
 // ป้ายชวนดวลลอยเหนือหัวผู้เล่นที่เดินเข้าใกล้เรามากพอ (เดินตามคนนั้นไปด้วย + เด้งเรียกความสนใจ)
@@ -169,9 +182,9 @@ function drawChar(ctx, world, ent) {
   // คนที่หลุด/ปิดแท็บไปแล้ว — จางลง + ลดสีเกือบขาวดำ ให้ดูออกชัดเจนว่าไม่ได้อยู่จริง (จางอย่างเดียว
   // แยกยากตอนอยู่ในโหมดปกติ เทียบกับคนที่แค่ยืนนิ่งเฉย ๆ)
   if (asleep) { ctx.globalAlpha = 0.65; ctx.filter = "grayscale(80%)"; }
-  // ชุดคอสตูมครอบทับตัวละครทั้งตัว — วาดแทนสไปรท์ตัวละครเดิมไปเลยถ้าใส่อยู่ (เฟรมชุดใหญ่กว่า
-  // เฟรมตัวละครฐาน วาดด้วยขนาดตัวเอง ไม่บีบให้พอดี config.frameW/frameH — ดู outfit.js)
-  if (!drawOutfitFrame(ctx, ent, hop)) {
+  // ลำดับความสำคัญ: ชุดคอสตูม (ครอบทับทั้งตัว) > สไปรท์ความละเอียดสูง (ถ้าเลือกไว้และโหลดสำเร็จ)
+  // > avatar เดิม (fallback เสมอถ้าอีกสองอย่างไม่วาดอะไรเลย — ไม่มีทาง crash/จอว่าง)
+  if (!drawOutfitFrame(ctx, ent, hop) && !drawHiresCharacter(ctx, ent, hop)) {
     const col = spriteFrame(ent);
     // ent.sheet = spritesheet เฉพาะตัว (custom สี, 1 แถว) — ไม่มีก็ใช้ sheet รวมตาม variant
     const img = ent.sheet || world.sheetImg;

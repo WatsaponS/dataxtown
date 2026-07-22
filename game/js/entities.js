@@ -4,6 +4,7 @@ import { boxBlocked, zoneAt } from "./world.js";
 import { PRIVATE_ZONE_TYPES } from "./data.js";
 
 const DIRS = ["down", "left", "right", "up"];
+export { DIRS };
 
 export function makeEntity({ id, name, role = "", variant = 0, x, y, kind = "npc" }) {
   return {
@@ -17,8 +18,12 @@ export function makeEntity({ id, name, role = "", variant = 0, x, y, kind = "npc
 }
 
 // ขยับ entity แยกแกน X/Y เพื่อให้ slide ตามกำแพงได้ — คืนค่าว่าขยับได้จริงไหม
+// hitbox ปกติคงที่ (HW=10,FOOT=10 — 2x จาก 5 ตาม tile 24->48px) เว้นแต่ entity ประกาศ
+// collisionW/collisionH เอง (ตัวละครความละเอียดสูงจาก sprites_manifest.js) — ตั้งใจไม่ผูกกับ
+// ขนาดภาพที่โชว์ (displayWidth/Height) เปลี่ยนสไปรท์ให้ใหญ่/เล็กลงจะไม่กระทบ collision เดิมเลย
 export function moveEntity(world, ent, dx, dy) {
-  const HW = 10, FOOT = 10; // hitbox ครึ่งกว้าง/สูงช่วงเท้า (2x จาก 5 — ตาม tile 24->48px)
+  const HW = ent.collisionW != null ? ent.collisionW / 2 : 10;
+  const FOOT = ent.collisionH != null ? ent.collisionH : 10;
   let movedX = false, movedY = false;
   if (dx !== 0) {
     const nx = ent.x + dx;
@@ -152,8 +157,15 @@ export function canHear(world, a, b) {
 // + เด้งตัวแนวตั้งใน render.js (ดู ent.emoteType==="jump")
 export const FRAMES_PER_DIR = 4;
 
+// แยกออกมาจาก spriteFrame() เดิม (ไม่เปลี่ยนพฤติกรรม แค่ให้ระบบอื่น เช่น sprites.js สำหรับ
+// สไปรท์ความละเอียดสูง ที่จัดเฟรมเป็น grid 2 มิติ (คอลัมน์=เฟรม, แถว=ทิศ) แทนแถบยาวแถวเดียว
+// แบบ avatars.png ใช้ทิศเดียวกันได้โดยไม่ต้องคำนวณซ้ำ)
+export function directionIndex(ent) {
+  return DIRS.indexOf(ent.dir);
+}
+
 export function spriteFrame(ent) {
-  const di = DIRS.indexOf(ent.dir);
+  const di = directionIndex(ent);
   let f = 0;
   if (ent.emoteType === "jump" && Date.now() < (ent.emoteUntil || 0)) {
     f = 0;

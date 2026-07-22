@@ -4,6 +4,7 @@
 import { makeEntity, speak } from "./entities.js";
 import { makeCustomSheet } from "./avatar.js";
 import { setPet } from "./pets.js";
+import { preloadSprite } from "./sprites.js";
 import { refreshOnlineList, addSystemLine } from "./ui.js";
 
 export function connectNet(world, ui) {
@@ -27,8 +28,10 @@ export function connectNet(world, ui) {
   ws.addEventListener("open", () => {
     net.connected = true;
     send({
+      // spriteId = แค่ชื่อ id อ้างอิง manifest (sprites_manifest.js) ไม่ส่งรูปภาพ/base64 ผ่าน
+      // network เด็ดขาด — client ปลายทางโหลด asset เองจาก manifest ตาม id นี้
       t: "join", key: accessKey, name: p.name, variant: p.variant, hair: p.hair, shirt: p.shirt,
-      pet: p.petId, petName: p.petName, x: p.x, y: p.y, dir: p.dir,
+      pet: p.petId, petName: p.petName, spriteId: p.spriteId || null, x: p.x, y: p.y, dir: p.dir,
     });
     addSystemLine(ui, "🟢 ออนไลน์แล้ว — คนอื่นในออฟฟิศจะเห็นคุณ");
     net.updatePet = (petId, petName) => send({ t: "pet", petId, petName });
@@ -129,6 +132,9 @@ export function addRemote(world, info) {
   }
   if (info.pet) setPet(ent, info.pet, info.petName);
   if (info.outfit) ent.outfit = info.outfit;
+  // client ฝั่งนี้อาจไม่เคยโหลดสไปรท์ id นี้มาก่อน (ไม่ใช่ตัวเราเอง) — โหลดตามหลังทันทีที่รู้จัก
+  // id; ถ้า id ไม่รู้จัก/โหลดพัง drawHiresCharacter() จะ fallback วาด avatar เดิมเองอัตโนมัติ
+  if (info.spriteId) { ent.spriteId = info.spriteId; preloadSprite(info.spriteId); }
   world.entities.push(ent);
 }
 

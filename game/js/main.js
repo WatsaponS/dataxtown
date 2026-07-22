@@ -25,6 +25,8 @@ import { initMissions, toggleMissions } from "./missions.js";
 import { TEAMS } from "./teams_data.js";
 import { loadOutfitsImage } from "./outfit.js";
 import { initOutfitMenu, toggleOutfitMenu } from "./outfit_menu.js";
+import { preloadSprite, drawSpritePreview } from "./sprites.js";
+import { getSpriteDef, SPRITE_MANIFEST } from "./sprites_manifest.js";
 import { makeCamera, updateCamera, draw } from "./render.js";
 import {
   setupUI, isChatOpen, toggleChat, submitChat,
@@ -89,6 +91,11 @@ let chosenHair = saved.hair ?? null;    // null = สีเดิมของส
 let chosenShirt = saved.shirt ?? null;
 let chosenPet = saved.pet ?? null;      // null = ไม่มีสัตว์เลี้ยง
 let chosenOutfit = saved.outfit ?? null; // null = ไม่ใส่ชุดคอสตูม ใช้ตัวละครเดิม
+// null = ใช้ระบบ avatar เดิม (32x50, recolor ได้) — ตั้งค่านี้ = ใช้สไปรท์ความละเอียดสูงแทนทั้งตัว
+// (ดู sprites_manifest.js) เลือกได้จาก #hires-picker ในหน้าสร้างตัวละคร คนละระบบกับ outfit
+// (outfit ใส่ทับ avatar ทีหลังได้เสมอในเกม ส่วนอันนี้คือ "ตัวละครฐาน" ตั้งแต่ตอนสร้างเลย)
+let chosenSpriteId = saved.spriteId ?? null;
+if (chosenSpriteId) preloadSprite(chosenSpriteId); // โหลดล่วงหน้าให้พรีวิวหน้าสร้างตัวละครไวขึ้น
 let chosenPetName = saved.petName ?? "";
 let chosenDept = saved.dept ?? TEAMS[Math.floor(Math.random() * TEAMS.length)].id; // สุ่มทีมให้ครั้งแรก เปลี่ยนได้เสมอ
 if (saved.name) document.getElementById("name-input").value = saved.name;
@@ -194,9 +201,57 @@ function refreshPetPicker() {
 buildPetPicker();
 refreshPetPicker();
 
+// ---------- ตัวเลือกสไปรท์ความละเอียดสูง (ทดลอง) — สร้างปุ่มจาก SPRITE_MANIFEST อัตโนมัติ
+// เพิ่มตัวละคร 128x128 ตัวถัดไปแค่เพิ่ม entry ในนั้น ไม่ต้องแก้ตรงนี้เลย ----------
+const HIRES_PREVIEW_BOX = 96; // กล่องพรีวิวสี่เหลี่ยมจัตุรัส — contain-fit ไม่บีบสัดส่วนต้นฉบับ
+const hiresPicker = document.getElementById("hires-picker");
+function buildHiresPicker() {
+  hiresPicker.textContent = "";
+  const none = document.createElement("button");
+  none.type = "button";
+  none.dataset.sprite = "";
+  none.textContent = "✕ ใช้ avatar ปกติ";
+  hiresPicker.appendChild(none);
+  for (const def of SPRITE_MANIFEST) {
+    const b = document.createElement("button");
+    b.type = "button";
+    b.dataset.sprite = def.id;
+    b.textContent = "🧪 " + def.name;
+    hiresPicker.appendChild(b);
+  }
+  hiresPicker.querySelectorAll("button").forEach(b => b.addEventListener("click", () => {
+    chosenSpriteId = b.dataset.sprite || null;
+    if (chosenSpriteId) preloadSprite(chosenSpriteId).then(updatePreview);
+    refreshHiresButtons();
+    updatePreview();
+  }));
+}
+function refreshHiresButtons() {
+  hiresPicker.querySelectorAll("button").forEach(b =>
+    b.classList.toggle("selected", (b.dataset.sprite || null) === chosenSpriteId));
+  // สไปรท์ความละเอียดสูงตัวอย่างนี้ไม่มี hair/clothing mask — ซ่อนตัวเลือกสีทิ้งไปเลยกันสับสน
+  // (interface เผื่อไว้แล้วถ้าจะเพิ่ม mask ให้ตัวละครความละเอียดสูงทีหลัง ดู sprites_manifest.js)
+  document.getElementById("custom-cols").classList.toggle("hidden", !!chosenSpriteId);
+}
+buildHiresPicker();
+refreshHiresButtons();
+
 function updatePreview() {
+  const canvas = document.getElementById("avatar-preview");
+  if (chosenSpriteId) {
+    // ขนาดจริง (attribute) ต้องตรงกับขนาดแสดงผล (CSS) เป๊ะ กันภาพถูกยืด/บีบสัดส่วนตอนเบราว์เซอร์
+    // scale ให้พอดีกล่อง — โหมด avatar ปกติใช้ CSS ที่ตั้งไว้ล่วงหน้า (64x96) ไม่ต้องยุ่ง inline style
+    canvas.width = HIRES_PREVIEW_BOX; canvas.height = HIRES_PREVIEW_BOX;
+    canvas.style.width = HIRES_PREVIEW_BOX + "px"; canvas.style.height = HIRES_PREVIEW_BOX + "px";
+    const draw = () => drawSpritePreview(canvas.getContext("2d"), canvas, chosenSpriteId, "down");
+    draw();
+    preloadSprite(chosenSpriteId).then(draw); // เผื่อยังโหลดไม่เสร็จตอนกดเลือกครั้งแรก
+    return;
+  }
+  canvas.width = CONFIG.frameW; canvas.height = CONFIG.frameH;
+  canvas.style.width = ""; canvas.style.height = ""; // กลับไปใช้ CSS เดิม (#avatar-preview)
   const sheet = makeCustomSheet(world, variantIndex(), { hair: chosenHair, shirt: chosenShirt });
-  const pc = document.getElementById("avatar-preview").getContext("2d");
+  const pc = canvas.getContext("2d");
   pc.imageSmoothingEnabled = false;
   pc.clearRect(0, 0, CONFIG.frameW, CONFIG.frameH);
   pc.drawImage(sheet, 0, 0, CONFIG.frameW, CONFIG.frameH, 0, 0, CONFIG.frameW, CONFIG.frameH);
@@ -215,6 +270,13 @@ if (params.get("shirt")) chosenShirt = "#" + params.get("shirt").replace("#", ""
 if (params.get("pet")) chosenPet = params.get("pet") === "none" ? null : params.get("pet");
 if (params.get("petname")) chosenPetName = params.get("petname");
 if (params.get("dept")) chosenDept = params.get("dept");
+// ?sprite=rosewind_healer_v2 (หรือ "none" กลับไปใช้ avatar เดิม) — เทสอัตโนมัติผ่าน cdp_shot ได้
+// โดยไม่ต้องคลิก UI เอง เหมือน ?hair=/?shirt= เดิม
+if (params.get("sprite")) {
+  const sid = params.get("sprite");
+  chosenSpriteId = sid === "none" ? null : sid;
+  if (chosenSpriteId) preloadSprite(chosenSpriteId);
+}
 if (params.get("autostart")) {
   document.getElementById("name-input").value = params.get("name") || "Tester";
   startGame();
@@ -239,10 +301,19 @@ function startGame() {
   }
   setPet(world.player, chosenPet, chosenPetName); // เรียกก่อน connect net ให้ payload join มี pet ติดไปด้วย
   world.player.outfit = chosenOutfit;
+  // สไปรท์ความละเอียดสูง (ถ้าเลือกไว้) — ตั้ง collision footprint จาก manifest แยกจาก
+  // displayWidth/Height เสมอ (ดู entities.js moveEntity) กันขนาดภาพกระทบ hitbox
+  world.player.spriteId = chosenSpriteId;
+  if (chosenSpriteId) {
+    preloadSprite(chosenSpriteId);
+    const def = getSpriteDef(chosenSpriteId);
+    if (def) { world.player.collisionW = def.collisionWidth; world.player.collisionH = def.collisionHeight; }
+  }
   world.entities.push(world.player);
   localStorage.setItem("dataxtown.avatar", JSON.stringify({
     name, variant: variantIndex(), hair: chosenHair, shirt: chosenShirt,
     pet: chosenPet, petName: chosenPetName, dept: chosenDept, outfit: chosenOutfit,
+    spriteId: chosenSpriteId,
   }));
 
   for (const n of NPCS) {
@@ -256,6 +327,14 @@ function startGame() {
     ent.duelWinRate = n.duelWinRate;
     if (n.roomBox) ent.roomBox = n.roomBox.map(v => v * world.tile);
     if (n.hair || n.shirt) ent.sheet = makeCustomSheet(world, n.variant, { hair: n.hair, shirt: n.shirt });
+    // เผื่ออนาคตอยาก assign สไปรท์ความละเอียดสูงให้ NPC บางคน (data.js เพิ่ม n.spriteId เข้าไป) —
+    // ไม่มี NPC ไหนใช้ตอนนี้ (ทุกคนยังเป็นระบบ avatar เดิม) โค้ดนี้เป็น no-op จนกว่าจะมีคนตั้งค่า
+    if (n.spriteId) {
+      ent.spriteId = n.spriteId;
+      preloadSprite(n.spriteId); // เฉพาะ NPC ที่อยู่ในฉากจริงเท่านั้น (ไม่ preload สไปรท์ทั้งระบบ)
+      const def = getSpriteDef(n.spriteId);
+      if (def) { ent.collisionW = def.collisionWidth; ent.collisionH = def.collisionHeight; }
+    }
     world.entities.push(ent);
   }
 
