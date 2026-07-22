@@ -189,57 +189,27 @@ body.touch #history-btn { left: auto; right: 20px; bottom: 96px; }
   background: #394158; color: #fff6dc; border: none; border-radius: 8px;
 }
 
-#shop-btn, #home-btn {
-  top: 14px;
+/* ปุ่มไอคอนแถวบน (shop/home/gift/tutorial/pet/cosmetics/emote/achv/missions) — อยู่ใน
+   #hud-icons ด้วยกัน กติกาเดียวใช้ร่วมกันหมด (ก่อนหน้านี้แยกเป็นบล็อกซ้ำ ๆ ต่อปุ่ม เพิ่มปุ่มใหม่
+   ทีไรมีสิทธิ์ลืมเพิ่ม CSS แล้วปุ่มไม่โผล่ — เคยเกิดมาแล้วกับ #cosmetics-btn) จอมือถือแนวตั้ง
+   (ดู media query ท้ายไฟล์) เปลี่ยน #hud-icons เป็น flex-wrap แทน ไม่ต้องคำนวณ right เองต่อปุ่ม
+   กันไอคอนล้นขอบจอเวลามีปุ่มเพิ่มขึ้นเรื่อย ๆ */
+#hud-icons > button {
+  position: fixed; top: 14px; z-index: 10;
   width: 36px; height: 36px; border-radius: 50%;
   font-size: 16px; cursor: pointer;
   background: rgba(23,27,44,.8); border: 1px solid #394158;
 }
+#hud-icons > button:hover { border-color: #e7b94f; }
 #shop-btn { right: 320px; }
 #home-btn { right: 366px; }
-#gift-btn {
-  top: 14px; right: 412px;
-  width: 36px; height: 36px; border-radius: 50%;
-  font-size: 16px; cursor: pointer;
-  background: rgba(23,27,44,.8); border: 1px solid #394158;
-}
-#tutorial-btn {
-  top: 14px; right: 458px;
-  width: 36px; height: 36px; border-radius: 50%;
-  font-size: 16px; cursor: pointer;
-  background: rgba(23,27,44,.8); border: 1px solid #394158;
-}
-#pet-btn {
-  top: 14px; right: 504px;
-  width: 36px; height: 36px; border-radius: 50%;
-  font-size: 16px; cursor: pointer;
-  background: rgba(23,27,44,.8); border: 1px solid #394158;
-}
-#cosmetics-btn {
-  top: 14px; right: 550px;
-  width: 36px; height: 36px; border-radius: 50%;
-  font-size: 16px; cursor: pointer;
-  background: rgba(23,27,44,.8); border: 1px solid #394158;
-}
-#emote-btn {
-  top: 14px; right: 596px;
-  width: 36px; height: 36px; border-radius: 50%;
-  font-size: 16px; cursor: pointer;
-  background: rgba(23,27,44,.8); border: 1px solid #394158;
-}
-#achv-btn {
-  top: 14px; right: 642px;
-  width: 36px; height: 36px; border-radius: 50%;
-  font-size: 16px; cursor: pointer;
-  background: rgba(23,27,44,.8); border: 1px solid #394158;
-}
-#missions-btn {
-  top: 14px; right: 688px;
-  width: 36px; height: 36px; border-radius: 50%;
-  font-size: 16px; cursor: pointer;
-  background: rgba(23,27,44,.8); border: 1px solid #394158;
-}
-#shop-btn:hover, #home-btn:hover, #gift-btn:hover, #tutorial-btn:hover, #pet-btn:hover, #cosmetics-btn:hover, #emote-btn:hover, #achv-btn:hover, #missions-btn:hover { border-color: #e7b94f; }
+#gift-btn { right: 412px; }
+#tutorial-btn { right: 458px; }
+#pet-btn { right: 504px; }
+#cosmetics-btn { right: 550px; }
+#emote-btn { right: 596px; }
+#achv-btn { right: 642px; }
+#missions-btn { right: 688px; }
 
 #achv-current { font-size: 13px; color: #e7b94f; font-weight: 700; margin-bottom: 12px; }
 #achv-grid {
@@ -578,16 +548,17 @@ body.touch #controls-hint { display: none; }
   #minimap { width: 96px; height: 96px; top: 10px; right: 10px; }
   #music-btn { top: 10px; right: 114px; width: 32px; height: 32px; font-size: 15px; }
   #score-badge { top: 10px; right: 154px; padding: 6px 11px; font-size: 12px; }
-  #shop-btn { top: 48px; right: 114px; width: 32px; height: 32px; font-size: 14px; }
-  #home-btn { top: 48px; right: 154px; width: 32px; height: 32px; font-size: 14px; }
-  #gift-btn { top: 48px; right: 194px; width: 32px; height: 32px; font-size: 14px; }
-  #tutorial-btn { top: 48px; right: 234px; width: 32px; height: 32px; font-size: 14px; }
-  #pet-btn { top: 48px; right: 274px; width: 32px; height: 32px; font-size: 14px; }
-  #cosmetics-btn { top: 48px; right: 314px; width: 32px; height: 32px; font-size: 14px; }
-  #emote-btn { top: 48px; right: 354px; width: 32px; height: 32px; font-size: 14px; }
-  #emote-panel { top: 84px; right: 10px; }
-  #achv-btn { top: 48px; right: 394px; width: 32px; height: 32px; font-size: 14px; }
-  #missions-btn { top: 48px; right: 434px; width: 32px; height: 32px; font-size: 14px; }
+  /* จอแคบ (มือถือแนวตั้ง) — แถวปุ่มแบบ right:Npx ต่อปุ่มแบบเดิมยาวเกินความกว้างจอเสมอ (ยิ่งเพิ่ม
+     ปุ่มใหม่ยิ่งแย่ลง) ไอคอนท้าย ๆ แถวเลยหลุดขอบจอไปทางซ้าย มองไม่เห็น/กดไม่ได้ — เปลี่ยนเป็น
+     flex-wrap แทน ให้ไอคอนที่ล้นความกว้างจอตกไปขึ้นแถวใหม่เองอัตโนมัติ ไม่ต้องคำนวณตำแหน่งเอง
+     ต่อปุ่มอีกต่อไป (กันปัญหาเดิมไม่ให้เกิดซ้ำเวลาเพิ่มปุ่มใหม่ในอนาคต) */
+  #hud-icons {
+    display: flex; flex-wrap: wrap; justify-content: flex-end;
+    position: fixed; top: 48px; right: 10px; gap: 6px;
+    max-width: calc(100vw - 20px);
+  }
+  #hud-icons > button { position: static; width: 32px; height: 32px; font-size: 14px; }
+  #emote-panel { top: 90px; right: 10px; }
   #room-canvas { width: 100%; height: auto; }
   #quest-hint { bottom: 150px; font-size: 13px; }
   #online-badge { display: flex; }
