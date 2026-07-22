@@ -44,9 +44,44 @@ HEADROOM = 2   # กันเผื่อขอบบน เท่ากับ b
 DIRS = ["down", "left", "right", "up"]
 FRAMES = 4
 
+LAYER = ROOT / "layer"
+
 VARIANTS = [
     ("male_cyber_fantasy", ROOT / "male-cyber-fantasy-walk-v1" / "male-cyber-fantasy-walk-sheet.png"),
     ("female_cyber_fantasy", ROOT / "female-cyber-fantasy-walk-v1" / "female-cyber-fantasy-walk-sheet.png"),
+    # ชุดเดี่ยว (ไม่แยกเพศ) จาก pixel-art/layer/
+    ("coral_psychic", LAYER / "coral-psychic-v2" / "coral-psychic-v2-walk-sheet.png"),
+    ("crimson_aegis_knight", LAYER / "crimson-aegis-knight" / "crimson-aegis-knight-walk-sheet.png"),
+    ("dragon_elf_sentinel", LAYER / "dragon-elf-sentinel" / "dragon-elf-sentinel-walk-sheet.png"),
+    ("emerald_agent", LAYER / "emerald-agent" / "emerald-agent-walk-sheet.png"),
+    ("lunar_frost_noble", LAYER / "lunar-frost-noble" / "lunar-frost-noble-walk-sheet.png"),
+    ("night_rift_hunter", LAYER / "night-rift-hunter" / "night-rift-hunter-walk-sheet.png"),
+    ("noir_orchid", LAYER / "noir-orchid-v3" / "noir-orchid-v3-walk-sheet.png"),
+    ("rosewind_healer", LAYER / "rosewind-healer-v2" / "rosewind-healer-v2-walk-sheet.png"),
+    ("skybreaker_mercenary", LAYER / "skybreaker-mercenary" / "skybreaker-mercenary-walk-sheet.png"),
+    # ชุดคู่ชาย/หญิง จาก pixel-art/layer/*-pair/
+    ("male_amber_scout", LAYER / "amber-rose-scout-pair" / "male" / "male-amber-scout-walk-sheet.png"),
+    ("female_rose_scout", LAYER / "amber-rose-scout-pair" / "female" / "female-rose-scout-walk-sheet.png"),
+    ("male_angel", LAYER / "angel-fantasy-pair" / "male" / "male-angel-walk-sheet.png"),
+    ("female_angel", LAYER / "angel-fantasy-pair" / "female" / "female-angel-walk-sheet.png"),
+    ("male_black_swordsman", LAYER / "black-white-swordsman-pair" / "male" / "male-black-swordsman-walk-sheet.png"),
+    ("female_white_rapier", LAYER / "black-white-swordsman-pair" / "female" / "female-white-rapier-walk-sheet.png"),
+    ("male_dark_knight_boss", LAYER / "dark-knight-boss-pair" / "male" / "male-dark-knight-boss-walk-sheet.png"),
+    ("female_dark_knight_boss", LAYER / "dark-knight-boss-pair" / "female" / "female-dark-knight-boss-walk-sheet.png"),
+    ("male_dark_knight", LAYER / "dark-knight-pair" / "male" / "male-dark-knight-walk-sheet.png"),
+    ("female_dark_knight", LAYER / "dark-knight-pair" / "female" / "female-dark-knight-walk-sheet.png"),
+    ("male_orange_shadow", LAYER / "orange-violet-swordsman-pair" / "male" / "male-orange-shadow-walk-sheet.png"),
+    ("female_violet_moon", LAYER / "orange-violet-swordsman-pair" / "female" / "female-violet-moon-walk-sheet.png"),
+    ("male_scarlet_martial", LAYER / "scarlet-violet-martial-pair" / "male" / "male-scarlet-martial-walk-sheet.png"),
+    ("female_violet_martial", LAYER / "scarlet-violet-martial-pair" / "female" / "female-violet-martial-walk-sheet.png"),
+    ("male_silver_fox", LAYER / "silver-jade-shrine-pair" / "male" / "male-silver-fox-walk-sheet.png"),
+    ("female_jade_mystic", LAYER / "silver-jade-shrine-pair" / "female" / "female-jade-mystic-walk-sheet.png"),
+    ("male_midnight_gentleman", LAYER / "solar-midnight-guardian-pair" / "male" / "male-midnight-gentleman-walk-sheet.png"),
+    ("female_solar_guardian", LAYER / "solar-midnight-guardian-pair" / "female" / "female-solar-guardian-walk-sheet.png"),
+    ("male_steel_knight", LAYER / "steel-knight-pair" / "male" / "male-steel-knight-walk-sheet.png"),
+    ("female_steel_knight", LAYER / "steel-knight-pair" / "female" / "female-steel-knight-walk-sheet.png"),
+    ("male_strawhat_deck", LAYER / "strawhat-bikini-navigator-pair" / "male" / "male-strawhat-deck-walk-sheet.png"),
+    ("female_bikini_navigator", LAYER / "strawhat-bikini-navigator-pair" / "female-v2" / "female-bikini-navigator-v2-walk-sheet.png"),
 ]
 SRC_FRAME = 128
 
