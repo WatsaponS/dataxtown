@@ -1,0 +1,66 @@
+{
+  "frameWidth": 32,
+  "frameHeight": 50,
+  "items": [
+    {
+      "id": "hat_arcane_stargazer",
+      "category": "hat",
+      "name": "หมวกจอมเวทย์",
+      "row": 0
+    },
+    {
+      "id": "hat_neon_ronin",
+      "category": "hat",
+      "name": "หมวกนีออนโรนิน",
+      "row": 1
+    },
+    {
+      "id": "shirt_dragon_knight",
+      "category": "shirt",
+      "name": "เกราะอัศวินมังกร",
+      "row": 2
+    },
+    {
+      "id": "shirt_street_phantom",
+      "category": "shirt",
+      "name": "แจ็คเก็ตแฟนธอม",
+      "row": 3
+    },
+    {
+      "id": "pants_rune_ranger",
+      "category": "bottom",
+      "name": "กางเกงจอมเวทย์รูน",
+      "row": 4
+    },
+    {
+      "id": "pants_cyber_cargo",
+      "category": "bottom",
+      "name": "กางเกงคาร์โก้ไซเบอร์",
+      "row": 5
+    },
+    {
+      "id": "skirt_celestial_mage",
+      "category": "bottom",
+      "name": "กระโปรงนางฟ้าสวรรค์",
+      "row": 6
+    },
+    {
+      "id": "skirt_gothic_battle",
+      "category": "bottom",
+      "name": "กระโปรงนักรบกอธิค",
+      "row": 7
+    },
+    {
+      "id": "wings_crystal_seraph",
+      "category": "wings",
+      "name": "ปีกเทวราชคริสตัล",
+      "row": 8
+    },
+    {
+      "id": "wings_mecha_demon",
+      "category": "wings",
+      "name": "ปีกปีศาจเมคา",
+      "row": 9
+    }
+  ]
+}

@@ -420,16 +420,17 @@ body.touch #history-btn { left: auto; right: 20px; bottom: 96px; }
 #board-list [data-uid]:hover { outline: 1px solid rgba(231,185,79,.5); }
 
 #quiz-overlay, #board-overlay, #history-overlay, #shop-overlay, #room-overlay, #login-overlay, #tutorial-overlay, #pet-overlay,
-#duel-incoming-overlay, #duel-overlay, #gacha-overlay, #achv-overlay, #missions-overlay {
+#duel-incoming-overlay, #duel-overlay, #gacha-overlay, #achv-overlay, #missions-overlay, #cosmetics-overlay {
   position: fixed; inset: 0; z-index: 60;
   background: rgba(23,27,44,.85);
   display: flex; align-items: center; justify-content: center;
 }
 #quiz-overlay.hidden, #board-overlay.hidden, #history-overlay.hidden,
 #shop-overlay.hidden, #room-overlay.hidden, #login-overlay.hidden, #tutorial-overlay.hidden, #pet-overlay.hidden,
-#duel-incoming-overlay.hidden, #duel-overlay.hidden, #gacha-overlay.hidden, #achv-overlay.hidden, #missions-overlay.hidden { display: none; }
+#duel-incoming-overlay.hidden, #duel-overlay.hidden, #gacha-overlay.hidden, #achv-overlay.hidden, #missions-overlay.hidden,
+#cosmetics-overlay.hidden { display: none; }
 
-#quiz-card, #board-card, #history-card, #shop-card, #room-card, #login-card, #tutorial-card, #pet-card, #gacha-card, #achv-card, #missions-card {
+#quiz-card, #board-card, #history-card, #shop-card, #room-card, #login-card, #tutorial-card, #pet-card, #gacha-card, #achv-card, #missions-card, #cosmetics-card {
   background: #212842; border: 1px solid #e7b94f;
   border-radius: 14px; padding: 26px 30px; width: min(480px, 92vw);
   max-height: 88dvh; overflow-y: auto;
@@ -498,7 +499,7 @@ body.touch #history-btn { left: auto; right: 20px; bottom: 96px; }
 }
 #quiz-next.hidden { display: none; }
 
-#board-card h2, #history-card h2, #shop-card h2, #room-card h2, #login-card h2, #tutorial-card h2, #pet-card h2, #gacha-card h2, #achv-card h2, #missions-card h2 { color: #e7b94f; margin-bottom: 14px; }
+#board-card h2, #history-card h2, #shop-card h2, #room-card h2, #login-card h2, #tutorial-card h2, #pet-card h2, #gacha-card h2, #achv-card h2, #missions-card h2, #cosmetics-card h2 { color: #e7b94f; margin-bottom: 14px; }
 .board-countdown {
   font-size: 12px; opacity: .75; text-align: center;
   padding: 4px 0 10px;
@@ -739,6 +740,28 @@ body.touch #controls-hint { display: none; }
   background: #e7b94f; color: #171b2c; border: none; border-radius: 8px;
 }
 #pet-menu-close {
+  margin-top: 8px; width: 100%; padding: 10px;
+  font-size: 14px; font-weight: 700; cursor: pointer;
+  background: #394158; color: #fff6dc; border: none; border-radius: 8px;
+}
+
+#cosmetics-note { font-size: 12px; opacity: .7; margin-bottom: 14px; }
+.cosmetics-section { margin-bottom: 16px; }
+.cosmetics-slot-label { font-size: 12px; font-weight: 700; color: #e7b94f; margin-bottom: 6px; }
+.cosmetics-grid {
+  display: grid; grid-template-columns: repeat(5, 1fr);
+  gap: 6px; max-height: 26dvh; overflow-y: auto;
+}
+.cosmetics-opt {
+  display: flex; flex-direction: column; align-items: center; gap: 3px;
+  padding: 6px 3px; cursor: pointer;
+  background: #171b2c; border: 2px solid #394158; border-radius: 8px;
+}
+.cosmetics-opt canvas { image-rendering: pixelated; width: 32px; height: 50px; }
+.cosmetics-opt span { font-size: 9px; opacity: .8; text-align: center; line-height: 1.2; }
+.cosmetics-opt.selected { border-color: #e7b94f; background: #26324a; }
+.cosmetics-opt .cosmetics-emoji { font-size: 20px; opacity: .5; height: 50px; display: flex; align-items: center; }
+#cosmetics-close {
   margin-top: 8px; width: 100%; padding: 10px;
   font-size: 14px; font-weight: 700; cursor: pointer;
   background: #394158; color: #fff6dc; border: none; border-radius: 8px;
