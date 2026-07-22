@@ -87,15 +87,34 @@ VARIANTS = [
 SRC_FRAME = 128
 
 # ทุก variant ใหม่จาก pixel-art/layer/ (สร้างผ่าน pipeline ภายนอกคนละตัวกับ 2 ตัวแรก) มีปัญหา
-# เดียวกันหมด: แถว "right" ในภาพต้นฉบับหันหน้าไปทางเดียวกับแถว "left" จริง ๆ (ไม่ได้ mirror กัน
-# ตามที่ควรจะเป็น) เช็คแล้วทั้ง 9 ชุดเดี่ยวและ 22 ชุดคู่เป็นแบบนี้หมด (เทียบ left_0.png/right_0.png
-# ทุกตัวแล้วหันทิศเดียวกันชัดเจน) — สร้างเฟรม "right" เอาเองจากเฟรม "left" กลับด้านซ้าย-ขวาแทนที่
-# จะอ่านจากต้นฉบับที่พัง รับประกันว่า mirror ถูกต้องเสมอไม่ว่าต้นฉบับจะเพี้ยนแค่ไหน
+# เดียวกันเกือบหมด: แถว "right" ในภาพต้นฉบับหันหน้าไปทางเดียวกับแถว "left" จริง ๆ (ไม่ได้ mirror
+# กันตามที่ควรจะเป็น) — สร้างเฟรม "right" เอาเองจากเฟรม "left" กลับด้านซ้าย-ขวาแทนที่จะอ่านจาก
+# ต้นฉบับที่พัง รับประกันว่า mirror ถูกต้องเสมอไม่ว่าต้นฉบับจะเพี้ยนแค่ไหน
 MIRROR_RIGHT_FROM_LEFT = {v for v, _ in VARIANTS if v not in ("male_cyber_fantasy", "female_cyber_fantasy")}
+
+# noir_orchid ไม่ใช่ปัญหาแบบเดียวกับด้านบน — ตรวจ raw source แยกแล้วพบว่าแถวที่ "ควร" เป็น left
+# กลับมีคอนเทนต์หันขวาจริง ๆ และแถวที่ "ควร" เป็น right มีคอนเทนต์หันซ้ายจริง ๆ (สลับตำแหน่งแถวกัน
+# ตรง ๆ ไม่ใช่ทั้งคู่หันทางเดียวกันแบบตัวอื่น) รอบที่แล้วเผลอเอาไปรวมกับกลุ่ม mirror-fix ด้านบน เลย
+# ยิ่งพังกว่าเดิม (mirror ของแถวที่ผิดอยู่แล้ว = ยังผิดเหมือนเดิม) — ต้องสลับว่าจะอ่านจากแถวไหนตอน
+# crop แทน ไม่ต้อง mirror เลย เหมือน SWAP_LR_PREFIXES ใน build_avatars.py (กรณี male_cro)
+SWAP_LR_ROWS = {"noir_orchid"}
+MIRROR_RIGHT_FROM_LEFT -= SWAP_LR_ROWS
 
 
 def content_bbox(frame_rgba):
     return frame_rgba.getchannel("A").getbbox()
+
+
+def source_row_for(variant_id, row):
+    """คืน source row index ที่ต้องอ่านจริงสำหรับทิศนี้ (แถวต้นฉบับตรงกับ DIRS อยู่แล้วปกติ อ่าน
+    row ตรง ๆ) ยกเว้น variant ใน SWAP_LR_ROWS ที่แถว left/right ในต้นฉบับสลับตำแหน่งกันจริง"""
+    if variant_id in SWAP_LR_ROWS:
+        direction = DIRS[row]
+        if direction == "left":
+            return DIRS.index("right")
+        if direction == "right":
+            return DIRS.index("left")
+    return row
 
 
 def measure_all_scales():
@@ -110,9 +129,10 @@ def measure_all_scales():
     for variant_id, path in VARIANTS:
         sheet = Image.open(path).convert("RGBA")
         for row in range(4):
+            src_row = source_row_for(variant_id, row)
             max_w = max_h = 0
             for col in range(4):
-                frame = sheet.crop((col * SRC_FRAME, row * SRC_FRAME, (col + 1) * SRC_FRAME, (row + 1) * SRC_FRAME))
+                frame = sheet.crop((col * SRC_FRAME, src_row * SRC_FRAME, (col + 1) * SRC_FRAME, (src_row + 1) * SRC_FRAME))
                 bbox = content_bbox(frame)
                 if not bbox:
                     continue
@@ -178,11 +198,12 @@ def build():
         left_placed = [None] * FRAMES  # เก็บเฟรม "left" ที่ place() แล้วไว้ mirror ต่อเป็น "right"
         for row in range(4):  # row order in source sheet already matches DIRS (down,left,right,up)
             direction = DIRS[row]
+            src_row = source_row_for(variant_id, row)  # ปกติ = row ตรง ๆ เว้นแต่ SWAP_LR_ROWS
             for col in range(FRAMES):
                 if direction == "right" and variant_id in MIRROR_RIGHT_FROM_LEFT:
                     placed = left_placed[col].transpose(Image.FLIP_LEFT_RIGHT)
                 else:
-                    box = (col * SRC_FRAME, row * SRC_FRAME, (col + 1) * SRC_FRAME, (row + 1) * SRC_FRAME)
+                    box = (col * SRC_FRAME, src_row * SRC_FRAME, (col + 1) * SRC_FRAME, (src_row + 1) * SRC_FRAME)
                     frame = sheet.crop(box)
                     bbox = content_bbox(frame)
                     if not bbox:
