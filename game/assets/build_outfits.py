@@ -2,8 +2,10 @@
 walk-cycle sprites in pixel-art/male-cyber-fantasy-walk-v1/ and
 female-cyber-fantasy-walk-v1/ (already chroma-keyed, pose-extracted, and laid
 out as down/left/right/up x 4 frames by each folder's own build.py — this
-script only crops each frame tightly, rescales everything uniformly, and
-re-lays it into the layout the game code expects).
+script crops each frame tightly, rescales it (per-direction, see
+measure_direction_scales below -- the source poses aren't all drawn at the
+same apparent character size), and re-lays it into the layout the game
+code expects).
 
 Unlike the earlier piece-by-piece cosmetics (hat/shirt/pants/wings as static
 overlays), this is a full-body replacement layer: when equipped it's drawn
@@ -53,9 +55,14 @@ def content_bbox(frame_rgba):
     return frame_rgba.getchannel("A").getbbox()
 
 
-def measure_uniform_scale():
-    """หาสเกลเดียวที่ใช้กับทุก variant ไม่งั้นชายกับหญิงจะดูตัวใหญ่เล็กไม่เท่ากัน"""
-    max_w = max_h = 0
+def measure_direction_scales():
+    """สเกลแยกต่อทิศ (ไม่ใช่สเกลเดียวรวมทุกทิศ) — เช็คแล้วท่าซ้าย/ขวา/หลังจาก DALL-E ตัวเล็กกว่า
+    ท่าหน้าตรงจริง ๆ (ไม่ใช่แค่ปีกกางน้อยกว่า) เช่น male ท่าหน้าตรง bbox สูง 112px แต่ท่าซ้ายสูง
+    แค่ 99px ทั้งที่ควรเป็นตัวละครคนเดียวกัน ถ้าใช้สเกลเดียวจากท่าที่สูงสุด (หน้าตรง) ทิศอื่นจะโดน
+    ย่อลงตามไปด้วยทั้งที่ไม่ควร ทำให้ดูตัวเล็กกว่าเวลาหันซ้าย/ขวา/หลัง — วัดสเกลแยกทิศแทน แต่ยัง
+    รวม male+female เข้าด้วยกันต่อทิศ (กันชาย/หญิงดูตัวใหญ่เล็กไม่เท่ากัน)"""
+    dir_max_w = [0] * 4
+    dir_max_h = [0] * 4
     for _, path in VARIANTS:
         sheet = Image.open(path).convert("RGBA")
         for row in range(4):
@@ -64,9 +71,10 @@ def measure_uniform_scale():
                 bbox = content_bbox(frame)
                 if not bbox:
                     continue
-                max_w = max(max_w, bbox[2] - bbox[0])
-                max_h = max(max_h, bbox[3] - bbox[1])
-    return TARGET_H / max_h, max_w, max_h
+                dir_max_w[row] = max(dir_max_w[row], bbox[2] - bbox[0])
+                dir_max_h[row] = max(dir_max_h[row], bbox[3] - bbox[1])
+    dir_scales = [TARGET_H / h for h in dir_max_h]
+    return dir_scales, dir_max_w, dir_max_h
 
 
 def resize_rgba_premultiplied(im, new_w, new_h):
@@ -108,12 +116,15 @@ def place(cropped, scale, fw, fh):
 
 
 def build():
-    scale, max_w, max_h = measure_uniform_scale()
-    # FW/FH คำนวณจากคอนเทนต์จริงที่วัดได้ (ไม่ใช่เดาอัตราส่วนจากตัวละครฐาน) — ท่าหน้าตรงมีปีกกาง
-    # ออกด้านข้างกว้างกว่าตัวละครทั่วไปมาก ต้องเผื่อ FW ให้พอดีความกว้างจริงหลังย่อสเกลแล้ว
-    fw = round(max_w * scale) + WING_PAD * 2
-    fh = round(max_h * scale) + HEADROOM
-    print(f"uniform scale {scale:.4f} (source max content {max_w}x{max_h}) -> frame {fw}x{fh}")
+    dir_scales, dir_max_w, dir_max_h = measure_direction_scales()
+    # FW คำนวณจากคอนเทนต์จริงที่วัดได้หลังสเกลแยกทิศแล้ว (ไม่ใช่เดาอัตราส่วนจากตัวละครฐาน) — ท่า
+    # หน้าตรงมีปีกกางออกด้านข้างกว้างกว่าตัวละครทั่วไปมาก ต้องเผื่อ FW ให้พอดีความกว้างจริงที่สุด
+    # ในทุกทิศ (แต่ละทิศสเกลไม่เท่ากันแล้ว ต้องหาความกว้าง "หลังสเกล" ของแต่ละทิศมาเทียบกัน)
+    fw = round(max(w * s for w, s in zip(dir_max_w, dir_scales))) + WING_PAD * 2
+    fh = TARGET_H + HEADROOM  # ทุกทิศสเกลให้พอดี TARGET_H แล้ว ความสูงเฟรมเลยเท่ากันทุกทิศ
+    for d, s, w, h in zip(DIRS, dir_scales, dir_max_w, dir_max_h):
+        print(f"  {d}: scale {s:.4f} (source content {w}x{h})")
+    print(f"-> frame {fw}x{fh}")
 
     total_cols = len(DIRS) * FRAMES
     out_sheet = Image.new("RGBA", (fw * total_cols, fh * len(VARIANTS)), (0, 0, 0, 0))
@@ -127,7 +138,7 @@ def build():
                 bbox = content_bbox(frame)
                 if not bbox:
                     continue
-                placed = place(frame.crop(bbox), scale, fw, fh)
+                placed = place(frame.crop(bbox), dir_scales[row], fw, fh)
                 dst_x = (row * FRAMES + col) * fw
                 dst_y = gi * fh
                 out_sheet.alpha_composite(placed, (dst_x, dst_y))
