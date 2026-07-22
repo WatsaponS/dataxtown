@@ -128,7 +128,7 @@ export function addRemote(world, info) {
     ent.sheet = makeCustomSheet(world, ent.variant, { hair: info.hair, shirt: info.shirt });
   }
   if (info.pet) setPet(ent, info.pet, info.petName);
-  if (info.outfit) { ent.outfit = info.outfit; ent.outfitColor = info.outfitColor || null; }
+  if (info.outfit) ent.outfit = info.outfit;
   world.entities.push(ent);
 }
 

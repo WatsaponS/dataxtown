@@ -88,8 +88,7 @@ let chosenGender = Math.min(1, Math.max(0, saved.variant ?? Math.round(Math.rand
 let chosenHair = saved.hair ?? null;    // null = สีเดิมของสไปรท์ต้นฉบับ
 let chosenShirt = saved.shirt ?? null;
 let chosenPet = saved.pet ?? null;      // null = ไม่มีสัตว์เลี้ยง
-let chosenOutfit = saved.outfit ?? null;         // null = ไม่ใส่ชุดคอสตูม ใช้ตัวละครเดิม
-let chosenOutfitColor = saved.outfitColor ?? null; // null = สีเดิมของชุด
+let chosenOutfit = saved.outfit ?? null; // null = ไม่ใส่ชุดคอสตูม ใช้ตัวละครเดิม
 let chosenPetName = saved.petName ?? "";
 let chosenDept = saved.dept ?? TEAMS[Math.floor(Math.random() * TEAMS.length)].id; // สุ่มทีมให้ครั้งแรก เปลี่ยนได้เสมอ
 if (saved.name) document.getElementById("name-input").value = saved.name;
@@ -240,12 +239,10 @@ function startGame() {
   }
   setPet(world.player, chosenPet, chosenPetName); // เรียกก่อน connect net ให้ payload join มี pet ติดไปด้วย
   world.player.outfit = chosenOutfit;
-  world.player.outfitColor = chosenOutfitColor;
   world.entities.push(world.player);
   localStorage.setItem("dataxtown.avatar", JSON.stringify({
     name, variant: variantIndex(), hair: chosenHair, shirt: chosenShirt,
-    pet: chosenPet, petName: chosenPetName, dept: chosenDept,
-    outfit: chosenOutfit, outfitColor: chosenOutfitColor,
+    pet: chosenPet, petName: chosenPetName, dept: chosenDept, outfit: chosenOutfit,
   }));
 
   for (const n of NPCS) {

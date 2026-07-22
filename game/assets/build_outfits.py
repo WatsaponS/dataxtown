@@ -2,19 +2,20 @@
 walk-cycle sprites in pixel-art/male-cyber-fantasy-walk-v1/ and
 female-cyber-fantasy-walk-v1/ (already chroma-keyed, pose-extracted, and laid
 out as down/left/right/up x 4 frames by each folder's own build.py — this
-script only crops each frame tightly, rescales everything uniformly to match
-avatars.png's scale, and re-lays it into the layout the game code expects).
+script only crops each frame tightly, rescales everything uniformly, and
+re-lays it into the layout the game code expects).
 
 Unlike the earlier piece-by-piece cosmetics (hat/shirt/pants/wings as static
 overlays), this is a full-body replacement layer: when equipped it's drawn
 *instead of* the base avatar body, using the same directional walk-cycle
-animation, so it moves naturally instead of a single static pose.
+animation, so it moves naturally instead of a single static pose. No
+recolor -- it's shown exactly as designed.
 
-No separate recolor mask is shipped -- the whole sprite is the recolor
-target (every opaque pixel), matching how the equip UI lets you retint the
-whole outfit as one piece rather than hair/clothing separately. Runtime
-recolor happens in game/js/outfit.js using the same brightness-preserving
-remap as game/js/avatar.js.
+Output frame is bigger than avatars.png (48x75 vs 32x50) on purpose: the
+source art is much more detailed than the base avatar, and the game draws
+this sheet at its own native size (not squeezed to match the base
+character), so the extra source detail actually stays visible in-game
+instead of being crushed down to the base character's pixel budget.
 
 Output: game/assets/outfits.png (+ outfits.json). Row 0 = male_cyber_fantasy,
 row 1 = female_cyber_fantasy. 16 cols per row (4 directions x 4 walk frames).
@@ -27,8 +28,12 @@ from PIL import Image
 OUT = Path(__file__).resolve().parent
 ROOT = OUT.parent.parent / "pixel-art"
 
-FW, FH = 32, 50   # เท่ากับ avatars.png ทุกประการ (วางทับตำแหน่งเดียวกับตัวละครได้ตรง ๆ)
-TARGET_H = 48     # เนื้อตัวละครสูงสุดที่ยอมให้สูง — เท่ากับ build_avatars.py ให้ขนาดตัวใกล้เคียงกัน
+# ใหญ่กว่า avatars.png (32x50) โดยตั้งใจ — ต้นฉบับสไปรท์จาก DALL-E ละเอียดกว่าตัวละครฐานมาก
+# (คอนเทนต์เต็มเฟรมสูงถึง ~112px) ถ้าบีบลงมาระดับเดียวกับตัวละครฐาน (48px) จะเสียรายละเอียด
+# เส้นเล็ก ๆ (ขนปีก, ลายเกราะ) ไปเกือบหมด เกมวาดชุดด้วยขนาดตัวเอง ไม่บีบให้พอดีตัวละครฐาน
+# (ดู game/js/outfit.js) เลยไม่จำเป็นต้องเท่ากับ 32x50 อีกต่อไป
+FW, FH = 48, 75
+TARGET_H = 72
 DIRS = ["down", "left", "right", "up"]
 FRAMES = 4
 

@@ -63,7 +63,7 @@ export function initDecor(world, ui) {
     myHome: {
       name: world.player.name, spent: 0, items: [], greeting: "",
       pet: world.player.petId || null, petName: world.player.petName || null, unlockedPets: [],
-      outfit: world.player.outfit || null, outfitColor: world.player.outfitColor || null,
+      outfit: world.player.outfit || null,
       avatar: { variant: world.player.variant, hair: world.player.hair || null, shirt: world.player.shirt || null },
     },
     selected: null,       // index ใน myHome.items ที่เลือกจาก inventory
@@ -106,13 +106,13 @@ export function initDecor(world, ui) {
           name: world.player.name, spent: v.spent || 0, items: v.items || [],
           greeting: v.greeting || "", login: v.login || null,
           pet: v.pet || null, petName: v.petName || null, unlockedPets: v.unlockedPets || [],
-          outfit: v.outfit ?? world.player.outfit ?? null, outfitColor: v.outfitColor ?? world.player.outfitColor ?? null,
+          outfit: v.outfit ?? world.player.outfit ?? null,
           avatar: { variant: world.player.variant, hair: world.player.hair || null, shirt: world.player.shirt || null },
         };
         // ห้องมีสัตว์เลี้ยงบันทึกไว้แต่ผู้เล่นยังไม่ได้ setPet ในเซสชันนี้ (เช่น localStorage ถูกล้าง) — ให้ตรงกัน
         if (v.pet && !world.player.petId) setPet(world.player, v.pet, v.petName);
         // เหมือนกัน — ห้องมีชุดคอสตูมบันทึกไว้แต่ session นี้ยังไม่ได้ตั้ง (localStorage ถูกล้าง)
-        if (v.outfit) { world.player.outfit = v.outfit; world.player.outfitColor = v.outfitColor || null; }
+        if (v.outfit) world.player.outfit = v.outfit;
       }
     } catch {}
     // เตือนครั้งเดียวต่ออีเวนต์ว่ามีของตกแต่งจำกัดเวลาขายอยู่ — ไม่งั้นมีแค่ banner เล็ก ๆ ในร้านค้า
