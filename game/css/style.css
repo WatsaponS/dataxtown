@@ -215,25 +215,31 @@ body.touch #history-btn { left: auto; right: 20px; bottom: 96px; }
   font-size: 16px; cursor: pointer;
   background: rgba(23,27,44,.8); border: 1px solid #394158;
 }
-#emote-btn {
+#cosmetics-btn {
   top: 14px; right: 550px;
   width: 36px; height: 36px; border-radius: 50%;
   font-size: 16px; cursor: pointer;
   background: rgba(23,27,44,.8); border: 1px solid #394158;
 }
-#achv-btn {
+#emote-btn {
   top: 14px; right: 596px;
   width: 36px; height: 36px; border-radius: 50%;
   font-size: 16px; cursor: pointer;
   background: rgba(23,27,44,.8); border: 1px solid #394158;
 }
-#missions-btn {
+#achv-btn {
   top: 14px; right: 642px;
   width: 36px; height: 36px; border-radius: 50%;
   font-size: 16px; cursor: pointer;
   background: rgba(23,27,44,.8); border: 1px solid #394158;
 }
-#shop-btn:hover, #home-btn:hover, #gift-btn:hover, #tutorial-btn:hover, #pet-btn:hover, #emote-btn:hover, #achv-btn:hover, #missions-btn:hover { border-color: #e7b94f; }
+#missions-btn {
+  top: 14px; right: 688px;
+  width: 36px; height: 36px; border-radius: 50%;
+  font-size: 16px; cursor: pointer;
+  background: rgba(23,27,44,.8); border: 1px solid #394158;
+}
+#shop-btn:hover, #home-btn:hover, #gift-btn:hover, #tutorial-btn:hover, #pet-btn:hover, #cosmetics-btn:hover, #emote-btn:hover, #achv-btn:hover, #missions-btn:hover { border-color: #e7b94f; }
 
 #achv-current { font-size: 13px; color: #e7b94f; font-weight: 700; margin-bottom: 12px; }
 #achv-grid {
@@ -577,10 +583,11 @@ body.touch #controls-hint { display: none; }
   #gift-btn { top: 48px; right: 194px; width: 32px; height: 32px; font-size: 14px; }
   #tutorial-btn { top: 48px; right: 234px; width: 32px; height: 32px; font-size: 14px; }
   #pet-btn { top: 48px; right: 274px; width: 32px; height: 32px; font-size: 14px; }
-  #emote-btn { top: 48px; right: 314px; width: 32px; height: 32px; font-size: 14px; }
+  #cosmetics-btn { top: 48px; right: 314px; width: 32px; height: 32px; font-size: 14px; }
+  #emote-btn { top: 48px; right: 354px; width: 32px; height: 32px; font-size: 14px; }
   #emote-panel { top: 84px; right: 10px; }
-  #achv-btn { top: 48px; right: 354px; width: 32px; height: 32px; font-size: 14px; }
-  #missions-btn { top: 48px; right: 394px; width: 32px; height: 32px; font-size: 14px; }
+  #achv-btn { top: 48px; right: 394px; width: 32px; height: 32px; font-size: 14px; }
+  #missions-btn { top: 48px; right: 434px; width: 32px; height: 32px; font-size: 14px; }
   #room-canvas { width: 100%; height: auto; }
   #quest-hint { bottom: 150px; font-size: 13px; }
   #online-badge { display: flex; }
