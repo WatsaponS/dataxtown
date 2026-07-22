@@ -11,9 +11,10 @@ import sys
 SKILL = r"C:\Users\Admin\.codex\skills\pixel-art-studio\scripts"
 sys.path.insert(0, SKILL)
 from pixelstudio import Sprite, ramp
-from PIL import ImageDraw, ImageFont
+from PIL import Image, ImageDraw, ImageFont
 
 OUT = Path(__file__).resolve().parent
+WORKSTATION_SRC = OUT.parent / "modern-office-workstation" / "office-workstation.png"
 SPACE_SCALE = int(os.environ.get("DATAXTOWN_SPACE_SCALE", "1"))
 if SPACE_SCALE not in (1, 2, 3):
     raise ValueError("DATAXTOWN_SPACE_SCALE must be 1, 2, or 3")
@@ -88,19 +89,55 @@ def R(tx0, ty0, tx1, ty1, c, border=None):
     else:
         s.rect(x0, y0, x1, y1, c)
 
+_WORKSTATION_CACHE = {}
+
+def _resize_rgba_box(im, new_w, new_h):
+    """ย่อภาพ RGBA แบบ premultiplied-alpha + BOX filter — กัน ringing ฮาโล่รอบขอบตอน
+    imageSmoothingEnabled ปิด (ปัญหาเดียวกับที่เจอใน game/assets/build_avatars.py ฯลฯ ถ้าใช้
+    LANCZOS กับ mask ขอบคม จะมีพิกเซล alpha เพี้ยนโผล่เป็นฝ้าเทารอบตัว)"""
+    r, g, b, a = im.split()
+    rgb = Image.merge("RGB", (r, g, b))
+    black = Image.new("RGB", im.size, (0, 0, 0))
+    premult = Image.composite(rgb, black, a)
+    premult_resized = premult.resize((new_w, new_h), Image.BOX)
+    a_resized = a.resize((new_w, new_h), Image.BOX)
+    pr, pg, pb = premult_resized.split()
+    a_arr = a_resized.load()
+    pr_l, pg_l, pb_l = pr.load(), pg.load(), pb.load()
+    out = Image.new("RGBA", (new_w, new_h))
+    out_px = out.load()
+    ALPHA_CUTOFF = 128
+    for yy in range(new_h):
+        for xx in range(new_w):
+            av = a_arr[xx, yy]
+            if av < ALPHA_CUTOFF:
+                out_px[xx, yy] = (0, 0, 0, 0)
+            else:
+                k = 255 / av
+                out_px[xx, yy] = (min(255, round(pr_l[xx, yy] * k)), min(255, round(pg_l[xx, yy] * k)),
+                                  min(255, round(pb_l[xx, yy] * k)), 255)
+    return out
+
+def _workstation_sprite():
+    """ย่อ office-workstation.png (ต้นฉบับ 64x96) ให้สูงพอดี 1 tile เป๊ะทุกความละเอียด build
+    (scale = TILE_PX/96 -> ความสูงหลังย่อ = TILE_PX เสมอ) แคชไว้ต่อ TILE_PX กันย่อซ้ำ"""
+    if TILE_PX not in _WORKSTATION_CACHE:
+        im = Image.open(WORKSTATION_SRC).convert("RGBA")
+        scale = TILE_PX / 96
+        nw, nh = max(1, round(im.width * scale)), max(1, round(im.height * scale))
+        _WORKSTATION_CACHE[TILE_PX] = _resize_rgba_box(im, nw, nh)
+    return _WORKSTATION_CACHE[TILE_PX]
+
 def desk(tx, ty, horizontal=True):
     x, y = tx*TILE, ty*TILE
     if horizontal:
-        w,h=Z(14),Z(7); x0=x+(TILE-w)//2; y0=y+(TILE-h)//2-Z(2)
-        s.rect(x0,y0,x0+w-1,y0+h-1,P["desk"])
-        s.line(x0+Z(1),y0,x0+w-Z(2),y0,P["desk_hi"])
-        # One monitor per seat: dark bezel, blue screen, short centered stand.
-        mw,mh=Z(7),Z(4); mx=x+(TILE-mw)//2; my=y0-Z(3)
-        s.rect(mx,my,mx+mw-1,my+mh-1,P["outline"])
-        s.rect(mx+Z(1),my+Z(1),mx+mw-Z(2),my+mh-Z(2),P["glass"])
-        s.rect(x+(TILE-Z(2))//2,my+mh,x+(TILE+Z(2))//2-1,my+mh+Z(2),P["outline"])
-        cw,ch=Z(4),Z(3); cx=x+(TILE-cw)//2
-        s.rect(cx,y0+h+Z(2),cx+cw-1,y0+h+Z(2)+ch-1,P["chair"])
+        # แทนที่การวาดมือ (โต๊ะ+จอ+เก้าอี้แบบ rect ล้วน) ด้วยสไปรท์จริงจาก
+        # pixel-art/modern-office-workstation — จัดกึ่งกลาง tile ทั้งแนวนอน/แนวตั้ง เหมือน
+        # เลย์เอาต์เดิม (จอลอยเหนือขอบบน tile, เก้าอี้ยื่นใต้ขอบล่าง tile เล็กน้อย)
+        stamp = _workstation_sprite()
+        dx = x + (TILE - stamp.width) // 2
+        dy = y + (TILE - stamp.height) // 2
+        s._img().alpha_composite(stamp, (dx, dy))
     else:
         w,h=Z(7),Z(14); x0=x+(TILE-w)//2-Z(2); y0=y+(TILE-h)//2
         s.rect(x0,y0,x0+w-1,y0+h-1,P["desk"])
@@ -109,32 +146,17 @@ def desk(tx, ty, horizontal=True):
         s.rect(x0+w+Z(2),y+(TILE-ch)//2,x0+w+Z(2)+cw-1,y+(TILE-ch)//2+ch-1,P["chair"])
 
 def monitor_bank(tx, ty, seats=4, width_tiles=2.55):
-    """Shared bench matching the user's reference: one long desk, four monitors/seats."""
+    """Shared bench — one pixel-art/modern-office-workstation sprite per seat, evenly spaced
+    across the row so seats stay right next to each other (replaces the hand-drawn shared
+    desk + separate monitor/chair rects with the real workstation sprite, repeated per seat)."""
     x, y = int(tx*TILE), int(ty*TILE)
-    width, depth = int(width_tiles*TILE), Z(10)
-    # Cable/power points above the shared desktop.
+    width = int(width_tiles*TILE)
+    stamp = _workstation_sprite()
+    dy = y - Z(2)
     for i in range(seats):
         cx = x + round((i+0.5)*width/seats)
-        s.rect(cx-Z(3),y-Z(10),cx+Z(3),y-Z(5),P["outline"])
-    # Contact shadow and a deep three-quarter bench keep this in the same scale as characters.
-    s.rect(x+Z(2),y+depth+Z(10),x+width+Z(2),y+depth+Z(13),P["shadow"])
-    s.rect(x,y,x+width-1,y+depth-1,P["desk"])
-    s.line(x+Z(2),y,x+width-Z(3),y,P["desk_hi"])
-    s.rect(x+Z(2),y+depth,x+width-Z(3),y+depth+Z(3),P["wood_dark"])
-    for i in range(seats):
-        cx = x + round((i+0.5)*width/seats)
-        mw,mh=Z(10),Z(7); mx=cx-mw//2; my=y+Z(2)
-        s.rect(mx,my,mx+mw-1,my+mh-1,P["outline"])
-        s.rect(mx+Z(1),my+Z(1),mx+mw-Z(2),my+mh-Z(2),P["glass"])
-        s.line(mx+Z(2),my+Z(2),mx+mw-Z(3),my+Z(2),P["screen_hi"])
-        s.rect(cx-Z(1),my+mh,cx+Z(1),my+mh+Z(2),P["outline"])
-        # Four chairs form a clean lower row, one aligned with each screen.
-        cw,ch=Z(10),Z(8)
-        s.rect(cx-cw//2,y+depth+Z(5),cx+cw//2,y+depth+Z(5)+ch-1,P["chair"])
-        s.rect(cx-cw//2+Z(2),y+depth+Z(5),cx+cw//2-Z(2),y+depth+Z(9),P["core_hi"])
-        # Keyboard and one personal prop per seat make the bank feel occupied.
-        s.rect(cx-Z(3),y+Z(1),cx+Z(3),y+Z(2),P["metal"])
-        if i % 2 == 0: s.rect(cx+Z(5),y+Z(1),cx+Z(7),y+Z(4),P["accent"])
+        dx = cx - stamp.width // 2
+        s._img().alpha_composite(stamp, (dx, dy))
 
 def plant(tx, ty):
     x, y = tx*TILE, ty*TILE
