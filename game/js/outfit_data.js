@@ -9,8 +9,8 @@ export const OUTFITS = [
 
 // ใหญ่กว่าเฟรมตัวละครฐาน (32x50) โดยตั้งใจ — ต้นฉบับสไปรท์ละเอียดกว่าตัวละครฐานมาก ถ้าบีบ
 // ลงมาขนาดเดียวกันจะเสียรายละเอียดไปมาก (ดู build_outfits.py) วาดด้วยขนาดนี้ตรง ๆ เสมอ
-export const OUTFIT_FRAME_W = 48;
-export const OUTFIT_FRAME_H = 75;
+export const OUTFIT_FRAME_W = 40;
+export const OUTFIT_FRAME_H = 62;
 export const OUTFIT_DIRS = ["down", "left", "right", "up"];
 export const OUTFIT_FRAMES = 4;
 

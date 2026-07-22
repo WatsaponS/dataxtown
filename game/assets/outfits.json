@@ -1,6 +1,6 @@
 {
-  "frameW": 48,
-  "frameH": 75,
+  "frameW": 40,
+  "frameH": 62,
   "dirs": [
     "down",
     "left",
