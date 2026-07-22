@@ -11,11 +11,14 @@ overlays), this is a full-body replacement layer: when equipped it's drawn
 animation, so it moves naturally instead of a single static pose. No
 recolor -- it's shown exactly as designed.
 
-Output frame is bigger than avatars.png (48x75 vs 32x50) on purpose: the
-source art is much more detailed than the base avatar, and the game draws
-this sheet at its own native size (not squeezed to match the base
-character), so the extra source detail actually stays visible in-game
-instead of being crushed down to the base character's pixel budget.
+Output frame height matches avatars.png's content height (48px) so an
+equipped character stands the same height as everyone else, but the frame
+is wider than avatars.png (32px) because the front-facing pose has wings
+spread out to both sides -- narrower would clip the wingtips. Frame size
+is derived from the actual measured source content, not guessed, and the
+game draws this sheet at its own native size (not squeezed to match the
+base character's frame), so the source detail stays visible instead of
+being crushed down further than necessary.
 
 Output: game/assets/outfits.png (+ outfits.json). Row 0 = male_cyber_fantasy,
 row 1 = female_cyber_fantasy. 16 cols per row (4 directions x 4 walk frames).
@@ -28,12 +31,13 @@ from PIL import Image
 OUT = Path(__file__).resolve().parent
 ROOT = OUT.parent.parent / "pixel-art"
 
-# ใหญ่กว่า avatars.png (32x50) โดยตั้งใจ — ต้นฉบับสไปรท์จาก DALL-E ละเอียดกว่าตัวละครฐานมาก
-# (คอนเทนต์เต็มเฟรมสูงถึง ~112px) ถ้าบีบลงมาระดับเดียวกับตัวละครฐาน (48px) จะเสียรายละเอียด
-# เส้นเล็ก ๆ (ขนปีก, ลายเกราะ) ไปเกือบหมด เกมวาดชุดด้วยขนาดตัวเอง ไม่บีบให้พอดีตัวละครฐาน
-# (ดู game/js/outfit.js) เลยไม่จำเป็นต้องเท่ากับ 32x50 อีกต่อไป
-FW, FH = 40, 62
-TARGET_H = 60
+# ส่วนสูงเนื้อตัวละครเป้าหมาย — เท่ากับ build_avatars.py's TARGET_H พอดี (48px) ให้ตัวสูงเท่า
+# ตัวละครทั่วไปจริง ๆ (ก่อนหน้านี้ตั้ง FW/FH เป็นค่าคงที่เดา ๆ ไว้ ทำให้ (1) ตัวใหญ่กว่าที่ตั้งใจ
+# และ (2) ปีกที่กางออกด้านข้าง (ท่าหน้าตรง) กว้างกว่ากรอบที่เผื่อไว้ โดนตัดขอบซ้าย/ขวา —
+# ตอนนี้คำนวณ FW/FH จากขนาดคอนเทนต์จริงที่วัดได้ ไม่เดาอัตราส่วนจากตัวละครฐานอีกต่อไป)
+TARGET_H = 48
+WING_PAD = 4   # กันเผื่อขอบซ้าย/ขวานิดหน่อยไม่ให้ปีกชนขอบเฟรมพอดีเป๊ะ
+HEADROOM = 2   # กันเผื่อขอบบน เท่ากับ build_avatars.py (เนื้อตัว 48px บนเฟรมสูง 50px)
 DIRS = ["down", "left", "right", "up"]
 FRAMES = 4
 
@@ -91,23 +95,27 @@ def resize_rgba_premultiplied(im, new_w, new_h):
     return out
 
 
-def place(cropped, scale):
-    """ย่อ + วางกึ่งกลางแนวนอน ชิดขอบล่าง บนแคนวาส FW x FH — เหมือน build_avatars.py's place()"""
+def place(cropped, scale, fw, fh):
+    """ย่อ + วางกึ่งกลางแนวนอน ชิดขอบล่าง บนแคนวาส fw x fh — เหมือน build_avatars.py's place()"""
     w, h = cropped.size
     new_w, new_h = max(1, round(w * scale)), max(1, round(h * scale))
     resized = resize_rgba_premultiplied(cropped, new_w, new_h)
-    canvas = Image.new("RGBA", (FW, FH), (0, 0, 0, 0))
-    dx, dy = (FW - new_w) // 2, FH - new_h
+    canvas = Image.new("RGBA", (fw, fh), (0, 0, 0, 0))
+    dx, dy = (fw - new_w) // 2, fh - new_h
     canvas.alpha_composite(resized, (dx, dy))
     return canvas
 
 
 def build():
     scale, max_w, max_h = measure_uniform_scale()
-    print(f"uniform scale {scale:.4f} (source max content {max_w}x{max_h})")
+    # FW/FH คำนวณจากคอนเทนต์จริงที่วัดได้ (ไม่ใช่เดาอัตราส่วนจากตัวละครฐาน) — ท่าหน้าตรงมีปีกกาง
+    # ออกด้านข้างกว้างกว่าตัวละครทั่วไปมาก ต้องเผื่อ FW ให้พอดีความกว้างจริงหลังย่อสเกลแล้ว
+    fw = round(max_w * scale) + WING_PAD * 2
+    fh = round(max_h * scale) + HEADROOM
+    print(f"uniform scale {scale:.4f} (source max content {max_w}x{max_h}) -> frame {fw}x{fh}")
 
     total_cols = len(DIRS) * FRAMES
-    out_sheet = Image.new("RGBA", (FW * total_cols, FH * len(VARIANTS)), (0, 0, 0, 0))
+    out_sheet = Image.new("RGBA", (fw * total_cols, fh * len(VARIANTS)), (0, 0, 0, 0))
 
     for gi, (variant_id, path) in enumerate(VARIANTS):
         sheet = Image.open(path).convert("RGBA")
@@ -118,16 +126,15 @@ def build():
                 bbox = content_bbox(frame)
                 if not bbox:
                     continue
-                placed = place(frame.crop(bbox), scale)
-                dst_x = (row * FRAMES + col) * FW
-                dst_y = gi * FH
+                placed = place(frame.crop(bbox), scale, fw, fh)
+                dst_x = (row * FRAMES + col) * fw
+                dst_y = gi * fh
                 out_sheet.alpha_composite(placed, (dst_x, dst_y))
 
     out_sheet.save(OUT / "outfits.png")
     meta = {
-        "frameW": FW, "frameH": FH, "dirs": DIRS, "frames": FRAMES,
+        "frameW": fw, "frameH": fh, "dirs": DIRS, "frames": FRAMES,
         "variants": [v for v, _ in VARIANTS],
-        "recolor": "whole-sprite-alpha (no separate mask -- entire opaque area is the recolor target)",
     }
     (OUT / "outfits.json").write_text(json.dumps(meta, indent=2), encoding="utf-8")
     print(f"wrote outfits.png {out_sheet.size[0]}x{out_sheet.size[1]} + outfits.json")
