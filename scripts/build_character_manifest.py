@@ -80,6 +80,15 @@ PET_FOLDER_NAMES = {
 # logical entity position. id -> {visualScale?, visualOffsetX?, visualOffsetY?, tagOffsetY?}
 VISUAL_OVERRIDES = {}
 
+# Ids whose raw source sheet has a genuine content bug: the "left" and "right" rows show the
+# identical pose instead of two mirrored poses (verified via a tight zoomed crop on the face/
+# hair region + exact pixel-diff — NOT visible at a glance on the full-body silhouette, which
+# looks deceptively similar either way). For these, synthesize "right" by horizontally
+# mirroring "left" post-copy instead of trusting the source "right" row at all — this
+# rearranges existing pixels only (no new art drawn) and matches the same fix applied to the
+# outfit system's MIRROR_RIGHT_FROM_LEFT in build_outfits.py.
+MIRROR_RIGHT_FROM_LEFT_IDS = {"noir_orchid", "noir_orchid_v2", "noir_orchid_v3"}
+
 NAME_OVERRIDES = {
     "crimson_aegis_knight": "อัศวินโล่เพลิง",
     "dragon_elf_sentinel": "เอลฟ์มังกรผู้พิทักษ์",
@@ -202,6 +211,24 @@ def find_sibling_json(png_path: Path) -> Path:
     return exact  # let validate() report the "missing" reason with the expected name
 
 
+def fix_mirrored_right(dest_png: Path, meta: dict):
+    """Overwrite the 'right' row in-place with a per-frame horizontal mirror of the 'left'
+    row. Used for MIRROR_RIGHT_FROM_LEFT_IDS whose source 'right' row is a duplicate of
+    'left' instead of a genuine mirror (see comment at MIRROR_RIGHT_FROM_LEFT_IDS). Mirrors
+    each frame column individually (not the whole strip) so walk-cycle frame order along the
+    row is preserved."""
+    directions = meta["directions"]
+    fw, fh = meta["frameWidth"], meta["frameHeight"]
+    frames_per_dir = meta["framesPerDirection"]
+    left_row = directions.index("left")
+    right_row = directions.index("right")
+    img = Image.open(dest_png).convert("RGBA")
+    for col in range(frames_per_dir):
+        frame = img.crop((col * fw, left_row * fh, (col + 1) * fw, (left_row + 1) * fh))
+        img.paste(frame.transpose(Image.FLIP_LEFT_RIGHT), (col * fw, right_row * fh))
+    img.save(dest_png)
+
+
 def discover():
     candidates = []
     for png_path in sorted(PIXEL_ART.rglob("*-walk-sheet.png")):
@@ -295,6 +322,8 @@ def main():
         dest_json.write_bytes(entry["json"].read_bytes())
 
         meta = entry["meta"]
+        if id_ in MIRROR_RIGHT_FROM_LEFT_IDS:
+            fix_mirrored_right(dest_png, meta)
         fw, fh = meta["frameWidth"], meta["frameHeight"]
         overrides = VISUAL_OVERRIDES.get(id_, {})
         manifest_entries.append({

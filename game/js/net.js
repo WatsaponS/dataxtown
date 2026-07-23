@@ -35,9 +35,6 @@ export function connectNet(world, ui) {
     });
     addSystemLine(ui, "🟢 ออนไลน์แล้ว — คนอื่นในออฟฟิศจะเห็นคุณ");
     net.updatePet = (petId, petName) => send({ t: "pet", petId, petName });
-    // เปลี่ยนตัวละครฐาน (สไปรท์ความละเอียดสูง) กลางเซสชัน — ส่งแค่ id อ้างอิง manifest เหมือนตอน
-    // join ครั้งแรก ไม่ส่งรูปภาพ/base64 ผ่าน network เด็ดขาด
-    net.updateSpriteId = spriteId => send({ t: "sprite", spriteId: spriteId || null });
 
     // ส่งตำแหน่งเมื่อมีการเปลี่ยนแปลง (จังหวะ 10 ครั้ง/วินาที)
     let last = "";
@@ -94,15 +91,6 @@ export function connectNet(world, ui) {
       case "pet": {
         const ent = findRemote(world, data.id);
         if (ent) setPet(ent, data.petId, data.petName);
-        break;
-      }
-      case "sprite": {
-        // id ไม่รู้จัก/โหลดพัง drawHiresCharacter() fallback ไปวาด avatar เดิมเองอัตโนมัติ (ไม่ crash)
-        const ent = findRemote(world, data.id);
-        if (ent) {
-          ent.spriteId = data.spriteId || null;
-          if (ent.spriteId) preloadSprite(ent.spriteId);
-        }
         break;
       }
       case "chat": {
