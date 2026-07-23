@@ -106,6 +106,27 @@ NAME_OVERRIDES = {
     "female_cyber_fantasy": "นักรบไซเบอร์ (หญิง)",
     "female_bikini_navigator": "นักเดินเรือหมวกฟาง (หญิง, รุ่นแรก)",
     "female_bikini_navigator_v2": "นักเดินเรือหมวกฟาง (หญิง)",
+    "office_ceo": "CEO",
+    "office_cto": "CTO",
+    "office_cco": "CCO",
+    "office_cfo": "CFO",
+    "office_cdo": "CDO",
+    "office_cro": "CRO",
+}
+
+# Purpose-built executive portraits (pixel-art/office-avatar-sprites/) — separate from the
+# general pixel-art/**/*-walk-sheet.png discovery above because this set uses its own sheet
+# convention (see sprites.json: directions ["front","right","left","back"], not our usual
+# ["down","left","right","up"] — "right" and "left" are in the OPPOSITE order too) and its own
+# versioning scheme (bare name = v1, "_v2" suffix = newer). id -> latest source basename.
+OFFICE_AVATAR_DIR = ROOT / "pixel-art" / "office-avatar-sprites"
+OFFICE_EXEC_SOURCES = {
+    "office_ceo": "male_ceo_v2",
+    "office_cto": "female_cto_v2",
+    "office_cco": "male_cco_v2",
+    "office_cdo": "female_cdo_v2",
+    "office_cfo": "male_cfo",   # no v2 exists for this role
+    "office_cro": "male_cro",  # no v2 exists for this role
 }
 
 
@@ -230,6 +251,81 @@ def fix_swapped_lr(dest_png: Path, meta: dict):
     img.save(dest_png)
 
 
+def import_office_execs(dry_run: bool):
+    """Import the 6 purpose-built executive portraits (see OFFICE_EXEC_SOURCES) — reorders
+    rows from the source convention (front,right,left,back) to ours (down,left,right,up),
+    since source row 1/2 are also in the opposite left/right order from what we use
+    elsewhere. Returns a list of manifest-entry dicts (same shape as the regular pipeline)."""
+    entries = []
+    fw = fh = 128
+    frames_per_dir = 4
+    directions = ["down", "left", "right", "up"]
+    # source row index for each of OUR target rows (down,left,right,up)
+    src_row_for_target = [0, 2, 1, 3]  # front->down, left->left(src idx2), right->right(src idx1), back->up
+
+    for id_, basename in OFFICE_EXEC_SOURCES.items():
+        src_png = OFFICE_AVATAR_DIR / f"{basename}_spritesheet.png"
+        if not src_png.exists():
+            print(f"  ! office exec source missing: {src_png}")
+            continue
+        img = Image.open(src_png).convert("RGBA")
+        if img.size != (fw * frames_per_dir, fh * 4):
+            print(f"  ! office exec {id_} unexpected size {img.size}, skipping")
+            continue
+
+        reordered = Image.new("RGBA", img.size, (0, 0, 0, 0))
+        for target_row, src_row in enumerate(src_row_for_target):
+            strip = img.crop((0, src_row * fh, fw * frames_per_dir, (src_row + 1) * fh))
+            reordered.paste(strip, (0, target_row * fh))
+
+        # groundAnchorY measured from the actual front-facing (down) frame content, not guessed
+        front_frame = reordered.crop((0, 0, fw, fh))
+        bbox = front_frame.getchannel("A").getbbox()
+        ground_anchor_y = bbox[3] if bbox else fh
+
+        png_name = f"{id_.replace('_', '-')}-walk-sheet.png"
+        hair_name = f"{id_.replace('_', '-')}-hair-mask.png"
+        clothing_name = f"{id_.replace('_', '-')}-clothing-mask.png"
+
+        if not dry_run:
+            OUT_DIR.mkdir(parents=True, exist_ok=True)
+            reordered.save(OUT_DIR / png_name)
+            src_hair = OFFICE_AVATAR_DIR / f"{basename}_hair_mask.png"
+            src_clothing = OFFICE_AVATAR_DIR / f"{basename}_clothing_mask.png"
+            if src_hair.exists():
+                (OUT_DIR / hair_name).write_bytes(src_hair.read_bytes())
+            if src_clothing.exists():
+                (OUT_DIR / clothing_name).write_bytes(src_clothing.read_bytes())
+
+        overrides = VISUAL_OVERRIDES.get(id_, {})
+        entries.append({
+            "id": id_,
+            "name": to_display_name(id_),
+            "image": f"assets/characters/{png_name}",
+            "sourceFrameWidth": fw,
+            "sourceFrameHeight": fh,
+            "columns": frames_per_dir,
+            "rows": len(directions),
+            "directions": directions,
+            "framesPerDirection": frames_per_dir,
+            "frameDurationMs": 140,
+            "displayWidth": fw // 2,
+            "displayHeight": fh // 2,
+            "anchorX": fw // 2,
+            "groundAnchorY": ground_anchor_y,
+            "collisionWidth": 20,
+            "collisionHeight": 14,
+            "hairMask": None,
+            "clothingMask": None,
+            "visualScale": overrides.get("visualScale", 1),
+            "visualOffsetX": overrides.get("visualOffsetX", 0),
+            "visualOffsetY": overrides.get("visualOffsetY", 0),
+            "tagOffsetY": overrides.get("tagOffsetY", 0),
+        })
+        print(f"  office exec: {id_:12s} <- {src_png.relative_to(ROOT)} (groundAnchorY={ground_anchor_y})")
+    return entries
+
+
 def discover():
     candidates = []
     for png_path in sorted(PIXEL_ART.rglob("*-walk-sheet.png")):
@@ -306,13 +402,16 @@ def main():
         rel = entry["png"].relative_to(ROOT)
         print(f"  {entry['id']:35s} <- {rel}")
 
+    print(f"\nOffice executive portraits ({len(OFFICE_EXEC_SOURCES)}):")
+    office_entries = import_office_execs(dry_run)
+
     if dry_run:
         print("\n[dry-run] no files written.")
         return final_entries, excluded, rejected, dup_skipped, id_collisions
 
     # ---- copy assets ----
     OUT_DIR.mkdir(parents=True, exist_ok=True)
-    manifest_entries = []
+    manifest_entries = list(office_entries)
     for entry in sorted(final_entries, key=lambda e: e["id"]):
         id_ = entry["id"]
         png_name = f"{id_.replace('_', '-')}-walk-sheet.png"

@@ -61,7 +61,7 @@ export const PRIVATE_ZONE_TYPES = new Set([
 // ต่อคนได้อิสระ ไม่ใช่สุ่มเสมอภาค 50/50 เหมือนดวลกับผู้เล่นจริง (CEO ตั้งใจให้ยากสุดเป็น "บอสใหญ่")
 export const NPCS = [
   { name: "พี่หนุ่ม", role: "CEO", variant: 2, home: [15, 8], roam: 2, roomBox: [12, 6.5, 19, 10.5], duelWinRate: 0.35,
-    spriteId: "crimson_aegis_knight",
+    spriteId: "office_ceo",
     lines: [
       "DataX จะไปได้ไกลแค่ไหน อยู่ที่พวกเราทุกคนครับ 🚀",
       "ล้มได้ แต่ลุกให้เร็ว เรียนรู้ให้ไวนะครับ",
@@ -70,7 +70,7 @@ export const NPCS = [
       "ปีนี้เราจะโตไปด้วยกันทั้งทีมครับ",
     ] },
   { name: "พี่อ้อ", role: "CTO", variant: 3, home: [3, 22], roam: 1, roomBox: [1.6, 21.6, 4.4, 24.4], duelWinRate: 0.5,
-    spriteId: "female_cyber_fantasy",
+    spriteId: "office_cto",
     lines: [
       "โค้ดไม่ต้องเพอร์เฟกต์ ขอให้กล้า ship แล้วเรียนรู้ไปด้วยกันค่ะ 💪",
       "ติด bug ตรงไหน มาคุยกับพี่อ้อได้เลย เดี๋ยวช่วยกันแกะ",
@@ -79,7 +79,7 @@ export const NPCS = [
       "ภูมิใจในทีม engineering ของเรามากเลยค่ะ สู้ ๆ นะ",
     ] },
   { name: "พี่หว่า", role: "CCO", variant: 4, home: [11, 3], roam: 1, roomBox: [10.6, 2.6, 12.4, 5.4], duelWinRate: 0.5,
-    spriteId: "male_midnight_gentleman",
+    spriteId: "office_cco",
     lines: [
       "ลูกค้ายิ้มได้เพราะพวกเราทุกคนครับ เก่งมาก!",
       "ฟังเสียงลูกค้าเยอะ ๆ นะครับ insight ดี ๆ อยู่ตรงนั้นแหละ",
@@ -87,7 +87,7 @@ export const NPCS = [
       "เป้า Q นี้ไม่ไกลเกินเอื้อม ช่วยกันอีกนิดครับทุกคน 🔥",
     ] },
   { name: "คุณ Manis", role: "CRO", variant: 7, home: [15, 3], roam: 1, roomBox: [13.6, 2.6, 16.4, 5.4], duelWinRate: 0.4,
-    spriteId: "dragon_elf_sentinel",
+    spriteId: "office_cro",
     lines: [
       "ความเสี่ยงไม่ใช่สิ่งที่ต้องกลัว แต่ต้องรู้จักมันให้ดีพอครับ",
       "ก่อน launch อะไรใหม่ แวะมาคุยเรื่อง risk กับคุณ Manis ได้เสมอครับ",
@@ -96,7 +96,7 @@ export const NPCS = [
       "กล้าเสี่ยงอย่างมีข้อมูล คือวิธีที่ DataX เติบโตอย่างปลอดภัยครับ",
     ] },
   { name: "พี่แตน", role: "CDO", variant: 6, home: [19, 3], roam: 1, roomBox: [17.6, 2.6, 21.4, 5.4], duelWinRate: 0.5,
-    spriteId: "female_jade_mystic",
+    spriteId: "office_cdo",
     lines: [
       "ข้อมูลที่ดีเริ่มจาก pipeline ที่แข็งแรง ขอบคุณที่ดูแลกันนะคะ",
       "ตัวเลขทุกตัวมีเรื่องเล่า อย่าลืมตั้งคำถามกับข้อมูลค่ะ",
@@ -105,7 +105,7 @@ export const NPCS = [
       "อยากเห็น insight ใหม่ ๆ ทุกสัปดาห์เลยค่ะ สู้ ๆ",
     ] },
   { name: "คุณ TT", role: "CFO", variant: 5, home: [25, 13], roam: 2, roomBox: [22.6, 11.6, 27.4, 15.4], duelWinRate: 0.55,
-    spriteId: "male_silver_fox",
+    spriteId: "office_cfo",
     lines: [
       "งบมีไว้ลงทุนกับของที่ใช่ เสนอมาได้เลยครับ",
       "ประหยัดได้ประหยัด แต่คุณภาพงานห้ามลดครับ 😄",
