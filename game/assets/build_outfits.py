@@ -97,13 +97,9 @@ SRC_FRAME = 128
 # ต้นฉบับที่พัง รับประกันว่า mirror ถูกต้องเสมอไม่ว่าต้นฉบับจะเพี้ยนแค่ไหน
 MIRROR_RIGHT_FROM_LEFT = {v for v, _ in VARIANTS if v not in ("male_cyber_fantasy", "female_cyber_fantasy")}
 
-# แก้ไข: รอบที่แล้วเข้าใจผิดว่า noir_orchid เป็นปัญหา "แถวสลับตำแหน่งกัน" (SWAP_LR_ROWS) — ตรวจ
-# ใหม่ด้วยการ crop เฉพาะส่วนหัว/หน้าแล้ว zoom เทียบ (ไม่ใช่ดูทั้งตัวซึ่งเงาโดยรวมคล้ายกันจนแยกไม่
-# ออก) พบว่าจริง ๆ แล้วเป็นปัญหาแบบเดียวกับตัวอื่นทั้งหมด: แถว left/right ทั้งคู่หันหน้าไปทางเดียวกัน
-# (ไม่ mirror กัน) ไม่ใช่สลับตำแหน่งแถว — SWAP_LR_ROWS เดิมเลยไม่ได้แก้อะไรจริง ๆ (สลับ label ของ
-# แถวที่ยังผิดอยู่ ก็ยังผิดเหมือนเดิม) ตอนนี้ปล่อยว่างไว้ ให้ noir_orchid ตกไปอยู่ใน
-# MIRROR_RIGHT_FROM_LEFT ด้านบนแทน (ค่า default เหมือนตัวอื่นเกือบทั้งหมด) — เก็บ mechanism นี้ไว้
-# เผื่อมีตัวอื่นในอนาคตที่เป็นปัญหาแบบสลับแถวจริง ๆ (ดู source_row_for ด้านล่าง)
+# mechanism เผื่อ variant ในอนาคตที่ต้อง mirror "left" จาก "right" แทน (ตรงข้ามกับ default
+# ด้านบน) — ไม่มีตัวไหนต้องใช้ตอนนี้ (ดู row_order ใน build() ที่รองรับกรณีนี้อยู่แล้ว)
+MIRROR_LEFT_FROM_RIGHT = set()
 SWAP_LR_ROWS = set()
 MIRROR_RIGHT_FROM_LEFT -= SWAP_LR_ROWS
 
@@ -202,13 +198,20 @@ def build():
 
     for gi, (variant_id, path) in enumerate(VARIANTS):
         sheet = Image.open(path).convert("RGBA")
-        left_placed = [None] * FRAMES  # เก็บเฟรม "left" ที่ place() แล้วไว้ mirror ต่อเป็น "right"
-        for row in range(4):  # row order in source sheet already matches DIRS (down,left,right,up)
+        left_placed = [None] * FRAMES   # เก็บเฟรม "left" ที่ place() แล้วไว้ mirror ต่อเป็น "right"
+        right_placed = [None] * FRAMES  # เก็บเฟรม "right" ที่ place() แล้วไว้ mirror ต่อเป็น "left"
+        # ต้อง process ทิศที่เป็น "ต้นทาง" ก่อนทิศที่ mirror มาจากมันเสมอ — ตัวอื่นเกือบทั้งหมด mirror
+        # right จาก left (ลำดับปกติ down,left,right,up ใช้ได้เลย) แต่ noir_orchid ต้อง mirror left
+        # จาก right แทน (ดู MIRROR_LEFT_FROM_RIGHT) เลยสลับให้ right มาก่อน left เฉพาะ variant นี้
+        row_order = [0, 2, 1, 3] if variant_id in MIRROR_LEFT_FROM_RIGHT else [0, 1, 2, 3]
+        for row in row_order:
             direction = DIRS[row]
             src_row = source_row_for(variant_id, row)  # ปกติ = row ตรง ๆ เว้นแต่ SWAP_LR_ROWS
             for col in range(FRAMES):
                 if direction == "right" and variant_id in MIRROR_RIGHT_FROM_LEFT:
                     placed = left_placed[col].transpose(Image.FLIP_LEFT_RIGHT)
+                elif direction == "left" and variant_id in MIRROR_LEFT_FROM_RIGHT:
+                    placed = right_placed[col].transpose(Image.FLIP_LEFT_RIGHT)
                 else:
                     box = (col * SRC_FRAME, src_row * SRC_FRAME, (col + 1) * SRC_FRAME, (src_row + 1) * SRC_FRAME)
                     frame = sheet.crop(box)
@@ -218,6 +221,8 @@ def build():
                     placed = place(frame.crop(bbox), scales[(variant_id, row)], fw, fh)
                     if direction == "left":
                         left_placed[col] = placed
+                    elif direction == "right":
+                        right_placed[col] = placed
                 dst_x = (row * FRAMES + col) * fw
                 dst_y = gi * fh
                 out_sheet.alpha_composite(placed, (dst_x, dst_y))

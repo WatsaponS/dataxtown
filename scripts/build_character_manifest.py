@@ -81,12 +81,15 @@ PET_FOLDER_NAMES = {
 VISUAL_OVERRIDES = {}
 
 # Ids whose raw source sheet has a genuine content bug: the "left" and "right" rows show the
-# identical pose instead of two mirrored poses (verified via a tight zoomed crop on the face/
-# hair region + exact pixel-diff — NOT visible at a glance on the full-body silhouette, which
-# looks deceptively similar either way). For these, synthesize "right" by horizontally
-# mirroring "left" post-copy instead of trusting the source "right" row at all — this
-# rearranges existing pixels only (no new art drawn) and matches the same fix applied to the
-# outfit system's MIRROR_RIGHT_FROM_LEFT in build_outfits.py.
+# same pose instead of two mirrored poses. Fix: mirror "right" from "left" (keep left as-is).
+# Verified via real KeyA-driven movement (through the actual game/entities.js code path, not
+# a manual dir override) cross-checked against crimson_aegis_knight — another hi-res outfit
+# never reported as buggy — under the identical dir="left" state: the two match each other's
+# apparent facing. (A naive comparison against the legacy 32x50 avatar's left-facing frame is
+# NOT a valid reference here — that art was drawn by a different pipeline with its own
+# left/right convention; only same-pipeline hi-res characters are comparable.) Rearranges
+# existing pixels only, no new art drawn — matches the outfit system's MIRROR_RIGHT_FROM_LEFT
+# in build_outfits.py.
 MIRROR_RIGHT_FROM_LEFT_IDS = {"noir_orchid", "noir_orchid_v2", "noir_orchid_v3"}
 
 NAME_OVERRIDES = {
@@ -213,10 +216,8 @@ def find_sibling_json(png_path: Path) -> Path:
 
 def fix_mirrored_right(dest_png: Path, meta: dict):
     """Overwrite the 'right' row in-place with a per-frame horizontal mirror of the 'left'
-    row. Used for MIRROR_RIGHT_FROM_LEFT_IDS whose source 'right' row is a duplicate of
-    'left' instead of a genuine mirror (see comment at MIRROR_RIGHT_FROM_LEFT_IDS). Mirrors
-    each frame column individually (not the whole strip) so walk-cycle frame order along the
-    row is preserved."""
+    row. Used for MIRROR_RIGHT_FROM_LEFT_IDS (see comment there). Mirrors each frame column
+    individually (not the whole strip) so walk-cycle frame order along the row is preserved."""
     directions = meta["directions"]
     fw, fh = meta["frameWidth"], meta["frameHeight"]
     frames_per_dir = meta["framesPerDirection"]
