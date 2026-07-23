@@ -7,6 +7,7 @@ import { petDisplayName } from "./pets_data.js";
 import { getDuelPrompt } from "./duel.js";
 import { drawGachaMachine, GACHA_Y, SPRITE_Y_OFFSET } from "./gacha.js";
 import { drawFx } from "./fx.js";
+import { drawWildMonster } from "./monsters.js";
 import { emoteEmoji } from "./emotes_data.js";
 import { achievementById } from "./achievements_data.js";
 import { teamById } from "./teams_data.js";
@@ -59,6 +60,7 @@ export function draw(ctx, world, cam) {
     if (ent.petId && ent.pet) drawables.push({ y: ent.pet.y, draw: () => drawPet(ctx, ent) });
   }
   drawables.push({ y: GACHA_Y + SPRITE_Y_OFFSET, draw: () => drawGachaMachine(ctx) }); // ตู้กาชา — ฐานอยู่ใต้จุดยืนเล็กน้อย
+  if (world.wild) for (const m of world.wild.list) drawables.push({ y: m.y, draw: () => drawWildMonster(ctx, m) });
   drawables.sort((a, b) => a.y - b.y);
   for (const d of drawables) d.draw();
   drawFx(ctx); // particle เอฟเฟกต์ — world-space เพื่อให้ยึดตำแหน่งบนแผนที่ถูก ไม่ลอยตามกล้อง

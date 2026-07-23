@@ -19,6 +19,7 @@ import { initPetMenu, togglePetMenu } from "./pet_menu.js";
 import { initDuel, updateDuelProximity, tryDuelNearby } from "./duel.js";
 import { initGacha, updateGachaProximity, toggleGacha, isNearGacha, loadGachaMachineImage } from "./gacha.js";
 import { updateFx } from "./fx.js";
+import { initWildMonsters, updateWildMonsters, loadMonsterImage } from "./monsters.js";
 import { initEmotes, toggleEmotePanel, isEmotePanelOpen } from "./emotes.js";
 import { initAchievements, toggleAchievements } from "./achievements.js";
 import { initMissions, toggleMissions } from "./missions.js";
@@ -64,6 +65,7 @@ try {
 document.getElementById("start-loading-card").classList.add("hidden");
 document.getElementById("start-card").classList.remove("hidden");
 const cam = makeCamera(CONFIG);
+window.__cam = cam; // hook สำหรับ automated test ผ่าน cdp_shot --eval
 let ui = null;
 
 // ---------- เพลงประกอบ ----------
@@ -80,6 +82,8 @@ window.__world = world;
 const petImg = loadPetImage(); // โหลดคู่ขนานไปเลย ไม่ต้องรอ
 loadGachaMachineImage();
 loadOutfitsImage();
+window.__monsterImg = loadMonsterImage(); // hook สำหรับ automated test ผ่าน cdp_shot --eval
+initWildMonsters(world); // มอนสเตอร์ป่าเริ่มสุ่มโผล่ได้เลยตั้งแต่หน้าสร้างตัวละคร ไม่ต้องรอ startGame
 
 // ---------- หน้าจอเริ่มเกม: ชื่อ + เพศ + สีผม/สีเสื้อ ----------
 // สไปรท์ต้นฉบับมีแค่ชาย/หญิงอย่างละ 1 แบบ (variant 0/1) ต่างคนต่างสีผ่าน mask recolor
@@ -442,6 +446,7 @@ function loop(now) {
   updateTutorial(world);
   updateDuelProximity(world); // เดินเข้าใกล้ผู้เล่นอื่น = ขึ้นป้ายชวนดวลเหนือหัวเขา (กด F ท้า)
   updateGachaProximity(world); // เดินเข้าใกล้ตู้กาชา = ขึ้นป้ายกด G
+  updateWildMonsters(world, dt); // มอนสเตอร์ป่าสุ่มโผล่ 5 ตัว อยู่ 10 วิแล้วสุ่มชุดใหม่ วนไป
   updateFx(world, dt);
   music.setZone(zoneAt(world, world.player.x, world.player.y)); // เพลงเปลี่ยนตามโซน
 
