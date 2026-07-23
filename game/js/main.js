@@ -91,10 +91,11 @@ let chosenHair = saved.hair ?? null;    // null = สีเดิมของส
 let chosenShirt = saved.shirt ?? null;
 let chosenPet = saved.pet ?? null;      // null = ไม่มีสัตว์เลี้ยง
 let chosenOutfit = saved.outfit ?? null; // null = ไม่ใส่ชุดคอสตูม ใช้ตัวละครเดิม
-// null = ใช้ระบบ avatar เดิม (32x50, recolor ได้) — ตั้งค่านี้ = ใช้สไปรท์ความละเอียดสูงแทนทั้งตัว
-// (ดู sprites_manifest.js) เลือกได้จาก #hires-picker ในหน้าสร้างตัวละคร คนละระบบกับ outfit
-// (outfit ใส่ทับ avatar ทีหลังได้เสมอในเกม ส่วนอันนี้คือ "ตัวละครฐาน" ตั้งแต่ตอนสร้างเลย)
-let chosenSpriteId = saved.spriteId ?? null;
+// ตัวละครฐานความละเอียดสูง (ดู sprites_manifest.js) — ไม่มี UI เลือกอีกต่อไป (ย้ายไปเป็น "ชุด"
+// ทั้งหมด, ดู outfit_menu.js) ตั้งใจไม่ restore จาก saved.spriteId แม้ localStorage เก่าจะมีค่าค้าง
+// อยู่ก็ตาม (ผู้เล่นที่เคยเลือกไว้ก่อนหน้านี้ต้องกลับไปเป็นตัวละครพื้นฐานเสมอ) — ตั้งได้แค่ผ่าน
+// ?sprite= URL param เท่านั้น (ใช้เทส ไม่ได้มีทางเข้าถึงจาก UI ปกติ)
+let chosenSpriteId = null;
 const HIRES_PREVIEW_BOX = 96; // กล่องพรีวิวใหญ่ (#avatar-preview) สี่เหลี่ยมจัตุรัส — contain-fit
 if (chosenSpriteId) preloadSprite(chosenSpriteId); // โหลดล่วงหน้าให้พรีวิวหน้าสร้างตัวละครไวขึ้น
 let chosenPetName = saved.petName ?? "";
@@ -204,8 +205,8 @@ refreshPetPicker();
 
 // หน้าสร้างตัวละครไม่มี UI เลือกสไปรท์ความละเอียดสูงแล้ว (ย้ายไปเลือกเป็น "ชุด" ในเกมแทนทั้งหมด
 // ผ่านเมนู 👕 — ดู outfit_menu.js) เหลือแค่ตัวละครฐานเดิม (avatar ธรรมดา) ให้เลือกตอนสร้างตัวละคร
-// chosenSpriteId ยังอยู่เผื่อ backward-compat กับ localStorage เก่า/พารามิเตอร์ ?sprite= (ใช้เทส)
-// แต่ไม่มีทางตั้งค่าจาก UI ปกติได้อีกแล้ว
+// chosenSpriteId ตั้งค่าได้ทางเดียวคือ ?sprite= URL param (ใช้เทส) — ไม่ restore จาก localStorage
+// เก่าอีกต่อไป (ดูตอนประกาศตัวแปรด้านบน)
 function updatePreview() {
   const canvas = document.getElementById("avatar-preview");
   document.getElementById("custom-cols").classList.toggle("hidden", !!chosenSpriteId);
