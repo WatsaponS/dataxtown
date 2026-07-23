@@ -18,7 +18,9 @@ function maskRowData(maskImg, variant, w, h, frameH) {
   return cx.getImageData(0, 0, w, h).data;
 }
 
-function applyMaskRecolor(d, maskData, targetHex) {
+// exported เพื่อให้ sprites.js (ตัวละครความละเอียดสูง) เรียกใช้อัลกอริทึม recolor เดียวกันได้
+// โดยไม่ต้อง duplicate โค้ด — ทำงานบน ImageData ธรรมดา ไม่ผูกกับขนาดเฟรม/เลย์เอาต์ระบบไหนเป็นพิเศษ
+export function applyMaskRecolor(d, maskData, targetHex) {
   const [tr, tg, tb] = hexToRgb(targetHex);
   let lo = 255, hi = 0;
   for (let i = 0; i < maskData.length; i += 4) {

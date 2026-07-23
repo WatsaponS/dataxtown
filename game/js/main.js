@@ -91,13 +91,14 @@ let chosenHair = saved.hair ?? null;    // null = สีเดิมของส
 let chosenShirt = saved.shirt ?? null;
 let chosenPet = saved.pet ?? null;      // null = ไม่มีสัตว์เลี้ยง
 let chosenOutfit = saved.outfit ?? null; // null = ไม่ใส่ชุดคอสตูม ใช้ตัวละครเดิม
-// ตัวละครฐานความละเอียดสูง (ดู sprites_manifest.js) — ไม่มี UI เลือกอีกต่อไป (ย้ายไปเป็น "ชุด"
-// ทั้งหมด, ดู outfit_menu.js) ตั้งใจไม่ restore จาก saved.spriteId แม้ localStorage เก่าจะมีค่าค้าง
-// อยู่ก็ตาม (ผู้เล่นที่เคยเลือกไว้ก่อนหน้านี้ต้องกลับไปเป็นตัวละครพื้นฐานเสมอ) — ตั้งได้แค่ผ่าน
-// ?sprite= URL param เท่านั้น (ใช้เทส ไม่ได้มีทางเข้าถึงจาก UI ปกติ)
-let chosenSpriteId = null;
+// ตัวละครฐานเริ่มต้น = สไปรท์ความละเอียดสูงจาก office-avatar-sprites (office_male/female) แทน
+// avatar เดิม 32x50 แล้ว — ยังปรับสีผม/เสื้อได้เหมือนเดิมทุกประการ (ผ่าน hairMask/clothingMask
+// ใน manifest, ดู sprites.js's getCustomHiresCanvas) ระบบ avatar เดิมยังอยู่ครบไม่ได้ลบ (ดู
+// updatePreview/startGame ด้านล่าง — เป็น fallback ถ้าตั้ง ?sprite=none หรือโหลดสไปรท์ไม่สำเร็จ)
 const HIRES_PREVIEW_BOX = 96; // กล่องพรีวิวใหญ่ (#avatar-preview) สี่เหลี่ยมจัตุรัส — contain-fit
-if (chosenSpriteId) preloadSprite(chosenSpriteId); // โหลดล่วงหน้าให้พรีวิวหน้าสร้างตัวละครไวขึ้น
+const GENDER_SPRITE_IDS = ["office_male", "office_female"];
+let chosenSpriteId = GENDER_SPRITE_IDS[chosenGender];
+preloadSprite(chosenSpriteId); // โหลดล่วงหน้าให้พรีวิวหน้าสร้างตัวละครไวขึ้น
 let chosenPetName = saved.petName ?? "";
 let chosenDept = saved.dept ?? TEAMS[Math.floor(Math.random() * TEAMS.length)].id; // สุ่มทีมให้ครั้งแรก เปลี่ยนได้เสมอ
 if (saved.name) document.getElementById("name-input").value = saved.name;
@@ -111,6 +112,8 @@ function refreshGenderButtons() {
 }
 genderPicker.querySelectorAll("button").forEach(b => b.addEventListener("click", () => {
   chosenGender = Number(b.dataset.gender);
+  chosenSpriteId = GENDER_SPRITE_IDS[chosenGender];
+  preloadSprite(chosenSpriteId);
   refreshGenderButtons();
   updatePreview();
 }));
@@ -203,19 +206,25 @@ function refreshPetPicker() {
 buildPetPicker();
 refreshPetPicker();
 
-// หน้าสร้างตัวละครไม่มี UI เลือกสไปรท์ความละเอียดสูงแล้ว (ย้ายไปเลือกเป็น "ชุด" ในเกมแทนทั้งหมด
-// ผ่านเมนู 👕 — ดู outfit_menu.js) เหลือแค่ตัวละครฐานเดิม (avatar ธรรมดา) ให้เลือกตอนสร้างตัวละคร
-// chosenSpriteId ตั้งค่าได้ทางเดียวคือ ?sprite= URL param (ใช้เทส) — ไม่ restore จาก localStorage
-// เก่าอีกต่อไป (ดูตอนประกาศตัวแปรด้านบน)
+// หน้าสร้างตัวละครไม่มี UI เลือก "ตัวละคร" อื่นนอกจากเพศแล้ว (ตัวเลือกที่เหลือทั้งหมดย้ายไปเป็น
+// "ชุด" ในเกมแทน ผ่านเมนู 👕 — ดู outfit_menu.js) แต่ตัวละครฐานตอนนี้เป็นสไปรท์ความละเอียดสูง
+// (office_male/female) แทน avatar เดิม 32x50 — chosenSpriteId ปกติตั้งตามเพศเสมอ (ดูตอน
+// ประกาศตัวแปรด้านบน) เปลี่ยนเป็นตัวอื่น/ปิดกลับไปใช้ avatar เดิมได้แค่ผ่าน ?sprite= URL param
+// (ใช้เทส) เท่านั้น — ไม่มีทางเข้าถึงจาก UI ปกติ
 function updatePreview() {
   const canvas = document.getElementById("avatar-preview");
-  document.getElementById("custom-cols").classList.toggle("hidden", !!chosenSpriteId);
+  const def = chosenSpriteId ? getSpriteDef(chosenSpriteId) : null;
+  // ซ่อนแถบสีผม/เสื้อเฉพาะตอนตัวละครที่เลือกไว้ (ผ่าน ?sprite= เทส) ไม่รองรับ recolor เลย
+  // (ไม่มี hairMask/clothingMask ใน manifest) — โหมดปกติ (office_male/female หรือ avatar เดิม)
+  // ปรับสีได้เสมอ
+  const supportsRecolor = !chosenSpriteId || !!(def && (def.hairMask || def.clothingMask));
+  document.getElementById("custom-cols").classList.toggle("hidden", !supportsRecolor);
   if (chosenSpriteId) {
     // ขนาดจริง (attribute) ต้องตรงกับขนาดแสดงผล (CSS) เป๊ะ กันภาพถูกยืด/บีบสัดส่วนตอนเบราว์เซอร์
     // scale ให้พอดีกล่อง — โหมด avatar ปกติใช้ CSS ที่ตั้งไว้ล่วงหน้า (64x96) ไม่ต้องยุ่ง inline style
     canvas.width = HIRES_PREVIEW_BOX; canvas.height = HIRES_PREVIEW_BOX;
     canvas.style.width = HIRES_PREVIEW_BOX + "px"; canvas.style.height = HIRES_PREVIEW_BOX + "px";
-    const draw = () => drawSpritePreview(canvas.getContext("2d"), canvas, chosenSpriteId, "down");
+    const draw = () => drawSpritePreview(canvas.getContext("2d"), canvas, chosenSpriteId, "down", chosenHair, chosenShirt);
     draw();
     preloadSprite(chosenSpriteId).then(draw); // เผื่อยังโหลดไม่เสร็จตอนกดเลือกครั้งแรก
     return;
@@ -299,8 +308,8 @@ function startGame() {
     ent.duelWinRate = n.duelWinRate;
     if (n.roomBox) ent.roomBox = n.roomBox.map(v => v * world.tile);
     if (n.hair || n.shirt) ent.sheet = makeCustomSheet(world, n.variant, { hair: n.hair, shirt: n.shirt });
-    // เผื่ออนาคตอยาก assign สไปรท์ความละเอียดสูงให้ NPC บางคน (data.js เพิ่ม n.spriteId เข้าไป) —
-    // ไม่มี NPC ไหนใช้ตอนนี้ (ทุกคนยังเป็นระบบ avatar เดิม) โค้ดนี้เป็น no-op จนกว่าจะมีคนตั้งค่า
+    // ผู้บริหารทั้ง 6 คนตั้ง spriteId ไว้ใน data.js (พอร์ตเรทเฉพาะจาก office-avatar-sprites) —
+    // NPC คนอื่นที่ไม่ได้ตั้งค่านี้ยังใช้ระบบ avatar เดิมตามปกติ
     if (n.spriteId) {
       ent.spriteId = n.spriteId;
       preloadSprite(n.spriteId); // เฉพาะ NPC ที่อยู่ในฉากจริงเท่านั้น (ไม่ preload สไปรท์ทั้งระบบ)

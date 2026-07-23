@@ -112,13 +112,17 @@ NAME_OVERRIDES = {
     "office_cfo": "CFO",
     "office_cdo": "CDO",
     "office_cro": "CRO",
+    "office_male": "พนักงานชาย (ปรับสีผม/เสื้อได้)",
+    "office_female": "พนักงานหญิง (ปรับสีผม/เสื้อได้)",
 }
 
-# Purpose-built executive portraits (pixel-art/office-avatar-sprites/) — separate from the
-# general pixel-art/**/*-walk-sheet.png discovery above because this set uses its own sheet
-# convention (see sprites.json: directions ["front","right","left","back"], not our usual
-# ["down","left","right","up"] — "right" and "left" are in the OPPOSITE order too) and its own
-# versioning scheme (bare name = v1, "_v2" suffix = newer). id -> latest source basename.
+# Purpose-built office/executive portraits (pixel-art/office-avatar-sprites/) — separate from
+# the general pixel-art/**/*-walk-sheet.png discovery above because this set uses its own
+# sheet convention (see sprites.json: directions ["front","right","left","back"], not our
+# usual ["down","left","right","up"] — "right" and "left" are in the OPPOSITE order too) and
+# its own versioning scheme (bare name = v1, "_v2" suffix = newer). id -> latest source
+# basename. "office_male"/"office_female" are the generic, freely-recolorable player-facing
+# variants (see HAIR/CLOTHING_MASK_IDS below); the rest are bespoke per-exec designs.
 OFFICE_AVATAR_DIR = ROOT / "pixel-art" / "office-avatar-sprites"
 OFFICE_EXEC_SOURCES = {
     "office_ceo": "male_ceo_v2",
@@ -127,7 +131,20 @@ OFFICE_EXEC_SOURCES = {
     "office_cdo": "female_cdo_v2",
     "office_cfo": "male_cfo",   # no v2 exists for this role
     "office_cro": "male_cro",  # no v2 exists for this role
+    "office_male": "male",
+    "office_female": "female",
 }
+
+# office-avatar-sprites ids whose hair_mask/clothing_mask should be wired into the manifest
+# for runtime recolor (see sprites.js's hi-res recolor support) — only the two generic
+# variants are meant to be freely recolored; the exec portraits are bespoke, used as-is
+# (matches build_avatars.py's precedent: "แถวที่ 2+ ... ใช้ as-is ไม่ recolor").
+OFFICE_RECOLORABLE_IDS = {"office_male", "office_female"}
+
+# male_cro_spritesheet.png's "right"/"left" rows are swapped in the source (confirmed by
+# build_avatars.py's SWAP_LR_PREFIXES, which already special-cases exactly this one file for
+# the legacy avatar system) — apply the same correction here.
+OFFICE_SWAP_LR_IDS = {"office_cro"}
 
 
 def to_id(stem: str) -> str:
@@ -252,16 +269,18 @@ def fix_swapped_lr(dest_png: Path, meta: dict):
 
 
 def import_office_execs(dry_run: bool):
-    """Import the 6 purpose-built executive portraits (see OFFICE_EXEC_SOURCES) — reorders
-    rows from the source convention (front,right,left,back) to ours (down,left,right,up),
-    since source row 1/2 are also in the opposite left/right order from what we use
-    elsewhere. Returns a list of manifest-entry dicts (same shape as the regular pipeline)."""
+    """Import the office-avatar-sprites portraits (see OFFICE_EXEC_SOURCES: 6 execs + the 2
+    generic recolorable player variants) — reorders rows from the source convention
+    (front,right,left,back) to ours (down,left,right,up), since source row 1/2 are also in
+    the opposite left/right order from what we use elsewhere. Returns a list of
+    manifest-entry dicts (same shape as the regular pipeline)."""
     entries = []
     fw = fh = 128
     frames_per_dir = 4
     directions = ["down", "left", "right", "up"]
     # source row index for each of OUR target rows (down,left,right,up)
-    src_row_for_target = [0, 2, 1, 3]  # front->down, left->left(src idx2), right->right(src idx1), back->up
+    default_src_row_for_target = [0, 2, 1, 3]  # front->down, left->left(src idx2), right->right(src idx1), back->up
+    swapped_src_row_for_target = [0, 1, 2, 3]  # OFFICE_SWAP_LR_IDS: left/right read from the opposite-labeled row
 
     for id_, basename in OFFICE_EXEC_SOURCES.items():
         src_png = OFFICE_AVATAR_DIR / f"{basename}_spritesheet.png"
@@ -273,6 +292,7 @@ def import_office_execs(dry_run: bool):
             print(f"  ! office exec {id_} unexpected size {img.size}, skipping")
             continue
 
+        src_row_for_target = swapped_src_row_for_target if id_ in OFFICE_SWAP_LR_IDS else default_src_row_for_target
         reordered = Image.new("RGBA", img.size, (0, 0, 0, 0))
         for target_row, src_row in enumerate(src_row_for_target):
             strip = img.crop((0, src_row * fh, fw * frames_per_dir, (src_row + 1) * fh))
@@ -286,6 +306,9 @@ def import_office_execs(dry_run: bool):
         png_name = f"{id_.replace('_', '-')}-walk-sheet.png"
         hair_name = f"{id_.replace('_', '-')}-hair-mask.png"
         clothing_name = f"{id_.replace('_', '-')}-clothing-mask.png"
+        recolorable = id_ in OFFICE_RECOLORABLE_IDS
+        hair_mask_ref = f"assets/characters/{hair_name}" if recolorable else None
+        clothing_mask_ref = f"assets/characters/{clothing_name}" if recolorable else None
 
         if not dry_run:
             OUT_DIR.mkdir(parents=True, exist_ok=True)
@@ -315,8 +338,8 @@ def import_office_execs(dry_run: bool):
             "groundAnchorY": ground_anchor_y,
             "collisionWidth": 20,
             "collisionHeight": 14,
-            "hairMask": None,
-            "clothingMask": None,
+            "hairMask": hair_mask_ref,
+            "clothingMask": clothing_mask_ref,
             "visualScale": overrides.get("visualScale", 1),
             "visualOffsetX": overrides.get("visualOffsetX", 0),
             "visualOffsetY": overrides.get("visualOffsetY", 0),

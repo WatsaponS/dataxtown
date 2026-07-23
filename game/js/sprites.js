@@ -13,8 +13,10 @@
 
 import { directionIndex } from "./entities.js";
 import { getSpriteDef } from "./sprites_manifest.js";
+import { applyMaskRecolor } from "./avatar.js";
 
-const _cache = new Map(); // id -> { img, promise, ready, failed }
+const _cache = new Map(); // id -> { img, promise, ready, failed, hairMaskImg, clothingMaskImg }
+const _customCache = new Map(); // `${id}|${hair}|${shirt}` -> HTMLCanvasElement (recolored whole sheet)
 
 function loadImage(src) {
   return new Promise(resolve => {
@@ -28,23 +30,74 @@ function loadImage(src) {
 // เรียกล่วงหน้าตอนรู้แล้วว่าจะใช้ id ไหน (เลือกตัวละครตอนสร้าง + NPC ที่มีจริงในฉากเท่านั้น —
 // "ห้าม preload ทุกตัวละครในระบบ" ตาม requirement H) คืน promise เดิมถ้าเคยเรียกไปแล้ว
 // (ไม่โหลดซ้ำ) resolve เสมอไม่ว่าจะสำเร็จหรือพัง (ไม่ throw — เกมต้องไม่ crash ถ้า asset หาย)
+// ถ้า def มี hairMask/clothingMask (ตัวละครที่ปรับสีได้ เช่น office_male/office_female) โหลด
+// มาสก์คู่กันไปเลย จะได้พร้อมใช้ recolor ทันทีที่ตัวสไปรท์หลักพร้อม ไม่ต้องรอ preload แยกรอบสอง
 export function preloadSprite(id) {
   const def = getSpriteDef(id);
   if (!def) return Promise.resolve(null);
   let entry = _cache.get(id);
   if (entry) return entry.promise;
-  entry = { img: null, ready: false, failed: false, promise: null };
-  entry.promise = loadImage(def.image).then(({ img, ok }) => {
-    entry.img = img;
-    if (ok) entry.ready = true;
+  entry = { img: null, ready: false, failed: false, promise: null, hairMaskImg: null, clothingMaskImg: null };
+  const loads = [loadImage(def.image)];
+  loads.push(def.hairMask ? loadImage(def.hairMask) : Promise.resolve(null));
+  loads.push(def.clothingMask ? loadImage(def.clothingMask) : Promise.resolve(null));
+  entry.promise = Promise.all(loads).then(([main, hair, clothing]) => {
+    entry.img = main.img;
+    if (main.ok) entry.ready = true;
     else {
       entry.failed = true;
       console.warn(`โหลดสไปรท์ตัวละคร "${id}" ไม่สำเร็จ (${def.image}) — ใช้ตัวละครเริ่มต้นแทน`);
     }
+    if (hair && hair.ok) entry.hairMaskImg = hair.img;
+    if (clothing && clothing.ok) entry.clothingMaskImg = clothing.img;
     return entry;
   });
   _cache.set(id, entry);
   return entry.promise;
+}
+
+// สร้าง (หรือคืนจาก cache) sheet ทั้งแผ่นที่ recolor ผม/เสื้อแล้ว — ใช้อัลกอริทึมเดียวกับ avatar.js
+// เป๊ะ (คงความสว่างเดิมของแต่ละพิกเซล คูณด้วยสีเป้าหมาย) แค่ทำงานบน sheet เต็ม (grid 4x4) แทน
+// แถบเดียว ต้อง sourceFrameWidth/Height ตรงกับที่ manifest ประกาศไว้เป๊ะ คืน null ถ้าไม่มีอะไรต้อง
+// recolor (ไม่มี hair/shirt เลือกไว้ หรือตัวละครนี้ไม่รองรับมาสก์) ให้ผู้เรียก fallback ไปใช้ภาพดิบ
+// cache ต่อ (id, hair, shirt) กันสร้าง canvas ใหม่ทุกเฟรม (ห้ามตาม requirement H)
+export function getCustomHiresCanvas(spriteId, hair, shirt) {
+  if (!hair && !shirt) return null;
+  const entry = _cache.get(spriteId);
+  if (!entry || !entry.ready) return null;
+  if ((hair && !entry.hairMaskImg) && (shirt && !entry.clothingMaskImg)) return null;
+  const key = `${spriteId}|${hair || ""}|${shirt || ""}`;
+  let canvas = _customCache.get(key);
+  if (canvas) return canvas;
+
+  const def = getSpriteDef(spriteId);
+  const w = def.sourceFrameWidth * def.columns, h = def.sourceFrameHeight * def.rows;
+  canvas = document.createElement("canvas");
+  canvas.width = w; canvas.height = h;
+  const ctx = canvas.getContext("2d");
+  ctx.imageSmoothingEnabled = false;
+  ctx.drawImage(entry.img, 0, 0, w, h, 0, 0, w, h);
+
+  const maskCanvas = document.createElement("canvas");
+  maskCanvas.width = w; maskCanvas.height = h;
+  const maskCtx = maskCanvas.getContext("2d");
+
+  const img = ctx.getImageData(0, 0, w, h);
+  const d = img.data;
+  if (hair && entry.hairMaskImg) {
+    maskCtx.clearRect(0, 0, w, h);
+    maskCtx.drawImage(entry.hairMaskImg, 0, 0, w, h, 0, 0, w, h);
+    applyMaskRecolor(d, maskCtx.getImageData(0, 0, w, h).data, hair);
+  }
+  if (shirt && entry.clothingMaskImg) {
+    maskCtx.clearRect(0, 0, w, h);
+    maskCtx.drawImage(entry.clothingMaskImg, 0, 0, w, h, 0, 0, w, h);
+    applyMaskRecolor(d, maskCtx.getImageData(0, 0, w, h).data, shirt);
+  }
+  ctx.putImageData(img, 0, 0);
+
+  _customCache.set(key, canvas);
+  return canvas;
 }
 
 // คืน HTMLImageElement ถ้าพร้อมวาดแล้ว (โหลดเสร็จและไม่พัง) — null ถ้ายังไม่เสร็จ/พัง/ไม่รู้จัก id
@@ -79,8 +132,11 @@ export function drawHiresCharacter(ctx, ent, hop = 0) {
   if (!ent.spriteId) return false;
   const def = getSpriteDef(ent.spriteId);
   if (!def) return false; // id ไม่รู้จัก (เช่น client เก่ากว่า/manifest ไม่ตรงกัน) — fallback เงียบ ๆ
-  const img = getSpriteImage(ent.spriteId);
-  if (!img) return false; // ยังโหลดไม่เสร็จ หรือโหลดพัง — fallback ไปวาด avatar เดิมแทน
+  const rawImg = getSpriteImage(ent.spriteId);
+  if (!rawImg) return false; // ยังโหลดไม่เสร็จ หรือโหลดพัง — fallback ไปวาด avatar เดิมแทน
+  // ตัวละครที่ปรับสีผม/เสื้อได้ (มี hairMask/clothingMask ใน manifest เช่น office_male/female) —
+  // ใช้ sheet ที่ recolor แล้วแทนถ้ามีการเลือกสี ไม่งั้นใช้ภาพดิบตามปกติ
+  const img = (ent.hair || ent.shirt) ? (getCustomHiresCanvas(ent.spriteId, ent.hair, ent.shirt) || rawImg) : rawImg;
 
   const dirIdx = directionIndex(ent);
   const frameIdx = frameIndexFor(ent, def);
@@ -110,12 +166,13 @@ export function drawHiresCharacter(ctx, ent, hop = 0) {
 // ---------- พรีวิวหน้าสร้างตัวละคร (section E) ----------
 // contain-fit ลง canvas ขนาด boxW x boxH โดยรักษาสัดส่วนเสมอ (ห้าม stretch/บีบ) ยึดตำแหน่งจาก
 // ground anchor เหมือนกันกับตอนวาดในเกมจริง (ไม่ใช่แค่กึ่งกลางกล่องเฉย ๆ)
-export function drawSpritePreview(ctx, canvas, spriteId, dir = "down") {
+export function drawSpritePreview(ctx, canvas, spriteId, dir = "down", hair = null, shirt = null) {
   const def = getSpriteDef(spriteId);
-  const img = getSpriteImage(spriteId);
+  const rawImg = getSpriteImage(spriteId);
   ctx.imageSmoothingEnabled = false;
   ctx.clearRect(0, 0, canvas.width, canvas.height);
-  if (!def || !img) return false;
+  if (!def || !rawImg) return false;
+  const img = (hair || shirt) ? (getCustomHiresCanvas(spriteId, hair, shirt) || rawImg) : rawImg;
   const boxW = canvas.width, boxH = canvas.height;
   const MARGIN = 0.92; // เผื่อขอบเล็กน้อยกันชนขอบกล่องพอดีเป๊ะ
   // คูณ visualScale ด้วยเพื่อให้พรีวิวตรงกับขนาดจริงตอนเดินในเกม (WYSIWYG กับ Phase H ที่ normalize

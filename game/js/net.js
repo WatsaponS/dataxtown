@@ -127,6 +127,11 @@ export function addRemote(world, info) {
   });
   ent.dir = info.dir || "down";
   ent.tx = info.x; ent.ty = info.y;
+  // เก็บ hair/shirt ไว้ตรง ๆ ด้วย (ไม่ใช่แค่ baked ลง ent.sheet) — drawHiresCharacter() ใน
+  // sprites.js อ่านจาก ent.hair/ent.shirt ตรง ๆ เพื่อ recolor สไปรท์ความละเอียดสูง (office_male/
+  // female) ส่วน ent.sheet ยังคงไว้เป็น fallback ให้ระบบ avatar เดิมเหมือนก่อน
+  ent.hair = info.hair || null;
+  ent.shirt = info.shirt || null;
   if (info.hair || info.shirt) {
     ent.sheet = makeCustomSheet(world, ent.variant, { hair: info.hair, shirt: info.shirt });
   }
