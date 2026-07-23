@@ -97,9 +97,11 @@ SRC_FRAME = 128
 # ต้นฉบับที่พัง รับประกันว่า mirror ถูกต้องเสมอไม่ว่าต้นฉบับจะเพี้ยนแค่ไหน
 MIRROR_RIGHT_FROM_LEFT = {v for v, _ in VARIANTS if v not in ("male_cyber_fantasy", "female_cyber_fantasy")}
 
-# mechanism เผื่อ variant ในอนาคตที่ต้อง mirror "left" จาก "right" แทน (ตรงข้ามกับ default
-# ด้านบน) — ไม่มีตัวไหนต้องใช้ตอนนี้ (ดู row_order ใน build() ที่รองรับกรณีนี้อยู่แล้ว)
-MIRROR_LEFT_FROM_RIGHT = set()
+# noir_orchid: ลองทั้งสองทิศ mirror แล้ว (right จาก left, และ left จาก right) — เทียบอัตโนมัติกับ
+# ตัวละครอื่นให้ผลขัดแย้งกัน สุดท้ายใช้ผลทดสอบจริงจากผู้เล่นเป็นหลัก (เดินจริงในเกม) ยืนยันว่าทิศนี้
+# (mirror left จาก right) ถูกต้อง หลังจากทิศตรงข้ามยังผิดอยู่
+MIRROR_LEFT_FROM_RIGHT = {"noir_orchid"}
+MIRROR_RIGHT_FROM_LEFT -= MIRROR_LEFT_FROM_RIGHT
 SWAP_LR_ROWS = set()
 MIRROR_RIGHT_FROM_LEFT -= SWAP_LR_ROWS
 

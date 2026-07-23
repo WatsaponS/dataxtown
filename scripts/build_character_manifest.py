@@ -81,16 +81,13 @@ PET_FOLDER_NAMES = {
 VISUAL_OVERRIDES = {}
 
 # Ids whose raw source sheet has a genuine content bug: the "left" and "right" rows show the
-# same pose instead of two mirrored poses. Fix: mirror "right" from "left" (keep left as-is).
-# Verified via real KeyA-driven movement (through the actual game/entities.js code path, not
-# a manual dir override) cross-checked against crimson_aegis_knight — another hi-res outfit
-# never reported as buggy — under the identical dir="left" state: the two match each other's
-# apparent facing. (A naive comparison against the legacy 32x50 avatar's left-facing frame is
-# NOT a valid reference here — that art was drawn by a different pipeline with its own
-# left/right convention; only same-pipeline hi-res characters are comparable.) Rearranges
-# existing pixels only, no new art drawn — matches the outfit system's MIRROR_RIGHT_FROM_LEFT
-# in build_outfits.py.
-MIRROR_RIGHT_FROM_LEFT_IDS = {"noir_orchid", "noir_orchid_v2", "noir_orchid_v3"}
+# same pose instead of two mirrored poses. Fix: mirror "left" from "right" (keep right as-is).
+# Automated cross-character comparisons (vs. legacy avatar, vs. crimson_aegis_knight) gave
+# conflicting signals for which mirror direction is correct — direct user playtesting is the
+# ground truth here, and confirmed this direction after the opposite one (mirror right from
+# left) was reported as still backwards. Rearranges existing pixels only, no new art drawn —
+# matches the outfit system's MIRROR_LEFT_FROM_RIGHT in build_outfits.py.
+MIRROR_LEFT_FROM_RIGHT_IDS = {"noir_orchid", "noir_orchid_v2", "noir_orchid_v3"}
 
 NAME_OVERRIDES = {
     "crimson_aegis_knight": "อัศวินโล่เพลิง",
@@ -214,9 +211,9 @@ def find_sibling_json(png_path: Path) -> Path:
     return exact  # let validate() report the "missing" reason with the expected name
 
 
-def fix_mirrored_right(dest_png: Path, meta: dict):
-    """Overwrite the 'right' row in-place with a per-frame horizontal mirror of the 'left'
-    row. Used for MIRROR_RIGHT_FROM_LEFT_IDS (see comment there). Mirrors each frame column
+def fix_mirrored_left(dest_png: Path, meta: dict):
+    """Overwrite the 'left' row in-place with a per-frame horizontal mirror of the 'right'
+    row. Used for MIRROR_LEFT_FROM_RIGHT_IDS (see comment there). Mirrors each frame column
     individually (not the whole strip) so walk-cycle frame order along the row is preserved."""
     directions = meta["directions"]
     fw, fh = meta["frameWidth"], meta["frameHeight"]
@@ -225,8 +222,8 @@ def fix_mirrored_right(dest_png: Path, meta: dict):
     right_row = directions.index("right")
     img = Image.open(dest_png).convert("RGBA")
     for col in range(frames_per_dir):
-        frame = img.crop((col * fw, left_row * fh, (col + 1) * fw, (left_row + 1) * fh))
-        img.paste(frame.transpose(Image.FLIP_LEFT_RIGHT), (col * fw, right_row * fh))
+        frame = img.crop((col * fw, right_row * fh, (col + 1) * fw, (right_row + 1) * fh))
+        img.paste(frame.transpose(Image.FLIP_LEFT_RIGHT), (col * fw, left_row * fh))
     img.save(dest_png)
 
 
@@ -323,8 +320,8 @@ def main():
         dest_json.write_bytes(entry["json"].read_bytes())
 
         meta = entry["meta"]
-        if id_ in MIRROR_RIGHT_FROM_LEFT_IDS:
-            fix_mirrored_right(dest_png, meta)
+        if id_ in MIRROR_LEFT_FROM_RIGHT_IDS:
+            fix_mirrored_left(dest_png, meta)
         fw, fh = meta["frameWidth"], meta["frameHeight"]
         overrides = VISUAL_OVERRIDES.get(id_, {})
         manifest_entries.append({
