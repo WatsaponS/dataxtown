@@ -19,7 +19,11 @@ export const PETS = [
 
 export const ALL_PETS = PETS; // ชื่อเดิมไว้ให้โมดูลอื่น import ไม่ต้องแก้ (ตอนนี้ = PETS ล้วน)
 
-// pets.png: CELL px, 4 คอลัมน์ (เฟรมเดิน) x (13 สัตว์ x 4 ทิศ) แถว — ดู build_pets.py
+// pets.png: SRC_FRAME px ต่อช่อง (เต็มความละเอียดต้นฉบับ ไม่ถูกย่อ), 4 คอลัมน์ (เฟรมเดิน) x
+// (13 สัตว์ x 4 ทิศ) แถว — ดู build_pets.py คนละเรื่องกับ PET_FRAME (ขนาดที่วาดจริงบนจอ,
+// ไม่เปลี่ยนจากเดิม) แยกกันเหมือนกับ sourceFrameWidth/displayWidth ในระบบตัวละครความละเอียดสูง —
+// ให้ canvas ย่อตอน draw แทนการ bake ไฟล์ย่อไว้ล่วงหน้า ภาพคมกว่าเดิมทั้งที่ขนาดในเกมเท่าเดิม
+export const PET_SRC_FRAME = 96;
 export const PET_FRAME = 32;
 export const PET_DIRS = ["down", "left", "right", "up"];
 export const PET_PHASES = 4;

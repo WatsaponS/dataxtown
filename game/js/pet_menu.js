@@ -1,7 +1,7 @@
 // เมนู 🐾 ในเกม — เปลี่ยน/ตั้งชื่อสัตว์เลี้ยงได้ตลอด เลือกได้ทั้ง 13 นักษัตร ไม่ต้องปลดล็อก
 // เปลี่ยนแล้ว sync ไปให้คนอื่นเห็นทันทีผ่าน world.net.updatePet (WebSocket หรือ Firebase)
 
-import { ALL_PETS, PET_FRAME, petIconRow, petInfo } from "./pets_data.js";
+import { ALL_PETS, PET_FRAME, PET_SRC_FRAME, petIconRow, petInfo } from "./pets_data.js";
 import { setPet, petImageEl } from "./pets.js";
 import { saveHome } from "./decor.js";
 import { addSystemLine } from "./ui.js";
@@ -67,7 +67,7 @@ function render(world, selected) {
     c.width = PET_FRAME; c.height = PET_FRAME;
     const cc = c.getContext("2d");
     cc.imageSmoothingEnabled = false;
-    const draw = () => cc.drawImage(img, 0, petIconRow(pet.id) * PET_FRAME, PET_FRAME, PET_FRAME, 0, 0, PET_FRAME, PET_FRAME);
+    const draw = () => cc.drawImage(img, 0, petIconRow(pet.id) * PET_SRC_FRAME, PET_SRC_FRAME, PET_SRC_FRAME, 0, 0, PET_FRAME, PET_FRAME);
     if (img && img.complete) draw(); else if (img) img.addEventListener("load", draw, { once: true });
     const label = document.createElement("span");
     label.textContent = `${pet.emoji} ${pet.name}`;

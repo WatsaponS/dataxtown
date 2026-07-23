@@ -2,7 +2,7 @@
 // สัตว์เดินตามจุดบนเส้นทางที่ห่างจากเจ้าของปัจจุบันไปทางท้ายเส้นตามระยะที่กำหนด (lag)
 // ข้อดี: เดินตามได้โดยไม่มีทางชนกำแพง เพราะเจ้าของเดินผ่านช่องเดินได้จริงมาแล้วเสมอ
 
-import { PET_FRAME, petFrameRow } from "./pets_data.js";
+import { PET_FRAME, PET_SRC_FRAME, petFrameRow } from "./pets_data.js";
 
 const LAG_DIST = 60;        // px — ระยะห่างจากเจ้าของตามเส้นทาง (2x จาก 30 — ตาม tile 24->48px)
 const SAMPLE_MIN_DIST = 10; // px — บันทึกจุดใหม่เมื่อเจ้าของขยับเกินนี้ (2x จาก 5)
@@ -112,7 +112,7 @@ export function drawPet(ctx, ent) {
   const row = petFrameRow(ent.petId, ent.pet.dir);
   if (row < 0) return;
   const col = ent.pet.moving ? (Math.floor(ent.pet.animTime * 7) % 4) : 0;
-  const size = PET_FRAME, dsize = size * PET_DRAW_SCALE;
+  const dsize = PET_FRAME * PET_DRAW_SCALE; // ขนาดที่วาดจริงบนจอ เท่าเดิมทุกประการ
   const dx = Math.round(ent.pet.x - dsize / 2), dy = Math.round(ent.pet.y - dsize + 6);
   // เงาอิงสัดส่วนตัวสัตว์จริง (แบบเดียวกับเงาผู้เล่นใน render.js ที่ใช้ frameW*0.62) — ก่อนหน้านี้
   // เป็นความกว้างคงที่ dsize-8 ที่ตั้งไว้ตอนสไปรท์ยังเล็ก (16px) พอสไปรท์ใหญ่ขึ้นเป็น 32px
@@ -120,5 +120,7 @@ export function drawPet(ctx, ent) {
   const shadowW = Math.round(dsize * 0.5), shadowH = Math.max(2, Math.round(dsize * 0.06));
   ctx.fillStyle = "rgba(0,0,0,0.22)";
   ctx.fillRect(Math.round(ent.pet.x - shadowW / 2), Math.round(ent.pet.y) - 2, shadowW, shadowH);
-  ctx.drawImage(img, col * size, row * size, size, size, dx, dy, dsize, dsize);
+  // ครอปจาก sheet ต้นฉบับความละเอียดสูง (PET_SRC_FRAME) แต่วาดลงขนาดจอเดิม (dsize) — ให้ canvas
+  // ย่อตอน draw แทนการใช้ภาพที่ถูก downscale ไว้ล่วงหน้าแล้วในไฟล์
+  ctx.drawImage(img, col * PET_SRC_FRAME, row * PET_SRC_FRAME, PET_SRC_FRAME, PET_SRC_FRAME, dx, dy, dsize, dsize);
 }

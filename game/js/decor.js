@@ -15,7 +15,7 @@ import { GACHA_SHEET_COLS, gachaItemName } from "./gacha_data.js";
 import { SEASON_SHEET_COLS, seasonItemName } from "./season_data.js";
 import { EVENT_ID, EVENT_ITEMS, EVENT_NAME, EVENT_END, EVENT_SHEET_COLS, isEventActive, eventItemName } from "./events_data.js";
 import { petImageEl, setPet } from "./pets.js";
-import { PET_FRAME, petFrameRow } from "./pets_data.js";
+import { PET_FRAME, PET_SRC_FRAME, petFrameRow } from "./pets_data.js";
 
 const ROOM_TRICKS = ["💤", "🎾", "🦴", "💫", "✨", "😽"];
 
@@ -498,12 +498,13 @@ function drawRoomPet(world, c) {
   const row = petFrameRow(b.petId, b.dir);
   if (row < 0) return;
   const col = b.moving ? Math.floor(b.animTime * 7) % 4 : 0;
-  const size = PET_FRAME;
+  const size = PET_FRAME; // ขนาดที่วาดจริง เท่าเดิมทุกประการ
   const dx = Math.round(b.x - size / 2) * S, dy = Math.round(b.y - size + 3) * S;
   const shadowW = Math.round(size * 0.5), shadowH = Math.max(2, Math.round(size * 0.06));
   c.fillStyle = "rgba(0,0,0,0.22)";
   c.fillRect(Math.round(b.x - shadowW / 2) * S, Math.round(b.y - 1) * S, shadowW * S, shadowH * S);
-  c.drawImage(img, col * size, row * size, size, size, dx, dy, size * S, size * S);
+  // ครอปจาก sheet ต้นฉบับความละเอียดสูง (PET_SRC_FRAME) วาดลงขนาดจอเดิม (size*S)
+  c.drawImage(img, col * PET_SRC_FRAME, row * PET_SRC_FRAME, PET_SRC_FRAME, PET_SRC_FRAME, dx, dy, size * S, size * S);
   const now = performance.now() / 1000;
   if (now < b.trickUntil) {
     const bob = Math.sin((b.trickUntil - now) * 10) * 2 * S;
