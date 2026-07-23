@@ -3,7 +3,7 @@
 // ใช้ DOM id เดิมจากระบบเครื่องแต่งกายแบบชิ้น ๆ รุ่นก่อน (#cosmetics-btn/#cosmetics-overlay ฯลฯ)
 // เพราะ CSS ตำแหน่ง/ขนาดปุ่มถูกต้องอยู่แล้ว เปลี่ยนแค่เนื้อหาเมนูข้างใน
 
-import { OUTFITS, OUTFIT_FRAME_W, OUTFIT_FRAME_H } from "./outfit_data.js";
+import { OUTFITS, OUTFIT_SRC_W, OUTFIT_SRC_H, OUTFIT_FRAME_W, OUTFIT_FRAME_H } from "./outfit_data.js";
 import { outfitImageEl } from "./outfit.js";
 import { saveHome } from "./decor.js";
 import { SPRITE_MANIFEST, getSpriteDef } from "./sprites_manifest.js";
@@ -60,7 +60,8 @@ function outfitThumb(id) {
   cx.imageSmoothingEnabled = false;
   const img = outfitImageEl();
   const row = OUTFITS.findIndex(o => o.id === id);
-  const draw = () => cx.drawImage(img, 0, row * OUTFIT_FRAME_H, OUTFIT_FRAME_W, OUTFIT_FRAME_H, 0, 0, OUTFIT_FRAME_W, OUTFIT_FRAME_H);
+  // ครอปจาก sheet ต้นฉบับความละเอียดสูง (เหมือน outfit.js) ไม่ใช่ FRAME_W/H เดิม — พรีวิวจะคมกว่า
+  const draw = () => cx.drawImage(img, 0, row * OUTFIT_SRC_H, OUTFIT_SRC_W, OUTFIT_SRC_H, 0, 0, OUTFIT_FRAME_W, OUTFIT_FRAME_H);
   if (img && img.complete) draw(); else if (img) img.addEventListener("load", draw, { once: true });
   return c;
 }

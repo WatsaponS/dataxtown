@@ -14,14 +14,13 @@ overlays), this is a full-body replacement layer: when equipped it's drawn
 animation, so it moves naturally instead of a single static pose. No
 recolor -- it's shown exactly as designed.
 
-Output frame height matches avatars.png's content height (48px) so an
-equipped character stands the same height as everyone else, but the frame
-is wider than avatars.png (32px) because the front-facing pose has wings
-spread out to both sides -- narrower would clip the wingtips. Frame size
-is derived from the actual measured source content, not guessed, and the
-game draws this sheet at its own native size (not squeezed to match the
-base character's frame), so the source detail stays visible instead of
-being crushed down further than necessary.
+Output frame height is 2x the on-screen display size (see OUTFIT_FRAME_W/H
+in outfit_data.js, which is the actual drawn size in-game and hasn't
+changed) -- outfit.js crops from this higher-resolution sheet and lets the
+canvas downscale at draw time instead of baking the downscale into the PNG,
+same source/display split as sprites_manifest.js uses for the hi-res
+character system. Frame size is derived from the actual measured source
+content, not guessed.
 
 Output: game/assets/outfits.png (+ outfits.json). Row 0 = male_cyber_fantasy,
 row 1 = female_cyber_fantasy. 16 cols per row (4 directions x 4 walk frames).
@@ -39,9 +38,15 @@ ROOT = OUT.parent.parent / "pixel-art"
 # เดา ๆ ไว้ ทำให้ (1) ตัวใหญ่กว่าที่ตั้งใจ และ (2) ปีกที่กางออกด้านข้าง (ท่าหน้าตรง) กว้างกว่ากรอบ
 # ที่เผื่อไว้ โดนตัดขอบซ้าย/ขวา — ตอนนี้คำนวณ FW/FH จากขนาดคอนเทนต์จริงที่วัดได้ ไม่เดาอัตราส่วน
 # จากตัวละครฐานอีกต่อไป)
-TARGET_H = 53
-WING_PAD = 4   # กันเผื่อขอบซ้าย/ขวานิดหน่อยไม่ให้ปีกชนขอบเฟรมพอดีเป๊ะ
-HEADROOM = 2   # กันเผื่อขอบบน เท่ากับ build_avatars.py (เนื้อตัว 48px บนเฟรมสูง 50px)
+# เดิมตั้ง TARGET_H=53 มาตรงกับ "ขนาดที่จะวาดบนจอ" ตรง ๆ ทำให้ downscale จาก source 128px ลงมา
+# เหลือ ~53px ถูก "baked" ลงในไฟล์ outfits.png เอง เสียรายละเอียดไปเยอะ (สังเกตได้ชัดเทียบกับระบบ
+# ตัวละครความละเอียดสูง sprites_manifest.js ที่แยก source/display ออกจากกัน) — ตอนนี้ TARGET_H คือ
+# ความสูงของ "sheet ต้นฉบับ" เท่านั้น (คูณ 2 จากเดิม เก็บรายละเอียดไว้มากขึ้น) ส่วนขนาดที่วาดจริงบน
+# จอยังเท่าเดิมทุกประการ (ดู OUTFIT_FRAME_W/H ใน outfit_data.js ที่แยกออกมาเป็น "display size"
+# ต่างหากแล้ว ไม่ผูกกับ SRC_W/H ของไฟล์นี้อีกต่อไป) — ผลคือของเดิมขนาดในเกมเท่าเดิมเป๊ะ แค่คมขึ้น
+TARGET_H = 106
+WING_PAD = 8   # กันเผื่อขอบซ้าย/ขวานิดหน่อยไม่ให้ปีกชนขอบเฟรมพอดีเป๊ะ (คูณ 2 ตาม TARGET_H)
+HEADROOM = 4   # กันเผื่อขอบบน (คูณ 2 ตาม TARGET_H)
 DIRS = ["down", "left", "right", "up"]
 FRAMES = 4
 

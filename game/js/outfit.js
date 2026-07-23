@@ -8,7 +8,7 @@
 // (ดูจุดยึด dx/dy ด้านล่าง) กัน "ลอย" ผิดตำแหน่งเวลาชุดสูง/กว้างกว่า
 
 import { spriteFrame } from "./entities.js";
-import { OUTFIT_FRAME_W, OUTFIT_FRAME_H, outfitRow } from "./outfit_data.js";
+import { OUTFIT_SRC_W, OUTFIT_SRC_H, OUTFIT_FRAME_W, OUTFIT_FRAME_H, outfitRow } from "./outfit_data.js";
 
 let outfitImg = null;
 export function loadOutfitsImage() {
@@ -29,7 +29,10 @@ export function drawOutfitFrame(ctx, ent, hop = 0) {
   const col = spriteFrame(ent);
   const dx = Math.round(ent.x - OUTFIT_FRAME_W / 2);
   const dy = Math.round(ent.y - OUTFIT_FRAME_H + 1 - hop);
-  ctx.drawImage(outfitImg, col * OUTFIT_FRAME_W, row * OUTFIT_FRAME_H, OUTFIT_FRAME_W, OUTFIT_FRAME_H,
+  // ครอปจาก sheet ต้นฉบับความละเอียดสูง (SRC_W/H) แต่วาดลงขนาดจอเดิม (FRAME_W/H) — ให้ canvas
+  // ย่อตอน draw แทนการใช้ภาพที่ถูก downscale ไว้ล่วงหน้าแล้วในไฟล์ ภาพจะคมกว่าเดิมทั้งที่ขนาด/
+  // ตำแหน่งในเกมเหมือนเดิมทุกประการ
+  ctx.drawImage(outfitImg, col * OUTFIT_SRC_W, row * OUTFIT_SRC_H, OUTFIT_SRC_W, OUTFIT_SRC_H,
     dx, dy, OUTFIT_FRAME_W, OUTFIT_FRAME_H);
   return true;
 }

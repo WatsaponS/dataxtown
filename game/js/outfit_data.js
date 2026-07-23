@@ -39,8 +39,15 @@ export const OUTFITS = [
   { id: "female_bikini_navigator", name: "นาวิกาชายทะเล (หญิง)" },
 ];
 
-// สูงเท่าเฟรมตัวละครฐาน (50) แต่กว้างกว่า (32) เพราะท่าหน้าตรงมีปีกกางออกด้านข้าง — ค่าคำนวณ
-// จากคอนเทนต์จริงใน build_outfits.py (อย่าเดาเอง ไม่งั้นปีกจะโดนตัดขอบเหมือนที่เคยเกิด)
+// ขนาดเฟรม "ต้นฉบับ" ในไฟล์ outfits.png จริง (จาก outfits.json — build_outfits.py คำนวณจาก
+// คอนเทนต์จริง อย่าเดาเอง) สูงกว่า OUTFIT_FRAME_H 2 เท่าโดยตั้งใจ (ดูคอมเมนต์ใน build_outfits.py)
+// เก็บรายละเอียดต้นฉบับไว้มากกว่าขนาดที่วาดจริง แล้วให้ canvas ย่อตอน draw แทนการ bake ลง PNG —
+// เหมือน sourceFrameWidth/Height ในระบบตัวละครความละเอียดสูง (sprites_manifest.js)
+export const OUTFIT_SRC_W = 113;
+export const OUTFIT_SRC_H = 110;
+
+// ขนาดที่ "วาดจริง" บนจอ (world-space px ก่อนคูณ zoom) — ค่าเดิมเป๊ะ ไม่เปลี่ยนพร็อพอร์ชัน/ขนาด
+// ในเกมเลย สูงเท่าเฟรมตัวละครฐาน (50) แต่กว้างกว่า (32) เพราะท่าหน้าตรงมีปีกกางออกด้านข้าง
 export const OUTFIT_FRAME_W = 56;
 export const OUTFIT_FRAME_H = 55;
 export const OUTFIT_DIRS = ["down", "left", "right", "up"];
