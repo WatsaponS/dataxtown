@@ -23,6 +23,7 @@ What it does (see README section at bottom of this file for the full contract):
   6. Regenerates game/js/sprites_manifest.js from scratch (auto-generated, do not hand-edit).
   7. Prints a full report: discovered / validated / imported / rejected-with-reasons.
 """
+import colorsys
 import hashlib
 import json
 import os
@@ -268,6 +269,60 @@ def fix_swapped_lr(dest_png: Path, meta: dict):
     img.save(dest_png)
 
 
+def _hue_dist(h1, h2):
+    d = abs(h1 - h2)
+    return min(d, 1 - d)
+
+
+def repair_recolor_mask(sheet: "Image.Image", mask: "Image.Image", frame_size=128, rows=4, cols=4,
+                         hue_thresh=0.06, min_sat=30):
+    """Extends an incomplete recolor mask by hue-matching: office-avatar-sprites' own hair/
+    clothing masks (pixel-art/office-avatar-sprites/*_hair_mask.png, *_clothing_mask.png) only
+    cover a small patch of the garment for the left/right (profile) frames instead of the
+    whole visible area — confirmed by direct pixel inspection (an ASCII coverage map showed
+    the "#" masked region was a tiny fraction of the "." opaque-but-unmasked jacket silhouette)
+    — so recoloring only tints part of the garment, leaving the rest at its original color.
+    Per-frame (not per-sheet): samples the hue of the EXISTING masked pixels (median, after
+    dropping near-grayscale outline/shadow pixels via a saturation floor — those pulled the
+    naive average badly off, e.g. black outline pixels within the small patch skewed a plain
+    RGB-distance approach to reference a near-black color instead of the garment's true hue),
+    then extends the mask to every opaque pixel in that frame within hue_thresh of that
+    median hue. Union with the original mask (only ever adds coverage, never removes) — a
+    conservative, verifiable extension from real pixel data, not a guess or hand-painted fix."""
+    sheet_px = sheet.load()
+    mask_px = mask.load()
+    out = mask.copy()
+    out_px = out.load()
+    for row in range(rows):
+        for col in range(cols):
+            ox, oy = col * frame_size, row * frame_size
+            hues = []
+            for y in range(oy, oy + frame_size):
+                for x in range(ox, ox + frame_size):
+                    if mask_px[x, y] < 128:
+                        continue
+                    r, g, b, a = sheet_px[x, y]
+                    if a <= 128:
+                        continue
+                    if max(r, g, b) - min(r, g, b) <= min_sat:
+                        continue
+                    h, _, _ = colorsys.rgb_to_hsv(r / 255, g / 255, b / 255)
+                    hues.append(h)
+            if not hues:
+                continue
+            hues.sort()
+            ref_hue = hues[len(hues) // 2]
+            for y in range(oy, oy + frame_size):
+                for x in range(ox, ox + frame_size):
+                    r, g, b, a = sheet_px[x, y]
+                    if a <= 128 or max(r, g, b) - min(r, g, b) <= min_sat:
+                        continue
+                    h, _, _ = colorsys.rgb_to_hsv(r / 255, g / 255, b / 255)
+                    if _hue_dist(h, ref_hue) <= hue_thresh:
+                        out_px[x, y] = 255
+    return out
+
+
 def import_office_execs(dry_run: bool):
     """Import the office-avatar-sprites portraits (see OFFICE_EXEC_SOURCES: 6 execs + the 2
     generic recolorable player variants) — reorders rows from the source convention
@@ -293,10 +348,15 @@ def import_office_execs(dry_run: bool):
             continue
 
         src_row_for_target = swapped_src_row_for_target if id_ in OFFICE_SWAP_LR_IDS else default_src_row_for_target
-        reordered = Image.new("RGBA", img.size, (0, 0, 0, 0))
-        for target_row, src_row in enumerate(src_row_for_target):
-            strip = img.crop((0, src_row * fh, fw * frames_per_dir, (src_row + 1) * fh))
-            reordered.paste(strip, (0, target_row * fh))
+
+        def reorder_rows(im):
+            out = Image.new(im.mode, im.size, (0, 0, 0, 0) if im.mode == "RGBA" else 0)
+            for target_row, src_row in enumerate(src_row_for_target):
+                strip = im.crop((0, src_row * fh, fw * frames_per_dir, (src_row + 1) * fh))
+                out.paste(strip, (0, target_row * fh))
+            return out
+
+        reordered = reorder_rows(img)
 
         # groundAnchorY measured from the actual front-facing (down) frame content, not guessed
         front_frame = reordered.crop((0, 0, fw, fh))
@@ -315,9 +375,21 @@ def import_office_execs(dry_run: bool):
             reordered.save(OUT_DIR / png_name)
             src_hair = OFFICE_AVATAR_DIR / f"{basename}_hair_mask.png"
             src_clothing = OFFICE_AVATAR_DIR / f"{basename}_clothing_mask.png"
-            if src_hair.exists():
+            # มาสก์ต้องสลับแถวแบบเดียวกับ sheet เป๊ะ (ไม่งั้นแถว left/right ของมาสก์จะไม่ตรงกับ
+            # เนื้อหาที่สลับแถวไปแล้วในชีท ทำให้ recolor เพี้ยนตำแหน่ง) แล้ว repair ความไม่ครบของ
+            # มาสก์ต้นฉบับ (ดู repair_recolor_mask — ตรวจแล้วว่ามาสก์ต้นฉบับครอบคลุมพื้นที่จริงแค่
+            # บางส่วนโดยเฉพาะท่าซ้าย/ขวา ไม่ใช่ทั้งชุด)
+            if src_hair.exists() and recolorable:
+                hair_mask = reorder_rows(Image.open(src_hair).convert("L"))
+                hair_mask = repair_recolor_mask(reordered, hair_mask)
+                hair_mask.save(OUT_DIR / hair_name)
+            elif src_hair.exists():
                 (OUT_DIR / hair_name).write_bytes(src_hair.read_bytes())
-            if src_clothing.exists():
+            if src_clothing.exists() and recolorable:
+                clothing_mask = reorder_rows(Image.open(src_clothing).convert("L"))
+                clothing_mask = repair_recolor_mask(reordered, clothing_mask)
+                clothing_mask.save(OUT_DIR / clothing_name)
+            elif src_clothing.exists():
                 (OUT_DIR / clothing_name).write_bytes(src_clothing.read_bytes())
 
         overrides = VISUAL_OVERRIDES.get(id_, {})
