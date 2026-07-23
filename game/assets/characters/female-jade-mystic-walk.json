@@ -1,0 +1,16 @@
+{
+  "frameWidth": 128,
+  "frameHeight": 128,
+  "directions": [
+    "down",
+    "left",
+    "right",
+    "up"
+  ],
+  "framesPerDirection": 4,
+  "frameDurationMs": 140,
+  "groundAnchorY": 120,
+  "paletteColors": 96,
+  "paletteScope": "shared-sheet",
+  "background": "transparent"
+}

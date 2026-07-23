@@ -67,7 +67,8 @@ function frameIndexFor(ent, def) {
 export function hiresAnchorHeight(spriteId) {
   const def = getSpriteDef(spriteId);
   if (!def) return null;
-  return def.groundAnchorY * (def.displayHeight / def.sourceFrameHeight);
+  const vScale = def.visualScale || 1;
+  return def.groundAnchorY * (def.displayHeight / def.sourceFrameHeight) * vScale + (def.tagOffsetY || 0);
 }
 
 // วาดตัวละครความละเอียดสูงแทนตัวละครเดิม — คืน true ถ้าวาดสำเร็จ (ให้ผู้เรียกข้ามการวาด
@@ -86,18 +87,22 @@ export function drawHiresCharacter(ctx, ent, hop = 0) {
   const sx = frameIdx * def.sourceFrameWidth;
   const sy = dirIdx * def.sourceFrameHeight;
 
-  const scaleX = def.displayWidth / def.sourceFrameWidth;
-  const scaleY = def.displayHeight / def.sourceFrameHeight;
+  // visualScale ปรับเฉพาะขนาด/ตำแหน่งที่ "วาด" เท่านั้น (สเกลรอบจุดยึดเท้า ไม่ขยับ entity.x/y
+  // จริง ไม่แตะ collisionWidth/Height) — ใช้ปรับความสูงให้ใกล้เคียงกันระหว่างตัวละครที่มีชุด
+  // เกราะ/ปีก/ผมยาวต่างกัน ส่วน visualOffsetX/Y ใช้ขยับภาพเป็นพิกเซลเพิ่มเติมกรณีจำเป็น
+  const vScale = def.visualScale || 1;
+  const scaleX = (def.displayWidth / def.sourceFrameWidth) * vScale;
+  const scaleY = (def.displayHeight / def.sourceFrameHeight) * vScale;
   const anchorDisplayX = def.anchorX * scaleX;
   const anchorDisplayY = def.groundAnchorY * scaleY;
 
-  const dx = Math.round(ent.x - anchorDisplayX);
-  const dy = Math.round(ent.y - anchorDisplayY - hop);
+  const dx = Math.round(ent.x - anchorDisplayX + (def.visualOffsetX || 0));
+  const dy = Math.round(ent.y - anchorDisplayY - hop + (def.visualOffsetY || 0));
 
   ctx.drawImage(
     img,
     sx, sy, def.sourceFrameWidth, def.sourceFrameHeight,
-    dx, dy, def.displayWidth, def.displayHeight,
+    dx, dy, def.sourceFrameWidth * scaleX, def.sourceFrameHeight * scaleY,
   );
   return true;
 }
@@ -113,7 +118,9 @@ export function drawSpritePreview(ctx, canvas, spriteId, dir = "down") {
   if (!def || !img) return false;
   const boxW = canvas.width, boxH = canvas.height;
   const MARGIN = 0.92; // เผื่อขอบเล็กน้อยกันชนขอบกล่องพอดีเป๊ะ
-  const scale = Math.min(boxW / def.sourceFrameWidth, boxH / def.sourceFrameHeight) * MARGIN;
+  // คูณ visualScale ด้วยเพื่อให้พรีวิวตรงกับขนาดจริงตอนเดินในเกม (WYSIWYG กับ Phase H ที่ normalize
+  // ความสูงตัวละครแต่ละตัว) — ตัวไหนถูกย่อ/ขยายในเกม พรีวิวก็ย่อ/ขยายตามสัดส่วนเดียวกัน
+  const scale = Math.min(boxW / def.sourceFrameWidth, boxH / def.sourceFrameHeight) * MARGIN * (def.visualScale || 1);
   const dirIdx = Math.max(0, def.directions.indexOf(dir));
   const sx = 0, sy = dirIdx * def.sourceFrameHeight; // เฟรมนิ่ง (frame 0) พอสำหรับพรีวิว
   const drawW = def.sourceFrameWidth * scale, drawH = def.sourceFrameHeight * scale;

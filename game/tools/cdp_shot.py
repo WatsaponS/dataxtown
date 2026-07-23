@@ -7,8 +7,10 @@ multiplayer ทำงานก่อนถ่ายภาพ  ใช้:
 import argparse
 import base64
 import json
+import select
 import struct
 import subprocess
+import sys
 import tempfile
 import time
 import urllib.request
@@ -49,6 +51,10 @@ def recv_message(f, sock):
 
 
 def main():
+    try:
+        sys.stdout.reconfigure(encoding="utf-8")  # กัน UnicodeEncodeError เวลา print ข้อความไทย/console ที่ไม่ใช่ UTF-8
+    except Exception:
+        pass
     ap = argparse.ArgumentParser()
     ap.add_argument("--url", required=True)
     ap.add_argument("--out", default="shot.png")
@@ -58,6 +64,8 @@ def main():
     ap.add_argument("--height", type=int, default=800)
     ap.add_argument("--eval", dest="eval_expr", default=None,
                     help="รัน JS ในหน้า (มี user gesture, await promise ให้) หลังครบ --wait แล้วพิมพ์ผลลัพธ์")
+    ap.add_argument("--errors", action="store_true",
+                    help="แทนที่จะ sleep เฉย ๆ ให้ฟัง console.error/warning + uncaught exception ตลอด --wait แล้วพิมพ์ทั้งหมด")
     args = ap.parse_args()
 
     edge = next((p for p in EDGE_PATHS if Path(p).exists()), None)
@@ -93,9 +101,12 @@ def main():
         path = "/" + ws_url.split("/", 3)[3]
         sock = ws_connect("localhost", args.port, path)
         f = sock.makefile("rb")
+        errors = []  # เก็บ console.error / uncaught exception ระหว่างรอ (ดู --errors)
 
-        def call(msg_id, method, params=None):
+        def call(msg_id, method, params=None, wait_reply=True):
             send_text(sock, json.dumps({"id": msg_id, "method": method, "params": params or {}}))
+            if not wait_reply:
+                return None
             while True:
                 raw = recv_message(f, sock)
                 if raw is None:
@@ -104,13 +115,45 @@ def main():
                 if msg.get("id") == msg_id:
                     return msg.get("result", {})
 
-        time.sleep(args.wait)  # ให้เกม + WebSocket ทำงานตามเวลาจริง
+        if args.errors:
+            call(50, "Runtime.enable")
+            call(51, "Log.enable", wait_reply=False)
+            end_time = time.time() + args.wait
+            while time.time() < end_time:
+                remaining = end_time - time.time()
+                readable, _, _ = select.select([sock], [], [], max(0.05, remaining))
+                if not readable:
+                    continue
+                raw = recv_message(f, sock)
+                if raw is None:
+                    break
+                try:
+                    msg = json.loads(raw)
+                except Exception:
+                    continue
+                method = msg.get("method")
+                if method == "Runtime.exceptionThrown":
+                    d = msg["params"]["exceptionDetails"]
+                    text = d.get("exception", {}).get("description") or d.get("text")
+                    errors.append(f"[exception] {text}")
+                elif method == "Runtime.consoleAPICalled" and msg["params"].get("type") in ("error", "warning"):
+                    args_txt = " ".join(str(a.get("value", a.get("description", ""))) for a in msg["params"].get("args", []))
+                    errors.append(f"[console.{msg['params']['type']}] {args_txt}")
+        else:
+            time.sleep(args.wait)  # ให้เกม + WebSocket ทำงานตามเวลาจริง
         if args.eval_expr:
             res = call(2, "Runtime.evaluate", {
                 "expression": args.eval_expr,
                 "awaitPromise": True, "userGesture": True, "returnByValue": True,
             })
             print("eval:", json.dumps(res.get("result", {}).get("value"), ensure_ascii=False))
+        if args.errors:
+            if errors:
+                print(f"console errors/warnings/exceptions ({len(errors)}):")
+                for e in errors:
+                    print(" -", e)
+            else:
+                print("console errors/warnings/exceptions: none")
         result = call(1, "Page.captureScreenshot", {"format": "png"})
         Path(args.out).write_bytes(base64.b64decode(result["data"]))
         print(f"saved {args.out}")

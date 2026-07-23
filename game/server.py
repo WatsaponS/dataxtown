@@ -145,6 +145,7 @@ class GameHandler(SimpleHTTPRequestHandler):
                         "variant": int(data.get("variant", 0)),
                         "hair": data.get("hair"), "shirt": data.get("shirt"),
                         "pet": data.get("pet"), "petName": data.get("petName"),
+                        "spriteId": data.get("spriteId"),
                         "x": float(data.get("x", 0)), "y": float(data.get("y", 0)),
                         "dir": data.get("dir", "down"), "moving": False, "running": False,
                     }
@@ -161,6 +162,12 @@ class GameHandler(SimpleHTTPRequestHandler):
                     client.info.update(pet=pet_id, petName=pet_name)
                     HUB.broadcast({"t": "pet", "id": client.id, "petId": pet_id, "petName": pet_name},
                                   exclude=client.id)
+                elif client and t == "sprite":
+                    # แค่ id อ้างอิง manifest (sprites_manifest.js) — ไม่ตรวจสอบเนื้อหาฝั่ง server เอง
+                    # ฝั่งรับ validate ต่อว่า id รู้จักไหมเอง (ไม่รู้จัก = fallback avatar เดิม)
+                    sprite_id = data.get("spriteId")
+                    client.info.update(spriteId=sprite_id)
+                    HUB.broadcast({"t": "sprite", "id": client.id, "spriteId": sprite_id}, exclude=client.id)
                 elif client and t == "chat":
                     text = str(data.get("text", ""))[:MAX_CHAT_LEN].strip()
                     if text:

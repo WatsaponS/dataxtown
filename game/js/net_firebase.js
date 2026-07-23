@@ -71,6 +71,10 @@ export async function connectFirebase(world, ui) {
     net.updatePet = (petId, petName) =>
       update(meRef, { pet: petId || null, petName: petName || null }).catch(() => {});
     net.updateOutfit = outfit => update(meRef, { outfit: outfit || null }).catch(() => {});
+    // เปลี่ยนตัวละครฐาน (สไปรท์ความละเอียดสูง) กลางเซสชัน — ส่งแค่ id อ้างอิง manifest เหมือน
+    // ตอน join ครั้งแรก ไม่ส่งรูปภาพ/base64 ผ่าน Firebase เด็ดขาด ฝั่งรับ sync ผ่าน onChildChanged
+    // ที่มีอยู่แล้วด้านล่าง (เช็ค v.spriteId !== ent.spriteId)
+    net.updateSpriteId = spriteId => update(meRef, { spriteId: spriteId || null }).catch(() => {});
     addSystemLine(ui, "🟢 ออนไลน์ผ่าน Firebase — คนอื่นในออฟฟิศจะเห็นคุณ");
 
     // ---------- สถานะการเชื่อมต่อของตัวเอง ----------

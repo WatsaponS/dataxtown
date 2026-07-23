@@ -201,36 +201,75 @@ function refreshPetPicker() {
 buildPetPicker();
 refreshPetPicker();
 
-// ---------- ตัวเลือกสไปรท์ความละเอียดสูง (ทดลอง) — สร้างปุ่มจาก SPRITE_MANIFEST อัตโนมัติ
-// เพิ่มตัวละคร 128x128 ตัวถัดไปแค่เพิ่ม entry ในนั้น ไม่ต้องแก้ตรงนี้เลย ----------
-const HIRES_PREVIEW_BOX = 96; // กล่องพรีวิวสี่เหลี่ยมจัตุรัส — contain-fit ไม่บีบสัดส่วนต้นฉบับ
+// ---------- ตัวเลือกสไปรท์ความละเอียดสูง — สร้างการ์ดจาก SPRITE_MANIFEST อัตโนมัติทั้งหมด
+// (ดู scripts/build_character_manifest.py) เพิ่มตัวละครใหม่แค่รัน script นั้น ไม่ต้องแก้ที่นี่เลย
+// พรีวิวแต่ละใบโหลดแบบ lazy — ไม่ preload สไปรท์ทั้ง 38+ ตัวพร้อมกันตอนเปิดหน้า (ดู requirement I)
+// โหลดเฉพาะใบที่เลื่อนมาใกล้จะเห็น (IntersectionObserver) หรือถูกเลือกจริง ----------
+const HIRES_THUMB = 48; // ขนาด canvas พรีวิวย่อในกริด (คนละอันกับ #avatar-preview กล่องใหญ่)
+const HIRES_PREVIEW_BOX = 96; // กล่องพรีวิวใหญ่ (#avatar-preview) สี่เหลี่ยมจัตุรัส — contain-fit
 const hiresPicker = document.getElementById("hires-picker");
+let hiresObserver = null;
+
+function loadHiresThumb(canvas, id) {
+  if (canvas.dataset.loaded) return;
+  canvas.dataset.loaded = "1";
+  preloadSprite(id).then(() => drawSpritePreview(canvas.getContext("2d"), canvas, id, "down"));
+}
+
 function buildHiresPicker() {
   hiresPicker.textContent = "";
-  const none = document.createElement("button");
-  none.type = "button";
-  none.dataset.sprite = "";
-  none.textContent = "✕ ใช้ avatar ปกติ";
-  hiresPicker.appendChild(none);
-  for (const def of SPRITE_MANIFEST) {
-    const b = document.createElement("button");
-    b.type = "button";
-    b.dataset.sprite = def.id;
-    b.textContent = "🧪 " + def.name;
-    hiresPicker.appendChild(b);
-  }
-  hiresPicker.querySelectorAll("button").forEach(b => b.addEventListener("click", () => {
-    chosenSpriteId = b.dataset.sprite || null;
-    if (chosenSpriteId) preloadSprite(chosenSpriteId).then(updatePreview);
+  const none = document.createElement("div");
+  none.className = "hires-opt none-opt" + (chosenSpriteId ? "" : " selected");
+  none.innerHTML = '<span class="hires-emoji">🙂</span><span>ใช้ตัวละครพื้นฐาน</span>';
+  none.addEventListener("click", () => {
+    chosenSpriteId = null;
     refreshHiresButtons();
     updatePreview();
-  }));
+  });
+  hiresPicker.appendChild(none);
+
+  for (const def of SPRITE_MANIFEST) {
+    const opt = document.createElement("div");
+    opt.className = "hires-opt" + (chosenSpriteId === def.id ? " selected" : "");
+    opt.dataset.sprite = def.id;
+    const c = document.createElement("canvas");
+    c.className = "hires-thumb";
+    c.width = HIRES_THUMB; c.height = HIRES_THUMB;
+    const label = document.createElement("span");
+    label.textContent = def.name;
+    opt.append(c, label);
+    opt.addEventListener("click", () => {
+      chosenSpriteId = def.id;
+      loadHiresThumb(c, def.id); // เผื่อคลิกก่อน observer ทันเวลา (การ์ดยังไม่เคยเข้าเฟรม)
+      preloadSprite(def.id).then(updatePreview);
+      refreshHiresButtons();
+      updatePreview();
+    });
+    hiresPicker.appendChild(opt);
+  }
+
+  if (hiresObserver) hiresObserver.disconnect();
+  hiresObserver = new IntersectionObserver(entries => {
+    for (const e of entries) {
+      if (!e.isIntersecting) continue;
+      const canvas = e.target.querySelector("canvas.hires-thumb");
+      if (canvas) loadHiresThumb(canvas, e.target.dataset.sprite);
+      hiresObserver.unobserve(e.target);
+    }
+  }, { root: hiresPicker, rootMargin: "120px 0px" });
+  hiresPicker.querySelectorAll(".hires-opt[data-sprite]").forEach(opt => hiresObserver.observe(opt));
+
+  // ตัวที่เลือกไว้ล่วงหน้า (เช่นจาก localStorage) โหลดพรีวิวทันทีแม้ยังไม่เลื่อนไปเห็น
+  if (chosenSpriteId) {
+    const sel = hiresPicker.querySelector(`.hires-opt[data-sprite="${chosenSpriteId}"] canvas.hires-thumb`);
+    if (sel) loadHiresThumb(sel, chosenSpriteId);
+  }
 }
 function refreshHiresButtons() {
-  hiresPicker.querySelectorAll("button").forEach(b =>
-    b.classList.toggle("selected", (b.dataset.sprite || null) === chosenSpriteId));
-  // สไปรท์ความละเอียดสูงตัวอย่างนี้ไม่มี hair/clothing mask — ซ่อนตัวเลือกสีทิ้งไปเลยกันสับสน
-  // (interface เผื่อไว้แล้วถ้าจะเพิ่ม mask ให้ตัวละครความละเอียดสูงทีหลัง ดู sprites_manifest.js)
+  hiresPicker.querySelectorAll(".hires-opt").forEach(el =>
+    el.classList.toggle("selected", (el.dataset.sprite || null) === chosenSpriteId));
+  // สไปรท์ความละเอียดสูงไม่มี hair/clothing mask — ซ่อนตัวเลือกสีทิ้งไปเลยกันสับสน (interface
+  // เผื่อไว้แล้วถ้าจะเพิ่ม mask ให้ตัวละครความละเอียดสูงทีหลัง ดู sprites_manifest.js)
   document.getElementById("custom-cols").classList.toggle("hidden", !!chosenSpriteId);
 }
 buildHiresPicker();
